@@ -1,0 +1,14 @@
+dependencies:
+  esp_audio_codec:
+    require: public
+  esp_audio_effects:
+    require: public
+  gmf_core:
+    require: public
+description: Espressif GMF Audio Elements Module
+documentation: https://github.com/espressif/esp-gmf/blob/main/elements/gmf_audio/README.md
+issues: https://github.com/espressif/esp-gmf/issues
+tags:
+- gmf
+url: https://github.com/espressif/esp-gmf/tree/main/elements/gmf_audio
+version: 0.7.1

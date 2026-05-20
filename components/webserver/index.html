@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AIClaw</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--dim:#7d8590;--green:#3fb950;--red:#f85149;--orange:#d29922;--blue:#58a6ff;--purple:#bc8cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.header h1{font-size:18px;font-weight:600}
+.header h1 span{color:var(--green);font-weight:400;font-size:13px;margin-left:8px}
+.tabs{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{padding:10px 20px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;font-size:14px;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.content{max-width:800px;margin:0 auto;padding:16px}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px}
+.card h3{font-size:15px;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.card h3 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.card h3 .dot.green{background:var(--green)}.card h3 .dot.red{background:var(--red)}.card h3 .dot.orange{background:var(--orange)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.stat{text-align:center;padding:8px}
+.stat .val{font-size:22px;font-weight:600;color:var(--text)}
+.stat .lbl{font-size:11px;color:var(--dim);text-transform:uppercase;margin-top:2px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:13px;color:var(--dim);margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;outline:none}
+.form-group input:focus{border-color:var(--blue)}
+.form-group input[type=range]{padding:4px 0}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}}
+.btn{padding:8px 16px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
+.btn-primary{background:var(--green);color:#000;border-color:var(--green)}
+.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-danger:hover{opacity:.85}
+.btn-secondary{background:var(--card);color:var(--text)}
+.btn-secondary:hover{background:var(--border)}
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.toast{position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.ok{background:var(--green);color:#000}
+.toast.err{background:var(--red);color:#fff}
+.errors-list{max-height:400px;overflow-y:auto}
+.err-item{padding:8px;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:8px}
+.err-item:last-child{border-bottom:none}
+.err-item .badge{padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;flex-shrink:0}
+.err-item .badge.error{background:var(--red);color:#fff}
+.err-item .badge.warning{background:var(--orange);color:#000}
+.err-item .badge.info{background:var(--blue);color:#000}
+.err-item .badge.critical{background:var(--purple);color:#fff}
+.err-time{color:var(--dim);font-size:11px;flex-shrink:0}
+.wizard{border:2px solid var(--blue);border-radius:8px;padding:16px;margin-top:12px}
+.wizard h4{color:var(--blue);margin-bottom:8px}
+.wizard .step{margin-bottom:8px;color:var(--dim);font-size:13px}
+.wizard .step.done{color:var(--green)}
+.wizard .step.fail{color:var(--red)}
+.wizard .step.active{color:var(--text);font-weight:600}
+.toggle{position:relative;width:44px;height:24px;display:inline-block}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s}
+.toggle .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.slider{background:var(--green)}
+.toggle input:checked+.slider:before{transform:translateX(20px)}
+.range-val{display:inline-block;width:40px;text-align:right;color:var(--blue);font-weight:600}
+/* LED visualization */
+.led-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.led-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .3s}
+.led-card:hover{border-color:var(--blue)}
+.led-card .state-name{font-size:13px;font-weight:600;text-transform:uppercase;margin-bottom:12px;letter-spacing:1px}
+.led-ring{position:relative;width:120px;height:120px;margin:0 auto 12px}
+.led-ring .led{position:absolute;width:14px;height:14px;border-radius:50%;filter:blur(3px);transition:background .1s}
+.led-ring .led.glow{box-shadow:0 0 8px 3px currentColor}
+.led-single{width:24px;height:24px;border-radius:50%;margin:0 auto 12px;filter:blur(4px)}
+.led-mode{font-size:11px;color:var(--dim);text-transform:uppercase}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+/* Notes / Chat History */
+.notes-date-item{padding:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s;display:flex;justify-content:space-between;align-items:center}
+.notes-date-item:hover{background:var(--bg)}
+.notes-date-item:last-child{border-bottom:none}
+.notes-date-info{flex:1}
+.notes-date-name{font-weight:600;font-size:15px;margin-bottom:4px}
+.notes-date-meta{font-size:12px;color:var(--dim)}
+.notes-date-actions{display:flex;gap:8px}
+.notes-date-actions button{padding:4px 10px;font-size:12px}
+.chat-message{padding:12px;margin-bottom:8px;border-radius:8px;line-height:1.6}
+.chat-message.user{background:#1a3a5c;border-left:3px solid var(--blue)}
+.chat-message.assistant{background:#1a2e1a;border-left:3px solid var(--green)}
+.chat-message .msg-header{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px}
+.chat-message .msg-role{font-weight:600;text-transform:uppercase}
+.chat-message .msg-time{color:var(--dim)}
+.chat-message .msg-content{white-space:pre-wrap;word-wrap:break-word}
+.chat-message .msg-thinking{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🦞 AIClaw <span id="hdr-ver"></span></h1>
+  <span id="hdr-status" style="font-size:13px;color:var(--dim)"></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-panel="dashboard" data-en="Dashboard" data-cn="仪表盘">Dashboard</div>
+  <div class="tab" data-panel="device" data-en="Device" data-cn="设备">Device</div>
+  <div class="tab" data-panel="openclaw" data-en="OpenClaw" data-cn="服务连接">OpenClaw</div>
+  <div class="tab" data-panel="tasks" data-en="Tasks" data-cn="任务">Tasks</div>
+  <div class="tab" data-panel="services" data-en="Services" data-cn="语音服务">Services</div>
+  <div class="tab" data-panel="leds" data-en="LED Patterns" data-cn="灯效">LED Patterns</div>
+  <div class="tab" data-panel="notes" data-en="Chat History" data-cn="聊天记录">Chat History</div>
+  <div class="tab" data-panel="errors" data-en="Errors" data-cn="错误日志">Errors</div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="content">
+<div class="panel active" id="dashboard">
+  <div class="card">
+    <h3><span class="dot" id="dash-oc-dot"></span> OpenClaw</h3>
+    <div class="grid">
+      <div class="stat"><div class="val" id="d-oc-state">—</div><div class="lbl" data-en="Status" data-cn="状态">Status</div></div>
+      <div class="stat"><div class="val" id="d-oc-ver">—</div><div class="lbl" data-en="Version" data-cn="版本">Version</div></div>
+      <div class="stat"><div class="val" id="d-oc-up">—</div><div class="lbl" data-en="Uptime" data-cn="运行时间">Uptime</div></div>
+      <div class="stat"><div class="val" id="d-oc-sess">—</div><div class="lbl" data-en="Sessions" data-cn="会话数">Sessions</div></div>
+      <div class="stat"><div class="val" id="d-oc-wa">—</div><div class="lbl" data-en="WhatsApp" data-cn="WhatsApp">WhatsApp</div></div>
+      <div class="stat"><div class="val" id="d-oc-last">—</div><div class="lbl" data-en="Last Activity" data-cn="最后活动">Last Activity</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3><span class="dot" id="dash-wifi-dot"></span> <span data-en="Device" data-cn="设备信息">Device</span></h3>
+    <div class="grid">
+      <div class="stat"><div class="val" id="d-wifi">—</div><div class="lbl" data-en="WiFi RSSI" data-cn="WiFi 信号">WiFi RSSI</div></div>
+      <div class="stat"><div class="val" id="d-ip">—</div><div class="lbl" data-en="IP" data-cn="IP 地址">IP</div></div>
+      <div class="stat"><div class="val" id="d-heap">—</div><div class="lbl" data-en="Free Heap" data-cn="剩余内存">Free Heap</div></div>
+      <div class="stat"><div class="val" id="d-bat">—</div><div class="lbl" data-en="Battery" data-cn="电池电量">Battery</div></div>
+      <div class="stat"><div class="val" id="d-errs">0</div><div class="lbl" data-en="Errors" data-cn="错误数">Errors</div></div>
+    </div>
+  </div>
+  <div class="card" id="dash-controls">
+    <h3>🎮 <span data-en="Controls" data-cn="操作指南">Controls</span></h3>
+    <div id="controls-guide" style="font-size:13px;line-height:1.7;color:var(--dim)"></div>
+  </div>
+</div>
+<div class="panel" id="device">
+  <div class="card">
+    <h3>🔊 <span data-en="Audio" data-cn="音频设置">Audio</span></h3>
+    <div class="form-group">
+      <label><span data-en="Volume" data-cn="音量">Volume</span>: <span class="range-val" id="vol-val">100</span>%</label>
+      <input type="range" id="s-volume" min="0" max="100" value="100" oninput="document.getElementById('vol-val').textContent=this.value">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label data-en="Silence Timeout (ms)" data-cn="静音检测超时 (毫秒)">Silence Timeout (ms)</label><input type="number" id="s-silence_timeout_ms" placeholder="1500" data-en-ph="1500" data-cn-ph="1500"></div>
+      <div class="form-group"><label data-en="Silence Threshold (RMS)" data-cn="静音检测阈值 (RMS)">Silence Threshold (RMS)</label><input type="number" id="s-silence_threshold" placeholder="500" data-en-ph="500" data-cn-ph="500"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label data-en="Max Record (sec)" data-cn="最大录音时长 (秒)">Max Record (sec)</label><input type="number" id="s-max_record_seconds" min="1" max="60" placeholder="15" data-en-ph="15" data-cn-ph="15"></div>
+      <div class="form-group"><label data-en="No-Speech Timeout (ms)" data-cn="未说话超时 (毫秒)">No-Speech Timeout (ms)</label><input type="number" id="s-no_speech_timeout_ms" placeholder="5000" data-en-ph="5000" data-cn-ph="5000"></div>
+    </div>
+    <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Silence timeout: how long silence after speech to stop. No-speech: how long to wait before canceling if nobody speaks." data-cn="静音超时：说话结束后等待多久停止。未说话超时：无人说话多久后取消。">Silence timeout: how long silence after speech to stop. No-speech: how long to wait before canceling if nobody speaks.</p>
+  </div>
+  <div class="card">
+    <h3>🖥️ <span data-en="Display" data-cn="显示设置">Display</span></h3>
+    <div class="form-group">
+      <label><span data-en="Brightness" data-cn="亮度">Brightness</span>: <span class="range-val" id="brt-val">100</span>%</label>
+      <input type="range" id="s-brightness" min="0" max="100" value="100" oninput="document.getElementById('brt-val').textContent=this.value">
+    </div>
+  </div>
+  <div class="card">
+    <h3>💡 <span data-en="RGB LED" data-cn="RGB 灯效">RGB LED</span></h3>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Enable RGB" data-cn="启用 RGB 灯">Enable RGB</label>
+      <label class="toggle"><input type="checkbox" id="s-rgb_enabled"><span class="slider"></span></label>
+    </div>
+    <div class="form-group">
+      <label data-en="Startup Animation Pattern" data-cn="开机动画模式">Startup Animation Pattern</label>
+      <select id="s-startup_pattern">
+        <option value="0" data-en="🌈 Smooth Rainbow" data-cn="🌈 彩虹渐变">🌈 Smooth Rainbow</option>
+        <option value="1" data-en="🌌 Aurora Borealis" data-cn="🌌 极光效果">🌌 Aurora Borealis</option>
+        <option value="2" data-en="✨ Starfield Twinkle" data-cn="✨ 星空闪烁">✨ Starfield Twinkle</option>
+        <option value="3" data-en="🔥 Fire Embers" data-cn="🔥 火焰余烬">🔥 Fire Embers</option>
+        <option value="4" data-en="🌊 Ocean Waves" data-cn="🌊 海洋波动">🌊 Ocean Waves</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="demoPattern()" data-en="▶ Demo Pattern" data-cn="▶ 演示模式">▶ Demo Pattern</button>
+      <button class="btn btn-secondary" onclick="demoBuiltIn('breathe')" data-en="Breathe" data-cn="呼吸">Breathe</button>
+      <button class="btn btn-secondary" onclick="demoBuiltIn('chase')" data-en="Chase" data-cn="追逐">Chase</button>
+      <button class="btn btn-secondary" onclick="demoBuiltIn('sparkle')" data-en="Sparkle" data-cn="闪烁">Sparkle</button>
+      <button class="btn btn-secondary" onclick="demoBuiltIn('stop')" data-en="⏹ Stop" data-cn="⏹ 停止">⏹ Stop</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🗣️ <span data-en="Response Behavior" data-cn="响应行为">Response Behavior</span></h3>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Auto Read Response Aloud" data-cn="自动语音播报响应">Auto Read Response Aloud</label>
+      <label class="toggle"><input type="checkbox" id="s-auto_read_response"><span class="slider"></span></label>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Short Responses (1-3 words)" data-cn="短响应模式 (1-3词)">Short Responses (1-3 words)</label>
+      <label class="toggle"><input type="checkbox" id="s-short_response"><span class="slider"></span></label>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Activity Carousel (multi-run display)" data-cn="活动轮播 (多任务显示)">Activity Carousel (multi-run display)</label>
+      <label class="toggle"><input type="checkbox" id="s-activity_carousel"><span class="slider"></span></label>
+    </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Auto-Announce Notifications" data-cn="自动播报通知">Auto-Announce Notifications</label>
+      <label class="toggle"><input type="checkbox" id="s-auto_notify"><span class="slider"></span></label>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📋 <span data-en="Logging" data-cn="日志设置">Logging</span></h3>
+    <div class="form-group">
+      <label data-en="Verbosity" data-cn="日志详细度">Verbosity</label>
+      <select id="s-log_verbosity">
+        <option value="0" data-en="Error" data-cn="错误">Error</option>
+        <option value="1" data-en="Warning" data-cn="警告">Warning</option>
+        <option value="2" data-en="Info" data-cn="信息">Info</option>
+        <option value="3" data-en="Debug" data-cn="调试">Debug</option>
+        <option value="4" data-en="Verbose" data-cn="冗余">Verbose</option>
+      </select>
+    </div>
+  </div>
+  <div class="card">
+    <h3>⚡ <span data-en="Power & Sleep" data-cn="电源与休眠">Power & Sleep</span></h3>
+    <div class="form-group"><label data-en="Sleep Timeout (seconds, 0=disabled)" data-cn="休眠超时 (秒, 0=禁用)">Sleep Timeout (seconds, 0=disabled)</label><input type="number" id="s-sleep_timeout_sec" min="0" step="1" placeholder="60" data-en-ph="60" data-cn-ph="60"></div>
+    <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Turns off display & LED after this many seconds of inactivity. Device stays connected." data-cn="无活动指定秒数后关闭显示器和 LED。设备保持连接。">Turns off display &amp; LED after this many seconds of inactivity. Device stays connected.</p>
+  </div>
+  <div class="card">
+    <h3>📶 WiFi</h3>
+    <div class="form-row">
+      <div class="form-group"><label data-en="SSID" data-cn="WiFi 名称">SSID</label><input type="text" id="s-wifi_ssid"></div>
+      <div class="form-group"><label data-en="Password" data-cn="WiFi 密码">Password</label><input type="password" id="s-wifi_password" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="saveSettings()" data-en="💾 Save Settings" data-cn="💾 保存设置">💾 Save Settings</button>
+    <button class="btn btn-danger" onclick="resetSettings()" data-en="🔄 Reset Defaults" data-cn="🔄 恢复默认">🔄 Reset Defaults</button>
+    <button class="btn btn-danger" onclick="rebootDevice()" data-en="⚡ Reboot" data-cn="⚡ 重启">⚡ Reboot</button>
+  </div>
+</div>
+
+<!-- OPENCLAW SETTINGS -->
+<div class="panel" id="openclaw">
+  <div class="card">
+    <h3>🤖 <span data-en="OpenClaw Connection" data-cn="OpenClaw 连接设置">OpenClaw Connection</span></h3>
+    <div class="form-row">
+      <div class="form-group"><label data-en="Host / IP" data-cn="主机地址 / IP">Host / IP</label><input type="text" id="s-oc_host" placeholder="OC_HOST" data-en-ph="OC_HOST" data-cn-ph="主机地址"></div>
+      <div class="form-group"><label data-en="Port" data-cn="端口">Port</label><input type="number" id="s-oc_port" value="18789"></div>
+    </div>
+    <div class="form-group"><label data-en="Token" data-cn="令牌">Token</label><input type="password" id="s-oc_token" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
+    <div class="form-group"><label data-en="Device Key (ED25519 hex)" data-cn="设备公钥 (ED25519 hex)">Device Key (ED25519 hex)</label><input type="text" id="s-oc_device_key" placeholder="****" data-en-ph="****" data-cn-ph="****" style="font-family:monospace;font-size:12px"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveSettings()" data-en="💾 Save" data-cn="💾 保存">💾 Save</button>
+      <button class="btn btn-secondary" onclick="testOpenClaw()" data-en="🔌 Test Connection" data-cn="🔌 测试连接">🔌 Test Connection</button>
+    </div>
+    <div id="oc-test-result" style="margin-top:8px;font-size:13px"></div>
+  </div>
+
+  <div class="card">
+    <h3>🧙 <span data-en="Setup Wizard" data-cn="配置向导">Setup Wizard</span></h3>
+    <p style="font-size:13px;color:var(--dim);margin-bottom:8px" data-en="Walk through configuring a new OpenClaw instance step by step." data-cn="按照步骤配置一个新的 OpenClaw 实例。">Walk through configuring a new OpenClaw instance step by step.</p>
+    <button class="btn btn-secondary" onclick="startWizard()" data-en="▶ Start Wizard" data-cn="▶ 开始向导">▶ Start Wizard</button>
+    <div id="wizard-area"></div>
+  </div>
+
+  <div class="card">
+    <h3>📖 <span data-en="Integration Guide" data-cn="集成指南">Integration Guide</span></h3>
+    <details style="margin-bottom:8px">
+      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">1. <span data-en="Device Pairing (Required)" data-cn="设备配对 (必填)">Device Pairing (Required)</span></summary>
+      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
+        <p data-en="AIClaw authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIClaw 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIClaw authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
+        <p style="margin-top:6px"><b data-en="To pair:" data-cn="配对步骤:">To pair:</b></p>
+        <ol style="padding-left:18px;margin-top:4px">
+          <li data-en="Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)" data-cn="记录上方显示的 <b>Device Key</b> (或启动时的串口日志: <code>Device identity: &lt;hex&gt;</code>)">Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)</li>
+          <li data-en="On the OpenClaw machine, run:" data-cn="在 OpenClaw 服务器上运行:">On the OpenClaw machine, run:<br><code style="background:var(--bg);padding:2px 6px;border-radius:4px">openclaw device approve &lt;device-key-hex&gt;</code></li>
+          <li data-en="The device will auto-connect on next WebSocket attempt (every 5s)" data-cn="设备将在下一次 WebSocket 尝试时自动连接 (每 5 秒一次)">The device will auto-connect on next WebSocket attempt (every 5s)</li>
+        </ol>
+        <p style="margin-top:6px;color:var(--orange)" data-en="⚠️ If using token auth instead of device keys, paste the token in the Token field above." data-cn="⚠️ 如果使用令牌验证而非设备密钥，请将令牌粘贴在上方的 Token 字段中。">⚠️ If using token auth instead of device keys, paste the token in the Token field above.</p>
+      </div>
+    </details>
+    <details style="margin-bottom:8px">
+      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">2. <span data-en="STT — DashScope (Required for voice)" data-cn="STT — 百炼 (语音必选)">STT — DashScope (Required for voice)</span></summary>
+      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
+        <p data-en="AIClaw uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text." data-cn="AIClaw 使用 <b>百炼 (DashScope)</b> 实时流式 ASR 进行语音转文字。">AIClaw uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text.</p>
+        <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
+        <ol style="padding-left:18px;margin-top:4px">
+          <li data-en="Get an API key from <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>DashScope Console</a>" data-cn="从 <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>百炼控制台</a> 获取 API 密钥">Get an API key from <a href="https://dashscope.console.aliyun.com/" target="_blank" style="color:var(--blue)">DashScope Console</a></li>
+          <li data-en="Enter the API key in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥">Enter the API key in the <b>Services</b> tab</li>
+          <li data-en="Default endpoint: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code>" data-cn="默认端点: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code>">Default endpoint: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code></li>
+          <li data-en="Default model: <code>fun-asr-realtime-2026-02-28</code>" data-cn="默认模型: <code>fun-asr-realtime-2026-02-28</code>">Default model: <code>fun-asr-realtime-2026-02-28</code></li>
+        </ol>
+      </div>
+    </details>
+    <details style="margin-bottom:8px">
+      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">3. <span data-en="TTS — MiMo (Optional — for voice responses)" data-cn="TTS — MiMo (可选 — 用于语音回复)">TTS — MiMo (Optional — for voice responses)</span></summary>
+      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
+        <p data-en="For audio playback of responses, <b>MiMo (Xiaomi)</b> TTS is used via streaming SSE." data-cn="对于响应的音频播放，使用 <b>MiMo (小米)</b> TTS 流式输出。">For audio playback of responses, <b>MiMo (Xiaomi)</b> TTS is used via streaming SSE.</p>
+        <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
+        <ol style="padding-left:18px;margin-top:4px">
+          <li data-en="Get an API key from <a href='https://mimo.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a>" data-cn="从 <a href='https://mimo.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥">Get an API key from <a href="https://mimo.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a></li>
+          <li data-en="Enter the API key and URL in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL">Enter the API key and URL in the <b>Services</b> tab</li>
+          <li data-en="Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>" data-cn="默认 URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>">Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code></li>
+          <li data-en="Default model: <code>mimo-v2-tts</code>, voice: <code>mimo_default</code>" data-cn="默认模型: <code>mimo-v2-tts</code>, 音色: <code>mimo_default</code>">Default model: <code>mimo-v2-tts</code>, voice: <code>mimo_default</code></li>
+        </ol>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- TASKS -->
+<div class="panel" id="tasks">
+  <div class="card">
+    <h3>📋 <span data-en="Background Tasks" data-cn="后台任务">Background Tasks</span> <span style="font-weight:400;font-size:13px;color:var(--dim)" id="tasks-count"></span></h3>
+    <div id="tasks-list"><p style="color:var(--dim);font-size:13px" data-en="Loading..." data-cn="加载中...">Loading...</p></div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="loadTasks()" data-en="🔄 Refresh" data-cn="🔄 刷新">🔄 Refresh</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>ℹ️ <span data-en="Controls" data-cn="操作指南">Controls</span></h3>
+    <p style="font-size:13px;color:var(--dim);line-height:1.5">
+      <b data-en="Wheel click" data-cn="滚轮点击">Wheel click</b> <span data-en="on Tasks screen → back to main" data-cn="在任务页面 → 返回主页">on Tasks screen → back to main</span><br>
+      <b data-en="Touch task" data-cn="触摸任务">Touch task</b> <span data-en="→ toggle enabled/disabled" data-cn="→ 切换 启用/禁用">→ toggle enabled/disabled</span><br>
+      <b data-en="Wheel spin" data-cn="滚轮旋转">Wheel spin</b> <span data-en="→ scroll task list" data-cn="→ 滚动任务列表">→ scroll task list</span><br>
+      <b data-en="Touch empty area" data-cn="触摸空白区域">Touch empty area</b> <span data-en="→ back to main screen" data-cn="→ 返回主屏幕">→ back to main screen</span><br>
+      <b data-en="Tasks button" data-cn="任务按钮">Tasks button</b> <span data-en="on main screen → open Tasks screen" data-cn="在主屏幕 → 打开任务页面">on main screen → open Tasks screen</span>
+    </p>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<div class="panel" id="services">
+  <div class="card">
+    <h3>🗣️ <span data-en="TTS (MiMo / Xiaomi)" data-cn="TTS 语音合成 (小米 MiMo)">TTS (MiMo / Xiaomi)</span></h3>
+    <div class="form-group"><label data-en="API URL" data-cn="API 地址">API URL</label><input type="text" id="s-mimo_url" placeholder="https://api.xiaomimimo.com/v1/chat/completions" data-en-ph="https://api.xiaomimimo.com/v1/chat/completions" data-cn-ph="https://api.xiaomimimo.com/v1/chat/completions"></div>
+    <div class="form-row">
+      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-mimo_model" placeholder="mimo-v2-tts" data-en-ph="mimo-v2-tts" data-cn-ph="mimo-v2-tts"></div>
+      <div class="form-group"><label data-en="Voice" data-cn="音色">Voice</label><input type="text" id="s-mimo_voice" placeholder="mimo_default" data-en-ph="mimo_default" data-cn-ph="mimo_default"></div>
+    </div>
+    <div class="form-group"><label data-en="API Key" data-cn="API 密钥">API Key</label><input type="password" id="s-mimo_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
+  </div>
+  <div class="card">
+    <h3>🎤 <span data-en="STT (DashScope / 百炼)" data-cn="STT 语音识别 (阿里百炼)">STT (DashScope / 百炼)</span></h3>
+    <div class="form-group"><label data-en="WebSocket Endpoint" data-cn="WebSocket 端点">WebSocket Endpoint</label><input type="text" id="s-stt_endpoint" placeholder="wss://dashscope.aliyuncs.com/api-ws/v1/inference/" data-en-ph="wss://dashscope.aliyuncs.com/api-ws/v1/inference/" data-cn-ph="wss://dashscope.aliyuncs.com/api-ws/v1/inference/"></div>
+    <div class="form-row">
+      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-stt_model" placeholder="fun-asr-realtime-2026-02-28" data-en-ph="fun-asr-realtime-2026-02-28" data-cn-ph="fun-asr-realtime-2026-02-28"></div>
+      <div class="form-group"><label data-en="API Key" data-cn="API 密钥">API Key</label><input type="password" id="s-dashscope_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="testSTT()" data-en="🔍 Check STT Config" data-cn="🔍 检查 STT 配置">🔍 Check STT Config</button>
+    </div>
+    <div id="stt-test-result" style="margin-top:8px;font-size:13px"></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="saveSettings()" data-en="💾 Save Settings" data-cn="💾 保存设置">💾 Save Settings</button>
+  </div>
+</div>
+
+<!-- LED PATTERNS -->
+<div class="panel" id="leds">
+  <div class="card">
+    <h3>💡 <span data-en="LED State Patterns" data-cn="灯效状态模式">LED State Patterns</span></h3>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:16px">
+      <span data-en="Visual preview of how the device LED indicator changes for each state." data-cn="设备 LED 指示灯在各个状态下的变化预览。">Visual preview of how the device LED indicator changes for each state.</span>
+      <span id="led-hw-info"></span>
+    </p>
+    <div class="led-grid" id="led-grid"></div>
+  </div>
+</div>
+
+<!-- NOTES / CHAT HISTORY -->
+<div class="panel" id="notes">
+  <div class="card">
+    <h3>📝 <span data-en="Chat History" data-cn="聊天记录">Chat History</span></h3>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:16px">
+      <span data-en="Browse your daily chat conversations stored on SD card." data-cn="浏览存储在 SD 卡中的每日聊天对话。">Browse your daily chat conversations stored on SD card.</span>
+    </p>
+    
+    <!-- Storage Stats -->
+    <div style="display:flex;gap:16px;margin-bottom:16px;padding:12px;background:var(--bg);border-radius:8px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:24px;font-weight:600;color:var(--blue)" id="notes-storage-kb">0</div>
+        <div style="font-size:11px;color:var(--dim);text-transform:uppercase" data-en="Storage Used" data-cn="已用存储">Storage Used</div>
+      </div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:24px;font-weight:600;color:var(--green)" id="notes-total-days">0</div>
+        <div style="font-size:11px;color:var(--dim);text-transform:uppercase" data-en="Days with Chats" data-cn="有记录的天数">Days with Chats</div>
+      </div>
+    </div>
+    
+    <!-- Date List -->
+    <div id="notes-date-list" style="max-height:500px;overflow-y:auto">
+      <p style="color:var(--dim);font-size:13px;text-align:center;padding:40px" data-en="Loading..." data-cn="加载中...">Loading...</p>
+    </div>
+  </div>
+  
+  <!-- Chat Detail View (hidden by default) -->
+  <div class="card" id="notes-detail" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0">📖 <span id="notes-detail-date"></span></h3>
+      <button class="btn btn-secondary" onclick="closeNotesDetail()" data-en="← Back" data-cn="← 返回">← Back</button>
+    </div>
+    <div id="notes-chat-messages" style="max-height:600px;overflow-y:auto">
+      <!-- Messages will be loaded here -->
+    </div>
+  </div>
+</div>
+
+<!-- ERRORS -->
+<div class="panel" id="errors">
+  <div class="card">
+    <h3>⚠️ <span data-en="Error Log" data-cn="错误日志">Error Log</span> <span style="font-weight:400;font-size:13px;color:var(--dim)" id="err-count"></span></h3>
+    <div class="errors-list" id="errors-list"><p style="color:var(--dim);font-size:13px" data-en="No errors" data-cn="无错误记录">No errors</p></div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="loadErrors()" data-en="🔄 Refresh" data-cn="🔄 刷新">🔄 Refresh</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let settings = {};
+let lang = 'en'; // Default language
+
+function updateLang() {
+  document.querySelectorAll('[data-en]').forEach(el => {
+    el.textContent = el.getAttribute('data-' + lang);
+  });
+  // Also update placeholders
+  document.querySelectorAll('input[placeholder]').forEach(el => {
+    if (el.dataset.enPh) {
+        el.placeholder = el.getAttribute('data-' + lang + '-ph');
+    }
+  });
+  // Re-render components that depend on language
+  if ($('led-grid').innerHTML) {
+    fetch('/api/status').then(r=>r.json()).then(d=>{
+      renderLedPanel(d.device.rgb_led_count > 1);
+    });
+  }
+  if ($('dashboard').classList.contains('active')) loadStatus();
+  if ($('tasks').classList.contains('active')) loadTasks();
+  if ($('errors').classList.contains('active')) loadErrors();
+  if ($('notes').classList.contains('active')) loadNotesList();
+}
+
+// Add language switcher to header
+const hdr = document.querySelector('.header');
+const langBtn = document.createElement('button');
+langBtn.className = 'btn btn-secondary';
+langBtn.style.padding = '4px 8px';
+langBtn.style.fontSize = '11px';
+langBtn.textContent = '中文 / EN';
+langBtn.onclick = () => {
+  lang = lang === 'en' ? 'cn' : 'en';
+  updateLang();
+};
+hdr.appendChild(langBtn);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $(t.dataset.panel).classList.add('active');
+    if (t.dataset.panel === 'errors') loadErrors();
+    if (t.dataset.panel === 'tasks') loadTasks();
+    if (t.dataset.panel === 'notes') loadNotesList();
+    if (t.dataset.panel === 'leds') {
+      fetch('/api/status').then(r=>r.json()).then(d=>{
+        renderLedPanel(d.device.rgb_led_count > 1);
+      }).catch(()=>renderLedPanel(true));
+    }
+  });
+});
+
+function toast(msg, ok) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (ok ? 'ok' : 'err');
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+function fmtTime(min) {
+  if (min === undefined || min === null) return '—';
+  if (min < 60) return min + (lang === 'cn' ? '分钟' : 'm');
+  if (min < 1440) return Math.floor(min/60) + (lang === 'cn' ? '小时 ' : 'h ') + (min%60) + (lang === 'cn' ? '分钟' : 'm');
+  return Math.floor(min/1440) + (lang === 'cn' ? '天' : 'd');
+}
+
+// Load status
+async function loadStatus() {
+  try {
+    const r = await fetch('/api/status');
+    const d = await r.json();
+    $('hdr-ver').textContent = 'v' + d.device.version;
+
+    // Dashboard
+    const oc = d.openclaw;
+    const stateMap = {
+        'connected': { en: 'Connected', cn: '已连接' },
+        'disconnected': { en: 'Disconnected', cn: '未连接' },
+        'connecting': { en: 'Connecting...', cn: '正在连接...' },
+        'error': { en: 'Error', cn: '连接错误' }
+    };
+    const s = stateMap[oc.state_str] || { en: oc.state_str, cn: oc.state_str };
+    $('d-oc-state').textContent = lang === 'cn' ? s.cn : s.en;
+    $('d-oc-state').style.color = oc.state_str === 'connected' ? 'var(--green)' : 'var(--orange)';
+    $('dash-oc-dot').className = 'dot ' + (oc.state_str === 'connected' ? 'green' : 'red');
+    $('d-oc-ver').textContent = oc.version || '—';
+    $('d-oc-up').textContent = fmtTime(oc.uptime_min);
+    $('d-oc-sess').textContent = oc.sessions ?? '—';
+    $('d-oc-wa').textContent = oc.wa_status || '—';
+    $('d-oc-last').textContent = oc.last_activity_min !== undefined ? fmtTime(oc.last_activity_min) : '—';
+
+    $('dash-wifi-dot').className = 'dot ' + (d.wifi.connected ? 'green' : 'red');
+    $('d-wifi').textContent = d.wifi.connected ? d.wifi.rssi + ' dBm' : (lang === 'cn' ? '断开' : 'OFF');
+    $('d-ip').textContent = d.wifi.ip || '—';
+    $('d-ip').style.fontSize = '14px';
+    $('d-heap').textContent = Math.round(d.device.heap_free / 1024) + 'K';
+    $('d-bat').textContent = d.device.battery_pct + '%';
+    $('d-errs').textContent = d.error_count;
+    $('hdr-status').textContent = oc.state_str === 'connected' ? (lang === 'cn' ? '🟢 已在线' : '🟢 Online') : (lang === 'cn' ? '🔴 已离线' : '🔴 Offline');
+
+    // Controls guide per device
+    const cg = $('controls-guide');
+    const name = (d.device.name || '').toLowerCase();
+    if (name.includes('m5stick')) {
+      if (lang === 'cn') {
+        cg.innerHTML = '<b>M5StickC Plus2 — 3 按键</b><br>' +
+          '<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:12px">' +
+          '<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:3px 6px">按键</th><th>短按</th><th>长按 (2s)</th><th>双击</th></tr>' +
+          '<tr><td style="padding:3px 6px"><b>A</b> (正面)</td><td style="text-align:center">说话 / 取消录音</td><td style="text-align:center">深度休眠</td><td style="text-align:center">切换自动语音</td></tr>' +
+          '<tr><td style="padding:3px 6px"><b>B</b> (侧面)</td><td style="text-align:center">Web / 取消 / 播放 / 停止</td><td style="text-align:center">任务页面</td><td style="text-align:center">设备信息</td></tr>' +
+          '<tr><td style="padding:3px 6px"><b>C</b> (电源)</td><td style="text-align:center">详情 / 任务</td><td style="text-align:center">深度休眠</td><td style="text-align:center">切换 Web</td></tr>' +
+          '</table>';
+      } else {
+        cg.innerHTML = '<b>M5StickC Plus2 — 3 Buttons</b><br>' +
+          '<table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:12px">' +
+          '<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:3px 6px">Button</th><th>Short</th><th>Long (2s)</th><th>Double</th></tr>' +
+          '<tr><td style="padding:3px 6px"><b>A</b> (front)</td><td style="text-align:center">Talk / Cancel rec</td><td style="text-align:center">Deep sleep</td><td style="text-align:center">Toggle auto-TTS</td></tr>' +
+          '<tr><td style="padding:3px 6px"><b>B</b> (side)</td><td style="text-align:center">Web / Cancel / Play / Stop</td><td style="text-align:center">Tasks screen</td><td style="text-align:center">Device info</td></tr>' +
+          '<tr><td style="padding:3px 6px"><b>C</b> (power)</td><td style="text-align:center">Details / Tasks</td><td style="text-align:center">Deep sleep</td><td style="text-align:center">Toggle web</td></tr>' +
+          '</table>';
+      }
+    } else if (name.includes('sensecap')) {
+      if (lang === 'cn') {
+        cg.innerHTML = '<b>SenseCAP Watcher — 滚轮 + 触摸</b><br>' +
+          '🔄 <b>滚轮点击:</b> 说话 / 取消录音 / 关闭响应<br>' +
+          '🔄 <b>滚轮旋转:</b> 取消录音 / 停止播放 / 中止对话<br>' +
+          '🔄 <b>滚轮长按 (4s):</b> 深度休眠<br>' +
+          '👆 <b>触摸屏幕:</b> 说话 (空闲) / 取消录音 / 活动详情<br>' +
+          '📷 相机按键 / ▶ 屏幕播放按钮';
+      } else {
+        cg.innerHTML = '<b>SenseCAP Watcher — Wheel + Touch</b><br>' +
+          '🔄 <b>Wheel click:</b> Talk / Cancel rec / Dismiss response<br>' +
+          '🔄 <b>Wheel spin:</b> Cancel rec / Stop TTS / Abort chat / Dismiss<br>' +
+          '🔄 <b>Wheel long press (4s):</b> Deep sleep<br>' +
+          '👆 <b>Touch screen:</b> Talk (IDLE) / Cancel rec / Details on activity<br>' +
+          '📷 Camera button / ▶ Play button on screen';
+      }
+    } else if (name.includes('waveshare') || name.includes('audio')) {
+      if (lang === 'cn') {
+        cg.innerHTML = '<b>音频开发板 — 按键 + 唤醒词</b><br>' +
+          '🔊 <b>BTN1:</b> 切换 Web Server 开启/关闭<br>' +
+          '🎙️ <b>唤醒词:</b> 说 "你好小智" 开始交谈<br>' +
+          '👆 <b>1.47寸屏:</b> 支持触摸操作及列表/图表显示';
+      } else {
+        cg.innerHTML = '<b>Audio Board — Buttons + Wake Word</b><br>' +
+          '🔊 <b>BTN1:</b> Toggle web server<br>' +
+          '🎙️ <b>Wake word:</b> "Ni Hao Xiao Zhi" to start talking<br>' +
+          '👆 <b>1.47" Screen:</b> Touch support';
+      }
+    } else {
+      cg.innerHTML = 'Unknown device type';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// Load settings
+async function loadSettings() {
+  try {
+    const r = await fetch('/api/settings');
+    settings = await r.json();
+    // Populate fields
+    const fields = ['wifi_ssid','wifi_password','oc_host','oc_port','oc_token','oc_device_key',
+      'mimo_api_key','mimo_url','mimo_model','mimo_voice','dashscope_api_key','stt_model','stt_endpoint',
+      'volume','silence_timeout_ms','silence_threshold','max_record_seconds','no_speech_timeout_ms',
+      'brightness','log_verbosity'];
+    fields.forEach(f => {
+      const el = $('s-'+f);
+      if (!el) return;
+      const v = settings[f];
+      if (v === '****') { el.placeholder = '****'; el.value = ''; }
+      else if (el.type === 'range') { el.value = v; el.dispatchEvent(new Event('input')); }
+      else el.value = v ?? '';
+    });
+    /* Sleep: convert ms → seconds for display */
+    if ($('s-sleep_timeout_sec')) $('s-sleep_timeout_sec').value = Math.round((settings.sleep_timeout_ms||0)/1000);
+    if ($('s-rgb_enabled')) $('s-rgb_enabled').checked = settings.rgb_enabled;
+    if ($('s-startup_pattern')) $('s-startup_pattern').value = settings.startup_pattern ?? 0;
+    if ($('s-auto_read_response')) $('s-auto_read_response').checked = settings.auto_read_response;
+    if ($('s-short_response')) $('s-short_response').checked = settings.short_response;
+    if ($('s-activity_carousel')) $('s-activity_carousel').checked = settings.activity_carousel;
+    if ($('s-auto_notify')) $('s-auto_notify').checked = settings.auto_notify;
+    updateLang();
+  } catch(e) { console.error(e); }
+}
+
+// Save settings
+async function saveSettings() {
+  const data = {};
+  const fields = ['wifi_ssid','wifi_password','oc_host','oc_token','oc_device_key',
+    'mimo_api_key','mimo_url','mimo_model','mimo_voice','dashscope_api_key','stt_model','stt_endpoint'];
+  fields.forEach(f => {
+    const el = $('s-'+f);
+    if (el && el.value) data[f] = el.value;
+  });
+  const nums = ['oc_port','volume','silence_timeout_ms',
+    'silence_threshold','max_record_seconds','no_speech_timeout_ms','brightness','log_verbosity'];
+  nums.forEach(f => {
+    const el = $('s-'+f);
+    if (el && el.value !== '') data[f] = Number(el.value);
+  });
+  /* Sleep: convert seconds → ms */
+  if ($('s-sleep_timeout_sec') && $('s-sleep_timeout_sec').value !== '') {
+    data.sleep_timeout_ms = Number($('s-sleep_timeout_sec').value) * 1000;
+  }
+  if ($('s-rgb_enabled')) data.rgb_enabled = $('s-rgb_enabled').checked;
+  if ($('s-startup_pattern')) data.startup_pattern = Number($('s-startup_pattern').value);
+  if ($('s-auto_read_response')) data.auto_read_response = $('s-auto_read_response').checked;
+  if ($('s-short_response')) data.short_response = $('s-short_response').checked;
+  if ($('s-activity_carousel')) data.activity_carousel = $('s-activity_carousel').checked;
+  if ($('s-auto_notify')) data.auto_notify = $('s-auto_notify').checked;
+
+  try {
+    const r = await fetch('/api/settings', {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const d = await r.json();
+    if (d.ok) {
+      // Check if WiFi settings were changed
+      const ssidChanged = $('s-wifi_ssid') && $('s-wifi_ssid').value !== '';
+      if (ssidChanged) {
+        // Show special message for WiFi config
+        const msg = lang === 'cn' 
+          ? 'WiFi配置已保存！\n\n请点击下方"⚡ Reboot"按钮重启设备以应用新配置。' 
+          : 'WiFi config saved!\n\nPlease click the "⚡ Reboot" button below to restart and apply new settings.';
+        alert(msg);
+        
+        // Scroll to the reboot button and highlight it
+        const rebootBtn = document.querySelector('button[onclick="rebootDevice()"]');
+        if (rebootBtn) {
+          rebootBtn.scrollIntoView({behavior: 'smooth', block: 'center'});
+          // Add temporary highlight effect
+          rebootBtn.style.animation = 'pulse 1s ease-in-out 3';
+          rebootBtn.style.boxShadow = '0 0 20px rgba(255, 0, 0, 0.8)';
+          setTimeout(() => {
+            rebootBtn.style.boxShadow = '';
+          }, 3000);
+        }
+      } else {
+        toast(lang === 'cn' ? '设置已保存!' : 'Settings saved!', true);
+      }
+    } else {
+      toast(lang === 'cn' ? '保存失败' : 'Save failed', false);
+    }
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+
+async function resetSettings() {
+  if (!confirm(lang === 'cn' ? '确定要恢复默认设置吗？' : 'Reset all settings to defaults?')) return;
+  try {
+    await fetch('/api/settings/reset', {method:'POST'});
+    toast(lang === 'cn' ? '设置已重置，重启后生效' : 'Settings reset. Reboot to apply.', true);
+    loadSettings();
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+
+async function rebootDevice() {
+  if (!confirm(lang === 'cn' ? '确定要重启设备吗？\n\n重启后将使用新的WiFi配置连接网络。' : 'Reboot the device?\n\nThe device will restart and connect using the new WiFi settings.')) return;
+  try { 
+    await fetch('/api/reboot', {method:'POST'}); 
+    const msg = lang === 'cn' 
+      ? '设备正在重启...\n\n请等待约30秒后，重新连接设备的WiFi热点或等待其连接到您的网络。' 
+      : 'Device is rebooting...\n\nPlease wait ~30 seconds, then reconnect to the device\'s WiFi or wait for it to join your network.';
+    alert(msg);
+  }
+  catch(e) {
+    alert(lang === 'cn' ? '重启请求失败: ' + e.message : 'Reboot request failed: ' + e.message);
+  }
+}
+
+// LED pattern demo
+async function demoPattern() {
+  const pat = $('s-startup_pattern').value;
+  const modes = ['rainbow_spin','aurora','starfield','fire','ocean'];
+  const mode = modes[pat] || 'rainbow_spin';
+  try {
+    const r = await fetch('/api/led/demo', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:mode})});
+    const d = await r.json();
+    if (d.ok) toast((lang === 'cn' ? '演示中: ' : 'Playing: ') + mode, true);
+    else toast(d.error || 'Failed', false);
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+async function demoBuiltIn(mode) {
+  try {
+    const r = await fetch('/api/led/demo', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({mode:mode})});
+    const d = await r.json();
+    if (d.ok) toast((lang === 'cn' ? '演示中: ' : 'Playing: ') + mode, true);
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+
+// Test OpenClaw
+async function testOpenClaw() {
+  const host = $('s-oc_host').value;
+  const port = Number($('s-oc_port').value) || 18789;
+  $('oc-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '测试中...' : 'Testing...'}</span>`;
+  try {
+    const r = await fetch('/api/openclaw/test', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({host, port})});
+    const d = await r.json();
+    $('oc-test-result').innerHTML = d.ok
+      ? '<span style="color:var(--green)">✅ ' + d.message + '</span>'
+      : '<span style="color:var(--red)">❌ ' + d.error + '</span>';
+  } catch(e) {
+    $('oc-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+  }
+}
+
+// Wizard
+function startWizard() {
+  const area = $('wizard-area');
+  const en = {
+    h4: 'OpenClaw Setup Wizard',
+    s1: '1. Enter OpenClaw host and port above',
+    s2: '2. Click "Test Connection" to verify',
+    s3: '3. Enter your API token',
+    s4: '4. Click "Save" to store configuration',
+    s5: '5. Reboot to connect with new settings',
+    p: 'Fill in the fields above and follow the steps. The device key is auto-generated on first connection.',
+    // Server setup wizard
+    sh: '🖥️ Server-Side OpenClaw Setup',
+    ss1: '1. On your OpenClaw server, edit gateway config:',
+    ss1_code: '"bind": "lan"',
+    ss2: '2. Restart the OpenClaw gateway',
+    ss3: '3. Check AIClaw logs for approval command:',
+    ss3_note: 'Look for: "Approve with: openclaw devices approve <device-id>"',
+    ss4: '4. Copy and run the approval command on your server'
+  };
+  const cn = {
+    h4: 'OpenClaw 配置向导',
+    s1: '1. 在上方输入 OpenClaw 服务器地址和端口',
+    s2: '2. 点击“测试连接”进行验证',
+    s3: '3. 输入您的 API 令牌 (Token)',
+    s4: '4. 点击“保存”存储配置',
+    s5: '5. 重启设备以应用新设置',
+    p: '填写上方字段并按照步骤操作。设备密钥将在首次连接时自动生成。',
+    // Server setup wizard
+    sh: '🖥️ 服务端 OpenClaw 设置',
+    ss1: '1. 在 OpenClaw 服务器上编辑网关配置：',
+    ss1_code: '"bind": "lan"',
+    ss2: '2. 重启 OpenClaw 网关',
+    ss3: '3. 查看 AIClaw 日志中的批准命令：',
+    ss3_note: '查找：“Approve with: openclaw devices approve <device-id>”',
+    ss4: '4. 复制并在服务器上运行批准命令'
+  };
+  const t = lang === 'cn' ? cn : en;
+  area.innerHTML = `<div class="wizard">
+    <h4>${t.h4}</h4>
+    <div class="step active" id="wiz-1">${t.s1}</div>
+    <div class="step" id="wiz-2">${t.s2}</div>
+    <div class="step" id="wiz-3">${t.s3}</div>
+    <div class="step" id="wiz-4">${t.s4}</div>
+    <div class="step" id="wiz-5">${t.s5}</div>
+    <p style="font-size:12px;color:var(--dim);margin-top:8px">${t.p}</p>
+    
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+    
+    <h4>${t.sh}</h4>
+    <div class="step" id="wiz-s1">${t.ss1}<br><code style="background:var(--bg);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:4px">${t.ss1_code}</code></div>
+    <div class="step" id="wiz-s2">${t.ss2}</div>
+    <div class="step" id="wiz-s3">${t.ss3}<br><span style="font-size:11px;color:var(--dim)">${t.ss3_note}</span></div>
+    <div class="step" id="wiz-s4">${t.ss4}</div>
+  </div>`;
+}
+
+async function testSTT() {
+  $('stt-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '检查中...' : 'Checking DashScope STT config...'}</span>`;
+  try {
+    const r = await fetch('/api/stt/health', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({})});
+    const d = await r.json();
+    if (d.ok) {
+        $('stt-test-result').innerHTML = '<span style="color:var(--green)">✅ ' + 
+            (lang === 'cn' ? '百炼 STT 配置正确 (模型: ' : 'DashScope STT configured (model: ') + 
+            (d.model||'unknown') + ')</span>';
+    } else {
+        $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + 
+            (lang === 'cn' ? '配置缺失或错误' : (d.error||'Configuration missing')) + '</span>';
+    }
+  } catch(e) {
+    $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+  }
+}
+
+// Load errors
+async function loadErrors() {
+  try {
+    const r = await fetch('/api/errors');
+    const errs = await r.json();
+    $('err-count').textContent = '(' + errs.length + ')';
+    if (!errs.length) {
+      $('errors-list').innerHTML = `<p style="color:var(--dim);font-size:13px">${lang === 'cn' ? '暂无错误记录' : 'No errors recorded'}</p>`;
+      return;
+    }
+    let html = '';
+    errs.reverse().forEach(e => {
+      const d = new Date(e.ts * 1000);
+      const time = d.toLocaleTimeString();
+      html += `<div class="err-item">
+        <span class="badge ${e.sev}">${e.sev}</span>
+        <span class="badge" style="background:var(--card);color:var(--dim)">${e.src}</span>
+        <span style="flex:1">${e.msg}</span>
+        <span class="err-time">${time}</span>
+      </div>`;
+    });
+    $('errors-list').innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+// Load background tasks
+async function loadTasks() {
+  try {
+    const r = await fetch('/api/tasks');
+    const tasks = await r.json();
+    $('tasks-count').textContent = '(' + tasks.length + ')';
+    if (!tasks.length) {
+      $('tasks-list').innerHTML = `<p style="color:var(--dim);font-size:13px">${lang === 'cn' ? '暂无定时任务' : 'No scheduled tasks'}</p>`;
+      return;
+    }
+    let html = '';
+    tasks.forEach(t => {
+      const color = t.running ? 'var(--orange)' : (t.enabled ? 'var(--green)' : 'var(--dim)');
+      const statusEn = t.running ? 'Running' : (t.enabled ? 'Active' : 'Disabled');
+      const statusCn = t.running ? '运行中' : (t.enabled ? '激活' : '已禁用');
+      const status = lang === 'cn' ? statusCn : statusEn;
+      
+      const icon = t.running ? '⟳' : (t.last_status === 'ok' ? '✓' : (t.last_status === 'error' ? '✗' : '—'));
+      const iconColor = t.running ? 'var(--orange)' : (t.last_status === 'ok' ? 'var(--green)' : (t.last_status === 'error' ? 'var(--red)' : 'var(--dim)'));
+      
+      const btnText = t.enabled ? (lang === 'cn' ? '禁用' : 'Disable') : (lang === 'cn' ? '启用' : 'Enable');
+      
+      html += `<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>
+          <div style="font-size:12px;color:var(--dim)">${t.schedule_kind} ${t.schedule_expr} · ${status}${t.last_error ? ' · ' + t.last_error.substring(0, 40) : ''}</div>
+          ${t.consecutive_errors > 0 ? `<div style="font-size:11px;color:var(--red)">${lang === 'cn' ? '连续错误: ' : 'Consecutive errors: '} ${t.consecutive_errors}</div>` : ''}
+        </div>
+        <span style="font-size:18px;color:${iconColor}">${icon}</span>
+        <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px" onclick="toggleTask('${t.id}',${!t.enabled})">${btnText}</button>
+      </div>`;
+    });
+    $('tasks-list').innerHTML = html;
+  } catch(e) { console.error(e); }
+}
+
+async function toggleTask(id, enabled) {
+  try {
+    await fetch('/api/tasks/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, enabled})});
+    toast(lang === 'cn' ? '任务已更新' : 'Task updated', true);
+    setTimeout(loadTasks, 500);
+  } catch(e) { toast('Failed: ' + e.message, false); }
+}
+
+
+
+// LED Pattern Visualization
+const LED_STATES = [
+  {name:{en:'Connecting',cn:'正在连接'}, mode:'rainbow_spin', color:[20,0,0], ringMode:{en:'Rainbow Spin',cn:'彩虹旋转'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[16,16,0]},
+  {name:{en:'Idle',cn:'空闲'}, mode:'solid', color:[0,4,0], ringMode:{en:'Solid',cn:'常亮'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,4,0]},
+  {name:{en:'Listening',cn:'正在聆听'}, mode:'pulse_wave', color:[8,40,16], ringMode:{en:'Pulse Wave',cn:'脉冲波'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[32,0,0]},
+  {name:{en:'Sending',cn:'正在发送'}, mode:'chase', color:[0,16,40], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,0,32]},
+  {name:{en:'Thinking',cn:'思考中'}, mode:'chase', color:[40,24,0], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[40,24,0]},
+  {name:{en:'Streaming',cn:'流式输出'}, mode:'sparkle', color:[32,8,48], ringMode:{en:'Sparkle',cn:'闪烁'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[24,0,40]},
+  {name:{en:'Response',cn:'响应中'}, mode:'solid', color:[0,8,0], ringMode:{en:'Solid',cn:'常亮'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,6,0]},
+  {name:{en:'TTS Loading',cn:'语音加载'}, mode:'chase', color:[0,24,24], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[0,24,24]},
+  {name:{en:'TTS Playing',cn:'语音播放'}, mode:'breathe', color:[0,32,16], ringMode:{en:'Breathe',cn:'呼吸'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[0,32,16]},
+  {name:{en:'Error',cn:'错误'}, mode:'blink', color:[32,0,0], ringMode:{en:'Blink',cn:'闪烁'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[32,0,0]}
+];
+const LED_COUNT = 7;
+let ledAnimFrames = [];
+let ledAnimId = null;
+
+function hsvToRgb(h,s,v){
+  h=h%360;let c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;
+  let r=0,g=0,b=0;
+  if(h<60){r=c;g=x}else if(h<120){r=x;g=c}else if(h<180){g=c;b=x}
+  else if(h<240){g=x;b=c}else if(h<300){r=x;b=c}else{r=c;b=x}
+  return[Math.round((r+m)*255),Math.round((g+m)*255),Math.round((b+m)*255)];
+}
+
+function renderLedPanel(isRing) {
+  const grid = $('led-grid');
+  const hwEn = isRing ? `Ring (${LED_COUNT} LEDs)` : 'Single RGB LED';
+  const hwCn = isRing ? `灯环 (${LED_COUNT} 颗 LED)` : '单颗 RGB LED';
+  $('led-hw-info').textContent = (lang === 'cn' ? '硬件: ' : 'Hardware: ') + (lang === 'cn' ? hwCn : hwEn);
+  let html = '';
+  LED_STATES.forEach((st, si) => {
+    const name = lang === 'cn' ? st.name.cn : st.name.en;
+    const modeName = isRing ? (lang === 'cn' ? st.ringMode.cn : st.ringMode.en) : (lang === 'cn' ? st.singleMode.cn : st.singleMode.en);
+    if (isRing) {
+      let dots = '';
+      for (let i = 0; i < LED_COUNT; i++) {
+        const angle = (i * 360 / LED_COUNT) - 90;
+        const r = 48;
+        const x = 60 + r * Math.cos(angle * Math.PI / 180) - 7;
+        const y = 60 + r * Math.sin(angle * Math.PI / 180) - 7;
+        dots += `<div class="led glow" id="led-${si}-${i}" style="left:${x}px;top:${y}px"></div>`;
+      }
+      html += `<div class="led-card"><div class="state-name">${name}</div>
+        <div class="led-ring">${dots}</div><div class="led-mode">${modeName}</div></div>`;
+    } else {
+      html += `<div class="led-card"><div class="state-name">${name}</div>
+        <div class="led-single" id="led-${si}-0"></div><div class="led-mode">${modeName}</div></div>`;
+    }
+  });
+  grid.innerHTML = html;
+  if (ledAnimId) cancelAnimationFrame(ledAnimId);
+  ledAnimFrames = LED_STATES.map(() => 0);
+  animateLeds(isRing);
+}
+
+function animateLeds(isRing) {
+  const now = performance.now();
+  LED_STATES.forEach((st, si) => {
+    const mode = isRing ? st.mode : (st.singleMode.toLowerCase().replace(' ','_'));
+    const [cr,cg,cb] = isRing ? st.color : st.singleColor;
+    const n = isRing ? LED_COUNT : 1;
+    const f = ledAnimFrames[si]++;
+    for (let i = 0; i < n; i++) {
+      const el = $(`led-${si}-${i}`);
+      if (!el) continue;
+      let r=cr,g=cg,b=cb;
+      const scale = 4;
+      if (mode === 'solid') {
+        r*=scale; g*=scale; b*=scale;
+      } else if (mode === 'breathe') {
+        const t = (Math.sin(now/600 + si) + 1) / 2;
+        const bright = t * t;
+        r=Math.round(cr*scale*bright); g=Math.round(cg*scale*bright); b=Math.round(cb*scale*bright);
+      } else if (mode === 'blink') {
+        const on = Math.sin(now/500 + si) > 0;
+        r=on?cr*scale:0; g=on?cg*scale:0; b=on?cb*scale:0;
+      } else if (mode === 'rainbow_spin') {
+        const hue = ((now/15 + i * 360/n) % 360);
+        [r,g,b] = hsvToRgb(hue, 1, 0.35);
+      } else if (mode === 'chase') {
+        const head = Math.floor(now/120) % n;
+        const dist = (head - i + n) % n;
+        const fade = dist===0?1:dist===1?0.4:dist===2?0.12:0;
+        r=Math.round(cr*scale*fade); g=Math.round(cg*scale*fade); b=Math.round(cb*scale*fade);
+      } else if (mode === 'pulse_wave') {
+        const pos = i / n;
+        const wave = (1 + Math.sin(pos * Math.PI * 2 - now/250)) / 2;
+        const w = wave * wave;
+        r=Math.round(cr*scale*w); g=Math.round(cg*scale*w); b=Math.round(cb*scale*w);
+      } else if (mode === 'sparkle') {
+        const spark = Math.random() < 0.15;
+        if (spark) { r=cr*scale; g=cg*scale; b=cb*scale; }
+        else { r=Math.round(cr*scale*0.12); g=Math.round(cg*scale*0.12); b=Math.round(cb*scale*0.12); }
+      }
+      r=Math.min(255,r); g=Math.min(255,g); b=Math.min(255,b);
+      el.style.background = `rgb(${r},${g},${b})`;
+      el.style.boxShadow = `0 0 ${Math.max(r,g,b)>30?12:4}px ${Math.max(r,g,b)>30?5:2}px rgb(${r},${g},${b})`;
+    }
+  });
+  ledAnimId = requestAnimationFrame(() => animateLeds(isRing));
+}
+
+// ── Notes / Chat History Functions ──────────────────────────────────────
+let currentNotesDate = null;
+
+async function loadNotesList() {
+  try {
+    const resp = await fetch('/api/notes');
+    if (!resp.ok) throw new Error('Failed to load notes');
+    const dates = await resp.json();
+    
+    // Update stats
+    $('notes-total-days').textContent = dates.length;
+    
+    // Load storage stats
+    const statsResp = await fetch('/api/notes/stats');
+    if (statsResp.ok) {
+      const stats = await statsResp.json();
+      $('notes-storage-kb').textContent = (stats.storage_used_kb || 0).toFixed(1);
+    }
+    
+    // Render date list
+    const listEl = $('notes-date-list');
+    if (dates.length === 0) {
+      listEl.innerHTML = `<p style="color:var(--dim);font-size:13px;text-align:center;padding:40px" data-en="No chat history yet. Start chatting to see your conversations here!" data-cn="还没有聊天记录。开始聊天后，你的对话将显示在这里！">No chat history yet. Start chatting to see your conversations here!</p>`;
+      return;
+    }
+    
+    let html = '';
+    dates.sort((a, b) => b.date.localeCompare(a.date)); // Newest first
+    
+    dates.forEach(d => {
+      const dateObj = new Date(d.date + 'T00:00:00');
+      const dateStr = dateObj.toLocaleDateString(lang === 'cn' ? 'zh-CN' : 'en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        weekday: 'short'
+      });
+      
+      html += `
+        <div class="notes-date-item" onclick="loadNotesDetail('${d.date}')">
+          <div class="notes-date-info">
+            <div class="notes-date-name">${dateStr}</div>
+            <div class="notes-date-meta">
+              ${d.entry_count} ${lang === 'cn' ? '条消息' : 'messages'} • ${(d.file_size / 1024).toFixed(1)} KB
+            </div>
+          </div>
+          <div class="notes-date-actions">
+            <button class="btn btn-secondary" onclick="event.stopPropagation(); downloadNotesDate('${d.date}')" title="Download JSON">
+              📥
+            </button>
+            <button class="btn btn-danger" onclick="event.stopPropagation(); deleteNotesDate('${d.date}')" title="Delete">
+              🗑️
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    
+    listEl.innerHTML = html;
+  } catch (err) {
+    console.error('Error loading notes:', err);
+    $('notes-date-list').innerHTML = `<p style="color:var(--red);font-size:13px;text-align:center;padding:40px">Failed to load chat history</p>`;
+  }
+}
+
+async function loadNotesDetail(date) {
+  try {
+    currentNotesDate = date;
+    const resp = await fetch(`/api/notes/${date}`);
+    if (!resp.ok) throw new Error('Failed to load notes');
+    const messages = await resp.json();
+    
+    // Show detail view
+    $('notes-detail').style.display = 'block';
+    $('notes-date-list').parentElement.style.display = 'none';
+    
+    // Set date header
+    const dateObj = new Date(date + 'T00:00:00');
+    const dateStr = dateObj.toLocaleDateString(lang === 'cn' ? 'zh-CN' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long'
+    });
+    $('notes-detail-date').textContent = dateStr;
+    
+    // Render messages
+    const msgContainer = $('notes-chat-messages');
+    if (messages.length === 0) {
+      msgContainer.innerHTML = '<p style="color:var(--dim);text-align:center;padding:40px">No messages</p>';
+      return;
+    }
+    
+    let html = '';
+    messages.forEach(msg => {
+      const time = new Date(msg.timestamp).toLocaleTimeString(lang === 'cn' ? 'zh-CN' : 'en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+      
+      const roleText = msg.role === 'user' ? (lang === 'cn' ? '用户' : 'You') : (lang === 'cn' ? 'AI 助手' : 'AI Assistant');
+      const thinkingTime = msg.thinking_time_ms ? `${(msg.thinking_time_ms / 1000).toFixed(1)}s` : '';
+      
+      html += `
+        <div class="chat-message ${msg.role}">
+          <div class="msg-header">
+            <span class="msg-role">${roleText}</span>
+            <span class="msg-time">${time}${thinkingTime ? ' • ' + thinkingTime : ''}</span>
+          </div>
+          <div class="msg-content">${escapeHtml(msg.content)}</div>
+          ${msg.thinking_time_ms ? `<div class="msg-thinking">💭 ${lang === 'cn' ? '思考时间' : 'Thinking time'}: ${(msg.thinking_time_ms / 1000).toFixed(1)}s</div>` : ''}
+        </div>
+      `;
+    });
+    
+    msgContainer.innerHTML = html;
+  } catch (err) {
+    console.error('Error loading notes detail:', err);
+    showToast('Failed to load chat details', 'err');
+  }
+}
+
+function closeNotesDetail() {
+  $('notes-detail').style.display = 'none';
+  $('notes-date-list').parentElement.style.display = 'block';
+  currentNotesDate = null;
+}
+
+async function downloadNotesDate(date) {
+  try {
+    const resp = await fetch(`/api/notes/${date}`);
+    if (!resp.ok) throw new Error('Failed to load notes');
+    const messages = await resp.json();
+    
+    // Create JSON blob and trigger download
+    const jsonStr = JSON.stringify(messages, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `chat_${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast(lang === 'cn' ? '聊天记录已下载' : 'Chat history downloaded', 'ok');
+  } catch (err) {
+    console.error('Error downloading notes:', err);
+    showToast(lang === 'cn' ? '下载失败' : 'Download failed', 'err');
+  }
+}
+
+async function deleteNotesDate(date) {
+  if (!confirm(lang === 'cn' ? `确定要删除 ${date} 的聊天记录吗？` : `Are you sure you want to delete chat history for ${date}?`)) {
+    return;
+  }
+  
+  try {
+    const resp = await fetch(`/api/notes/${date}`, { method: 'DELETE' });
+    if (!resp.ok) throw new Error('Delete failed');
+    
+    showToast(lang === 'cn' ? '聊天记录已删除' : 'Chat history deleted', 'ok');
+    
+    // Reload list
+    if (currentNotesDate === date) {
+      closeNotesDetail();
+    }
+    loadNotesList();
+  } catch (err) {
+    console.error('Error deleting notes:', err);
+    showToast(lang === 'cn' ? '删除失败' : 'Delete failed', 'err');
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Init
+loadStatus();
+loadSettings();
+setInterval(loadStatus, 5000);
+</script>
+</body>
+</html>

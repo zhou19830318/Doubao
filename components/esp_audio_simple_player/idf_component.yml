@@ -1,0 +1,11 @@
+dependencies:
+  gmf_audio: {}
+  gmf_io: {}
+description: Espressif audio simple player based on ESP-GMF
+documentation: https://github.com/espressif/esp-gmf/blob/main/packages/esp_audio_simple_player/README.md
+issues: https://github.com/espressif/esp-gmf/issues
+tags:
+- gmf
+- audio_player
+url: https://github.com/espressif/esp-gmf/tree/main/packages/esp_audio_simple_player
+version: 0.9.4~2

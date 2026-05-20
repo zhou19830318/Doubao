@@ -1,0 +1,22 @@
+menu "Board Configuration"
+
+    config BOARD_LCD_BRIGHTNESS_DEFAULT
+        int "Default LCD brightness (0-100)"
+        range 0 100
+        default 80
+        help
+            Default LCD backlight brightness percentage
+
+    config BOARD_AUDIO_SAMPLE_RATE
+        int "Audio sample rate"
+        default 16000
+        help
+            Default audio sample rate in Hz
+
+    config BOARD_AUDIO_MIC_GAIN
+        int "Microphone gain (dB x10)"
+        default 270
+        help
+            Microphone gain in dB x 10 (e.g. 270 = 27.0 dB)
+
+endmenu

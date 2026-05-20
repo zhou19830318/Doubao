@@ -1,0 +1,94 @@
+menu "AIClaw Application Configuration"
+
+    choice HEYCLAWY_BOARD_SELECT
+        prompt "Select target board"
+        default HEYCLAWY_BOARD_SENSECAP_WATCHER
+        help
+            Select the hardware board target for AIClaw.
+
+        config HEYCLAWY_BOARD_SENSECAP_WATCHER
+            bool "SenseCAP Watcher"
+            help
+                Seeed Studio SenseCAP Watcher (ESP32-S3, SPD2010 display, ES8311+ES7243 audio, 8MB flash)
+
+        config HEYCLAWY_BOARD_WAVESHARE_AUDIO
+            bool "Waveshare ESP32-S3 Audio Board"
+            help
+                Waveshare ESP32-S3-AUDIO-Board (no display, 7x RGB ring, ES8311+ES7210 dual mic, 16MB flash)
+
+        config HEYCLAWY_BOARD_M5STICKCPLUS2
+            bool "M5StickC Plus2"
+            help
+                M5Stack M5StickCPlus2 (ESP32-PICO-V3-02, 135x240 ST7789V2, buzzer, PDM mic, 3 buttons, 8MB flash)
+
+        config HEYCLAWY_BOARD_GENERIC_ESP32S3
+            bool "Generic ESP32-S3 (future)"
+            help
+                Generic ESP32-S3 board with basic peripherals (mic + speaker). Not yet implemented.
+    endchoice
+
+    config HEYCLAWY_BOARD
+        string
+        default "sensecap_watcher" if HEYCLAWY_BOARD_SENSECAP_WATCHER
+        default "waveshare_audio" if HEYCLAWY_BOARD_WAVESHARE_AUDIO
+        default "m5stickcplus2" if HEYCLAWY_BOARD_M5STICKCPLUS2
+        default "generic_esp32s3" if HEYCLAWY_BOARD_GENERIC_ESP32S3
+
+    choice HEYCLAWY_WAKE_WORD_ENGINE
+        prompt "Wake word detection engine"
+        default HEYCLAWY_WAKE_WORD_WAKENET
+        help
+            Select which engine to use for wake word detection.
+            WakeNet is recommended — it is designed for short wake phrases.
+            MultiNet is for longer speech commands (not recommended for wake words).
+
+        config HEYCLAWY_WAKE_WORD_WAKENET
+            bool "WakeNet (short wake phrase)"
+            help
+                Built-in WakeNet model for wake word detection.
+                Select the specific model in: Component config → ESP Speech Recognition → WakeNet.
+                Available models: Hi ESP, Hey Jarvis, Hey Computer, Alexa, and more.
+                To request a custom model (e.g. "Hi Clawy"), open a GitHub issue at
+                https://github.com/espressif/esp-sr/issues with your desired phrase.
+
+        config HEYCLAWY_WAKE_WORD_MULTINET
+            bool "MultiNet (custom speech command)"
+            help
+                Uses MultiNet speech command recognition.
+                Works best with multi-word commands (3+ words).
+                NOT recommended for short wake phrases like "Hi Clawy".
+    endchoice
+
+    config HEYCLAWY_WAKE_PHRASE
+        string "Custom wake word phrase"
+        default "Hi Clawy"
+        depends on HEYCLAWY_WAKE_WORD_MULTINET
+        help
+            The wake word phrase for MultiNet detection.
+            Must be 2-63 characters. English phrases work with mn6_en/mn7_en models.
+            Note: Short phrases (1-2 words) may not work reliably.
+
+    config HEYCLAWY_WAKE_THRESHOLD
+        int "Wake word detection threshold (0-100)"
+        default 45
+        range 0 100
+        depends on HEYCLAWY_WAKE_WORD_MULTINET
+        help
+            Confidence threshold for wake word detection.
+            Lower = more sensitive (more false positives).
+            Higher = less sensitive (may miss real wake words).
+            Recommended: 40-60.
+
+    config HEYCLAWY_OPENCLAW_HOST
+        string "OpenClaw Gateway host"
+        default "192.168.1.100"
+        help
+            IP address or hostname of the OpenClaw gateway
+
+    config HEYCLAWY_OPENCLAW_PORT
+        int "OpenClaw Gateway port"
+        default 18789
+        help
+            WebSocket port of the OpenClaw gateway
+
+endmenu

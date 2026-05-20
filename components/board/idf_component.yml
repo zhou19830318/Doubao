@@ -1,0 +1,29 @@
+dependencies:
+  idf:
+    version: ">=5.5.0"
+  lvgl/lvgl:
+    version: "~8.3.0"
+  espressif/esp_lvgl_port:
+    version: "^1.4.0"
+  espressif/led_strip:
+    version: "^2.5.0"
+  espressif/esp_lcd_spd2010:
+    version: "^2.0.0"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/esp_lcd_touch_spd2010:
+    version: "^2.0.0"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/esp_codec_dev:
+    version: "^1.5.0"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/esp_io_expander:
+    version: "^1.2.0"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/esp_io_expander_tca95xx_16bit:
+    version: "^2.0.0"
+    rules:
+      - if: "target in [esp32s3]"
