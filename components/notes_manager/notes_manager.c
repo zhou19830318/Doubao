@@ -7,6 +7,7 @@
 
 #include "notes_manager.h"
 #include "esp_log.h"
+#include "esp_heap_caps.h"
 #include "esp_vfs_fat.h"
 #include "cJSON.h"
 #include <stdio.h>
@@ -585,6 +586,23 @@ esp_err_t notes_manager_load_for_ai_summary(const char *date, int max_days, char
         free(files[i]);
     }
     free(files);
-    
+
     return ESP_OK;
+}
+
+char *notes_manager_read_date(const char *date)
+{
+    if (!date) return NULL;
+
+    /* Allocate a buffer for formatted chat history text */
+    char *buf = heap_caps_malloc(16384, MALLOC_CAP_SPIRAM);
+    if (!buf) return NULL;
+
+    esp_err_t ret = notes_manager_load_for_ai_summary(date, 1, buf, 16384);
+    if (ret != ESP_OK || buf[0] == '\0') {
+        free(buf);
+        return NULL;
+    }
+
+    return buf;
 }

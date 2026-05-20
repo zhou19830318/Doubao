@@ -128,6 +128,14 @@ void notes_manager_get_today_date(char *buffer, size_t buffer_size);
  */
 esp_err_t notes_manager_load_for_ai_summary(const char *date, int max_days, char *out_text, size_t text_size);
 
+/**
+ * Read chat log for a specific date (YYYY-MM-DD)
+ * Returns formatted text buffer (caller must free() the result)
+ * @param date Date string in YYYY-MM-DD format
+ * @return Malloc'd string with formatted chat log, or NULL if not found/error
+ */
+char *notes_manager_read_date(const char *date);
+
 #ifdef __cplusplus
 }
 #endif

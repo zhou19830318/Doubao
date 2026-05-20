@@ -539,6 +539,30 @@ int parse_device_commands(char *buf)
             /* Defer to main task to avoid stack overflow in websocket_task (4KB stack) */
             app_queue_mp3_cmd(val);
             count++;
+        } else if (strcmp(key, "chatlog") == 0 && strncmp(val, "query:", 6) == 0) {
+            /* Handle chatlog query: read SD card chat history and send to OpenClaw */
+            const char *date = val + 6;
+            ESP_LOGI(TAG, "Chatlog query: %s", date);
+            char *log_text = notes_manager_read_date(date);
+            if (openclaw_get_state() == OPENCLAW_STATE_CONNECTED) {
+                if (log_text && strlen(log_text) > 0) {
+                    char *prompt = heap_caps_malloc(4096, MALLOC_CAP_SPIRAM);
+                    if (prompt) {
+                        snprintf(prompt, 4096, "以下是从SD卡读取的 %s 聊天记录，请总结要点：\n\n%s", date, log_text);
+                        openclaw_chat_send(prompt, app_on_chat_response);
+                        free(prompt);
+                    }
+                    free(log_text);
+                } else {
+                    char msg[128];
+                    snprintf(msg, sizeof(msg), "没有找到 %s 的聊天记录", date);
+                    openclaw_chat_send(msg, app_on_chat_response);
+                }
+            } else {
+                if (log_text) free(log_text);
+                ESP_LOGW(TAG, "OpenClaw not connected, cannot process chatlog query");
+            }
+            count++;
         } else {
             ESP_LOGW(TAG, "Unknown device cmd: %s", key);
         }
