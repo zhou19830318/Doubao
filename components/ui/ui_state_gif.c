@@ -18,8 +18,8 @@
 
 static const char *TAG = "ui_state_gif";
 
-/* GIF file paths on SD card */
-#define GIF_BASE_PATH "S:status_gif/"
+/* GIF file paths on SD card (LVGL FS: S: -> /sdcard/) */
+#define GIF_BASE_PATH "S:gifs/"
 
 /* GIF filename mapping */
 static const char *gif_filenames[GIF_STATE_COUNT] = {
@@ -29,11 +29,11 @@ static const char *gif_filenames[GIF_STATE_COUNT] = {
     [GIF_STATE_IDLE]       = GIF_BASE_PATH "idle.gif",
     [GIF_STATE_LISTENING]  = GIF_BASE_PATH "listening.gif",
     [GIF_STATE_SENDING]    = GIF_BASE_PATH "sending.gif",
-    [GIF_STATE_THINKING]   = GIF_BASE_PATH "Thinking.gif",  /* Note: Capital T as per user's file */
+    [GIF_STATE_THINKING]   = GIF_BASE_PATH "thinking.gif",
     [GIF_STATE_STREAMING]  = GIF_BASE_PATH "streaming.gif",
     [GIF_STATE_RESPONSE]   = GIF_BASE_PATH "response.gif",
     [GIF_STATE_SPEAKING]   = GIF_BASE_PATH "speaking.gif",
-    [GIF_STATE_ERROR]      = GIF_BASE_PATH "Error.gif",
+    [GIF_STATE_ERROR]      = GIF_BASE_PATH "error.gif",
     [GIF_STATE_NOTIFYING]  = GIF_BASE_PATH "notifying.gif",
 };
 
@@ -103,7 +103,15 @@ static gif_state_type_t ui_state_to_gif_state(ui_state_t ui_state)
 /* Load GIF file from SD card into memory buffer */
 static esp_err_t load_gif_from_sd(const char *filepath, uint8_t **out_data, size_t *out_size)
 {
-    FILE *f = fopen(filepath + 2, "rb");  /* Skip "S:" prefix for stdio */
+    /* Convert LVGL path (S:gifs/boot.gif) to POSIX path (/sdcard/gifs/boot.gif) */
+    char posix_path[128];
+    const char *path_after_drive = filepath;
+    if (filepath[0] && filepath[1] == ':') {
+        path_after_drive = filepath + 2;  /* Skip "S:" */
+    }
+    snprintf(posix_path, sizeof(posix_path), "/sdcard/%s", path_after_drive);
+
+    FILE *f = fopen(posix_path, "rb");
     if (!f) {
         ESP_LOGW(TAG, "Failed to open GIF file: %s", filepath);
         return ESP_ERR_NOT_FOUND;

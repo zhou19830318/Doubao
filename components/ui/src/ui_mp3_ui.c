@@ -176,7 +176,7 @@ esp_err_t ui_mp3_ui_init(lv_obj_t *parent)
     lv_obj_center(s_gif);
     
     /* Set speaking GIF for MP3 playback */
-    lv_gif_set_src(s_gif, "S:/sdcard/status_gif/speaking.gif");
+    lv_gif_set_src(s_gif, "S:gifs/speaking.gif");
 #else
     ESP_LOGW(TAG, "LV_USE_GIF is disabled, GIF will not be displayed");
 #endif
