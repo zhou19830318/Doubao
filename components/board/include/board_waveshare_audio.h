@@ -17,13 +17,14 @@
  *   IO Expand:  TCA9555 16-bit I2C GPIO expander
  *   SD Card:    MicroSD via SPI (SDMMC 1-bit)
  *   RTC:        PCF85063 via I2C
- *   No display, no touch, no camera, no rotary encoder.
+ *   Display:     1.47" JD9853 IPS LCD (172x320) via SPI
+ *   Touch:      AXS5106L capacitive touch via I2C
+ *   Camera:     Reserved (optional, via IO expander)
  */
 
 #pragma once
 
 #include "driver/gpio.h"
-#include "hal/adc_types.h"
 
 // ============================================================================
 // Board identification
