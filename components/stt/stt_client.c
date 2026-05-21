@@ -91,9 +91,6 @@ static cJSON *create_run_task_json(void)
     cJSON_AddBoolToObject(parameters, "semantic_punctuation_enabled", true);
     cJSON_AddNumberToObject(parameters, "max_sentence_silence", (double)s_stt.cfg.silence_ms);
     cJSON_AddBoolToObject(parameters, "heartbeat", false);
-    
-    /* CRITICAL: Specify language for Chinese recognition */
-    cJSON_AddStringToObject(parameters, "language_hints", "zh");  /* zh=Chinese, en=English */
 
     cJSON_AddItemToObject(payload, "parameters", parameters);
     cJSON_AddItemToObject(payload, "input", input);
