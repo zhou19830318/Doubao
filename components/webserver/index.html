@@ -115,6 +115,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="tab" data-panel="services" data-en="Services" data-cn="语音服务">Services</div>
   <div class="tab" data-panel="leds" data-en="LED Patterns" data-cn="灯效">LED Patterns</div>
   <div class="tab" data-panel="notes" data-en="Chat History" data-cn="聊天记录">Chat History</div>
+  <div class="tab" data-panel="files" data-en="Files" data-cn="文件管理">Files</div>
   <div class="tab" data-panel="errors" data-en="Errors" data-cn="错误日志">Errors</div>
 </div>
 
@@ -413,6 +414,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
 </div>
 
+<!-- FILES -->
+<div class="panel" id="files">
+  <div class="card">
+    <h3>🎵 <span data-en="MP3 Files" data-cn="MP3 文件">MP3 Files</span></h3>
+    <div class="form-group">
+      <label data-en="Upload MP3" data-cn="上传 MP3">Upload MP3</label>
+      <div style="display:flex;gap:8px">
+        <input type="file" id="mp3-file-input" accept=".mp3,.wav" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="uploadMp3()" data-en="Upload" data-cn="上传">Upload</button>
+      </div>
+    </div>
+    <div id="mp3-file-list" style="margin-top:8px">
+      <p style="color:var(--dim);font-size:13px" data-en="Loading..." data-cn="加载中...">Loading...</p>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🖼️ <span data-en="GIF Files" data-cn="GIF 文件">GIF Files</span></h3>
+    <div class="form-group">
+      <label data-en="Upload GIF" data-cn="上传 GIF">Upload GIF</label>
+      <div style="display:flex;gap:8px">
+        <input type="file" id="gif-file-input" accept=".gif" style="flex:1;padding:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px">
+        <button class="btn btn-primary" onclick="uploadGif()" data-en="Upload" data-cn="上传">Upload</button>
+      </div>
+    </div>
+    <div id="gif-file-list" style="margin-top:8px">
+      <p style="color:var(--dim);font-size:13px" data-en="Loading..." data-cn="加载中...">Loading...</p>
+    </div>
+  </div>
+</div>
 <!-- ERRORS -->
 <div class="panel" id="errors">
   <div class="card">
@@ -452,6 +482,7 @@ function updateLang() {
   if ($('tasks').classList.contains('active')) loadTasks();
   if ($('errors').classList.contains('active')) loadErrors();
   if ($('notes').classList.contains('active')) loadNotesList();
+  if ($('files').classList.contains('active')) loadFilesList();
 }
 
 // Add language switcher to header
@@ -477,6 +508,7 @@ document.querySelectorAll('.tab').forEach(t => {
     if (t.dataset.panel === 'errors') loadErrors();
     if (t.dataset.panel === 'tasks') loadTasks();
     if (t.dataset.panel === 'notes') loadNotesList();
+    if (t.dataset.panel === 'files') loadFilesList();
     if (t.dataset.panel === 'leds') {
       fetch('/api/status').then(r=>r.json()).then(d=>{
         renderLedPanel(d.device.rgb_led_count > 1);
@@ -1173,6 +1205,136 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+
+// ── Files Management Functions ───────────────────────────────────────────
+async function loadFilesList() {
+  try {
+    const [mp3Resp, gifResp] = await Promise.all([
+      fetch("/api/mp3/list"),
+      fetch("/api/gif/list")
+    ]);
+    const mp3Files = mp3Resp.ok ? await mp3Resp.json() : [];
+    const gifFiles = gifResp.ok ? await gifResp.json() : [];
+
+    // Render MP3 list
+    const mp3List = $("mp3-file-list");
+    if (mp3Files.length === 0) {
+      mp3List.innerHTML = '<p style="color:var(--dim);font-size:13px" data-en="No MP3 files uploaded" data-cn="暂无 MP3 文件">No MP3 files uploaded</p>';
+    } else {
+      let html = '';
+      mp3Files.forEach(f => {
+        const sizeKb = (f.size / 1024).toFixed(1);
+        const name = escapeHtml(f.name);
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:13px">🎵 ' + name + ' <span style="color:var(--dim);font-size:11px">(' + sizeKb + ' KB)</span></span>'
+          + '<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteMp3(\'' + name + '\')">'
+          + (lang === 'cn' ? "删除" : "Delete") + '</button></div>';
+      });
+      mp3List.innerHTML = html;
+    }
+
+    // Render GIF list
+    const gifList = $("gif-file-list");
+    if (gifFiles.length === 0) {
+      gifList.innerHTML = '<p style="color:var(--dim);font-size:13px" data-en="No GIF files uploaded" data-cn="暂无 GIF 文件">No GIF files uploaded</p>';
+    } else {
+      let html = '';
+      gifFiles.forEach(f => {
+        const sizeKb = (f.size / 1024).toFixed(1);
+        const name = escapeHtml(f.name);
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)">'
+          + '<span style="font-size:13px">🖼️ ' + name + ' <span style="color:var(--dim);font-size:11px">(' + sizeKb + ' KB)</span></span>'
+          + '<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteGif(\'' + name + '\')">'
+          + (lang === 'cn' ? "删除" : "Delete") + '</button></div>';
+      });
+      gifList.innerHTML = html;
+    }
+  } catch(e) { console.error('Error loading files:', e); }
+}
+
+async function uploadMp3() {
+  const input = $("mp3-file-input");
+  if (!input.files || input.files.length === 0) {
+    toast(lang === 'cn' ? "请选择文件" : "Please select a file", false);
+    return;
+  }
+  const file = input.files[0];
+  if (file.size > 10 * 1024 * 1024) {
+    toast(lang === 'cn' ? "文件超过 10MB 限制" : "File exceeds 10MB limit", false);
+    return;
+  }
+  try {
+    const resp = await fetch("/api/mp3/upload?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
+    const result = await resp.json();
+    if (result.status === "ok") {
+      toast(lang === 'cn' ? "上传成功" : "Upload successful", true);
+      input.value = "";
+      loadFilesList();
+    } else {
+      toast(lang === 'cn' ? "上传失败" : "Upload failed", false);
+    }
+  } catch(e) { toast("Error: " + e.message, false); }
+}
+
+async function uploadGif() {
+  const input = $("gif-file-input");
+  if (!input.files || input.files.length === 0) {
+    toast(lang === 'cn' ? "请选择文件" : "Please select a file", false);
+    return;
+  }
+  const file = input.files[0];
+  if (file.size > 10 * 1024 * 1024) {
+    toast(lang === 'cn' ? "文件超过 10MB 限制" : "File exceeds 10MB limit", false);
+    return;
+  }
+  try {
+    const resp = await fetch("/api/gif/upload?name=" + encodeURIComponent(file.name), { method: "POST", body: file });
+    const result = await resp.json();
+    if (result.status === "ok") {
+      toast(lang === 'cn' ? "上传成功" : "Upload successful", true);
+      input.value = "";
+      loadFilesList();
+    } else {
+      toast(lang === 'cn' ? "上传失败" : "Upload failed", false);
+    }
+  } catch(e) { toast("Error: " + e.message, false); }
+}
+
+async function deleteMp3(filename) {
+  if (!confirm(lang === 'cn' ? "确定要删除 " + filename + " 吗？" : "Delete " + filename + "?")) return;
+  try {
+    const resp = await fetch("/api/mp3/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: filename })
+    });
+    const result = await resp.json();
+    if (result.status === "ok") {
+      toast(lang === 'cn' ? "删除成功" : "Deleted", true);
+      loadFilesList();
+    } else {
+      toast(lang === 'cn' ? "删除失败" : "Delete failed", false);
+    }
+  } catch(e) { toast("Error: " + e.message, false); }
+}
+
+async function deleteGif(filename) {
+  if (!confirm(lang === 'cn' ? "确定要删除 " + filename + " 吗？" : "Delete " + filename + "?")) return;
+  try {
+    const resp = await fetch("/api/gif/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file: filename })
+    });
+    const result = await resp.json();
+    if (result.status === "ok") {
+      toast(lang === 'cn' ? "删除成功" : "Deleted", true);
+      loadFilesList();
+    } else {
+      toast(lang === 'cn' ? "删除失败" : "Delete failed", false);
+    }
+  } catch(e) { toast("Error: " + e.message, false); }
+}
 // Init
 loadStatus();
 loadSettings();

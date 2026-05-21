@@ -143,7 +143,7 @@ esp_err_t notes_manager_save_message(const char *role, const char *content, int6
     size_t nread = fread(buf, 1, 2, f);
     
     /* Check if file ends with ] (properly closed JSON) or not */
-    if (nread == 2 && buf[1] == ']') {
+    if (nread == 2 && buf[0] == ']') {
         /* Properly closed: seek back to overwrite the trailing \n] */
         fseek(f, -2, SEEK_END);
         fprintf(f, ",\n  %s\n]\n", json_str);

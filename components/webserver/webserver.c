@@ -26,8 +26,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <errno.h>
+#include <dirent.h>
+#include <strings.h>
 
 static const char *TAG = "webserver";
 static httpd_handle_t s_server = NULL;
@@ -530,12 +533,16 @@ static esp_err_t notes_date_handler(httpd_req_t *req)
     /* Extract date from URI: /api/notes/YYYY-MM-DD */
     const char *uri = req->uri;
     const char *date = uri + strlen("/api/notes/");
-    
+
+    ESP_LOGI(TAG, "notes_date_handler: uri=%s, date=%s", req->uri, date);
+
     if (strlen(date) != 10) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid date format");
         return ESP_FAIL;
     }
-    
+
+    ESP_LOGI(TAG, "Loading notes for date: %s", date);
+
     notes_entry_t **entries = NULL;
     int count = 0;
     
@@ -552,6 +559,7 @@ static esp_err_t notes_date_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
     
+    ESP_LOGI(TAG, "Loaded %d entries for date %s", count, date);
     /* Build JSON response */
     cJSON *root = cJSON_CreateArray();
     for (int i = 0; i < count; i++) {
@@ -711,6 +719,18 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
         received += ret;
     }
 
+    /* Extract filename from query parameter ?name= , fallback to uploaded.mp3 */
+    const char *qmark = strchr(req->uri, '?');
+    char filename[64] = "uploaded.mp3";
+    if (qmark) {
+        char name_buf[64];
+        if (httpd_query_key_value(qmark + 1, "name", name_buf, sizeof(name_buf)) == ESP_OK
+            && is_safe_filename(name_buf)) {
+            strncpy(filename, name_buf, sizeof(filename) - 1);
+            filename[sizeof(filename) - 1] = '\0';
+        }
+    }
+
     /* Ensure /sdcard/music/ directory exists */
     struct stat st;
     if (stat("/sdcard/music", &st) != 0) {
@@ -718,7 +738,8 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
     }
 
     /* Write file */
-    const char *filepath = "/sdcard/music/uploaded.mp3";
+    char filepath[320];
+    snprintf(filepath, sizeof(filepath), "/sdcard/music/%s", filename);
     FILE *f = fopen(filepath, "wb");
     if (!f) {
         free(buf);
@@ -741,7 +762,7 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
 
     cJSON *j = cJSON_CreateObject();
     cJSON_AddStringToObject(j, "status", "ok");
-    cJSON_AddStringToObject(j, "file", "uploaded.mp3");
+    cJSON_AddStringToObject(j, "file", filename);
     cJSON_AddNumberToObject(j, "size", total_len);
 
     char *str = cJSON_PrintUnformatted(j);
@@ -856,6 +877,18 @@ static esp_err_t gif_upload_handler(httpd_req_t *req)
         received += ret;
     }
 
+    /* Extract filename from query parameter ?name= , fallback to uploaded.gif */
+    const char *qmark = strchr(req->uri, '?');
+    char filename[64] = "uploaded.gif";
+    if (qmark) {
+        char name_buf[64];
+        if (httpd_query_key_value(qmark + 1, "name", name_buf, sizeof(name_buf)) == ESP_OK
+            && is_safe_filename(name_buf)) {
+            strncpy(filename, name_buf, sizeof(filename) - 1);
+            filename[sizeof(filename) - 1] = '\0';
+        }
+    }
+
     /* Ensure /sdcard/gifs/ directory exists */
     struct stat st;
     if (stat("/sdcard/gifs", &st) != 0) {
@@ -863,7 +896,8 @@ static esp_err_t gif_upload_handler(httpd_req_t *req)
     }
 
     /* Write file */
-    const char *filepath = "/sdcard/gifs/uploaded.gif";
+    char filepath[320];
+    snprintf(filepath, sizeof(filepath), "/sdcard/gifs/%s", filename);
     FILE *f = fopen(filepath, "wb");
     if (!f) {
         free(buf);
@@ -886,7 +920,7 @@ static esp_err_t gif_upload_handler(httpd_req_t *req)
 
     cJSON *j = cJSON_CreateObject();
     cJSON_AddStringToObject(j, "status", "ok");
-    cJSON_AddStringToObject(j, "file", "uploaded.gif");
+    cJSON_AddStringToObject(j, "file", filename);
     cJSON_AddNumberToObject(j, "size", total_len);
 
     char *str = cJSON_PrintUnformatted(j);
@@ -975,6 +1009,79 @@ static esp_err_t gif_delete_handler(httpd_req_t *req)
     return eret;
 }
 
+/* ── GET /api/mp3/list — list MP3 files in /sdcard/music/ ───────────────── */
+static esp_err_t mp3_list_handler(httpd_req_t *req)
+{
+    cJSON *j = cJSON_CreateArray();
+    DIR *dir = opendir("/sdcard/music");
+    if (dir) {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_type == DT_REG || entry->d_type == DT_UNKNOWN) {
+                const char *name = entry->d_name;
+                size_t len = strlen(name);
+                if (len > 4 && (strcasecmp(name + len - 4, ".mp3") == 0 ||
+                                strcasecmp(name + len - 4, ".wav") == 0)) {
+                    struct stat st;
+                    char fullpath[320];
+                    snprintf(fullpath, sizeof(fullpath), "/sdcard/music/%s", name);
+                    cJSON *item = cJSON_CreateObject();
+                    cJSON_AddStringToObject(item, "name", name);
+                    if (stat(fullpath, &st) == 0) {
+                        cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                    }
+                    cJSON_AddItemToArray(j, item);
+                }
+            }
+        }
+        closedir(dir);
+    }
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
+/* ── GET /api/gif/list — list GIF files in /sdcard/gifs/ ───────────────── */
+static esp_err_t gif_list_handler(httpd_req_t *req)
+{
+    cJSON *j = cJSON_CreateArray();
+    DIR *dir = opendir("/sdcard/gifs");
+    if (dir) {
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (entry->d_type == DT_REG || entry->d_type == DT_UNKNOWN) {
+                const char *name = entry->d_name;
+                size_t len = strlen(name);
+                if (len > 4 && strcasecmp(name + len - 4, ".gif") == 0) {
+                    struct stat st;
+                    char fullpath[320];
+                    snprintf(fullpath, sizeof(fullpath), "/sdcard/gifs/%s", name);
+                    cJSON *item = cJSON_CreateObject();
+                    cJSON_AddStringToObject(item, "name", name);
+                    if (stat(fullpath, &st) == 0) {
+                        cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                    }
+                    cJSON_AddItemToArray(j, item);
+                }
+            }
+        }
+        closedir(dir);
+    }
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
 /* ── Server start/stop ───────────────────────────────────────────────── */
 
 static void mdns_init_helper(void)
@@ -1011,7 +1118,7 @@ esp_err_t webserver_start(void)
     mdns_init_helper();
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 25;
+    config.max_uri_handlers = 30;
     config.stack_size = 8192;
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
@@ -1040,6 +1147,8 @@ esp_err_t webserver_start(void)
         { .uri = "/api/notes/*",       .method = HTTP_GET,   .handler = notes_date_handler },
         { .uri = "/api/notes/*",       .method = HTTP_DELETE, .handler = notes_delete_handler },
         { .uri = "/api/chat/history",  .method = HTTP_GET,    .handler = chat_history_handler },
+        { .uri = "/api/mp3/list",      .method = HTTP_GET,    .handler = mp3_list_handler },
+        { .uri = "/api/gif/list",      .method = HTTP_GET,    .handler = gif_list_handler },
         { .uri = "/api/mp3/upload",    .method = HTTP_POST,   .handler = mp3_upload_handler },
         { .uri = "/api/mp3/delete",    .method = HTTP_POST,   .handler = mp3_delete_handler },
         { .uri = "/api/gif/upload",    .method = HTTP_POST,   .handler = gif_upload_handler },
