@@ -38,6 +38,8 @@ static struct {
     tts_config_t cfg;
     bool         playing;
     bool         stop_requested;
+    StaticTask_t *play_tcb;      /**< TCB for play task (alloc once, reused) */
+    StackType_t  *play_stack;    /**< Stack for play task (alloc once, reused) */
 } s_tts;
 
 /* ── Playback task notification bits ── */
@@ -56,8 +58,6 @@ typedef struct {
     uint32_t      src_rate;      /**< Source sample rate (from WAV header or default) */
     uint16_t      src_ch;        /**< Source channels (from WAV header or default) */
     TaskHandle_t  play_task;     /**< Playback task handle */
-    StaticTask_t *play_tcb;      /**< TCB for static task (freed after task ends) */
-    StackType_t  *play_stack;    /**< Stack for static task (freed after task ends) */
 } mimo_stream_t;
 
 /* Forward declarations */
@@ -343,8 +343,6 @@ static void run_mimo_session(const char *text)
         .src_rate      = 24000,
         .src_ch        = 1,
         .play_task     = NULL,
-        .play_tcb      = NULL,
-        .play_stack    = NULL,
     };
 
     if (!stream.pcm_buf) {
@@ -355,19 +353,22 @@ static void run_mimo_session(const char *text)
         return;
     }
 
-    /* Create playback task with PSRAM stack to avoid internal memory exhaustion.
-     * xTaskCreate() uses internal heap for the stack — after multiple TTS
-     * cycles, internal memory fragments and 8192-byte allocations fail. */
+    /* Lazy-allocate play task static resources once, shared across all sessions.
+     * Previously each TTS session allocated+then-freed TCB/stack, but if the
+     * idle task hadn't processed vTaskDelete yet, freeing the TCB caused a
+     * StoreProhibited crash when FreeRTOS later walked the terminated-tasks list. */
     #define MIMO_PLAY_STACK 8192
-    stream.play_tcb = heap_caps_calloc(1, sizeof(StaticTask_t),
-                                        MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    stream.play_stack = heap_caps_calloc(1, MIMO_PLAY_STACK,
-                                          MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    if (!stream.play_tcb || !stream.play_stack) {
+    if (!s_tts.play_tcb) {
+        s_tts.play_tcb = heap_caps_calloc(1, sizeof(StaticTask_t),
+                                           MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    }
+    if (!s_tts.play_stack) {
+        s_tts.play_stack = heap_caps_calloc(1, MIMO_PLAY_STACK,
+                                             MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    }
+    if (!s_tts.play_tcb || !s_tts.play_stack) {
         ESP_LOGE(TAG, "Play task static alloc failed (tcb=%p stack=%p)",
-                 (void *)stream.play_tcb, (void *)stream.play_stack);
-        free(stream.play_tcb);
-        free(stream.play_stack);
+                 (void *)s_tts.play_tcb, (void *)s_tts.play_stack);
         free(line_buf);
         free(stream.pcm_buf);
         esp_http_client_close(client);
@@ -376,11 +377,10 @@ static void run_mimo_session(const char *text)
     }
 
     stream.play_task = xTaskCreateStaticPinnedToCore(mimo_play_task, "mimo_play",
-                     MIMO_PLAY_STACK, &stream, 4, stream.play_stack, stream.play_tcb, 1);
+                     MIMO_PLAY_STACK, &stream, 4,
+                     s_tts.play_stack, s_tts.play_tcb, 1);
     if (!stream.play_task) {
         ESP_LOGE(TAG, "Play task create failed");
-        free(stream.play_tcb);
-        free(stream.play_stack);
         free(line_buf);
         free(stream.pcm_buf);
         esp_http_client_close(client);
@@ -553,9 +553,10 @@ mimo_wait_play:
     ESP_LOGI(TAG, "MiMo total played: %zu/%zu bytes", stream.pcm_read_pos, stream.pcm_write_pos);
     free(stream.pcm_buf);
 
-    /* Free static task resources (TCB + PSRAM stack) after task has exited */
-    if (stream.play_tcb) free(stream.play_tcb);
-    if (stream.play_stack) free(stream.play_stack);
+    /* TCB and stack are shared across sessions — do NOT free them here.
+     * FreeRTOS idle task still holds a reference to the TCB on the
+     * xTasksWaitingTermination list until it runs. Freeing now would
+     * cause a use-after-free crash on the next scheduler iteration. */
 
     esp_http_client_close(client);
     esp_http_client_cleanup(client);
