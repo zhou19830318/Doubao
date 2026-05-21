@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 player UI module - Progress bar, track name, control buttons

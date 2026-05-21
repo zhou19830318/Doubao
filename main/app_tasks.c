@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * Background tasks — knob, status polling, TTS playback
@@ -577,7 +577,7 @@ static void status_update_task(void *arg)
                 if (reconnect_ticks * 500 >= backoff_ms) {
                     reconnect_ticks = 0;
                     ESP_LOGW(TAG, "OpenClaw reconnect (backoff=%dms)", backoff_ms);
-                    /* AIClaw approach: directly connect without force disconnect */
+                    /* AIWearable approach: directly connect without force disconnect */
                     esp_err_t ret = openclaw_connect();
                     if (ret != ESP_OK) {
                         ESP_LOGE(TAG, "OpenClaw connect failed: %s", esp_err_to_name(ret));
@@ -598,7 +598,7 @@ static void status_update_task(void *arg)
                 if (reconnect_ticks >= 60) { // 30s
                     reconnect_ticks = 0;
                     ESP_LOGW(TAG, "Stuck connecting — forcing reconnect");
-                    /* AIClaw approach: no delay between disconnect and reconnect */
+                    /* AIWearable approach: no delay between disconnect and reconnect */
                     openclaw_disconnect();
                     openclaw_connect();
                 }
@@ -689,7 +689,8 @@ static void sleep_task(void *arg)
         /* Don't sleep during active operations */
         if (state == UI_STATE_LISTENING || state == UI_STATE_SENDING ||
             state == UI_STATE_THINKING || state == UI_STATE_STREAMING ||
-            state == UI_STATE_TTS_LOADING || state == UI_STATE_TTS_PLAYING) {
+            state == UI_STATE_TTS_LOADING || state == UI_STATE_TTS_PLAYING ||
+            state == UI_STATE_PLAYING_MP3) {
             s_last_activity_us = esp_timer_get_time();
             continue;
         }

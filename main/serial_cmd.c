@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * Serial CLI — ESP-IDF esp_console-based interactive command line.
@@ -10,11 +10,11 @@
  *
  * To use:
  *   idf.py monitor               # or picocom / minicom at 115200 baud
- *   AIClaw> help                 # at the prompt (logs scroll alongside)
- *   AIClaw> quiet                # suppress ESP_LOG* noise
- *   AIClaw> logs                 # re-enable ESP_LOG* output
- *   AIClaw> status               # show device state
- *   AIClaw> exit                 # (not needed, just press Ctrl+D or reboot)
+ *   AIWearable> help             # at the prompt (logs scroll alongside)
+ *   AIWearable> quiet            # suppress ESP_LOG* noise
+ *   AIWearable> logs             # re-enable ESP_LOG* output
+ *   AIWearable> status           # show device state
+ *   AIWearable> exit             # (not needed, just press Ctrl+D or reboot)
  */
 
 #include "serial_cmd.h"
@@ -86,7 +86,7 @@ static int cmd_help(int argc, char **argv)
        to show our custom list alongside the registered commands. */
     printf("\n");
     printf("╔══════════════════════════════════════════════╗\n");
-    printf("║            AIClaw Serial Commands            ║\n");
+    printf("║            AIWearable Serial Commands            ║\n");
     printf("╠══════════════════════════════════════════════╣\n");
     printf("║  CHAT:                                      ║\n");
     printf("║    talk / t        — Start voice chat       ║\n");
@@ -305,7 +305,7 @@ static int cmd_say(int argc, char **argv)
 static int cmd_cron_add_test(int argc, char **argv)
 {
     printf("Creating test cron job...\n");
-    openclaw_cron_add("AIClaw Test",
+    openclaw_cron_add("AIWearable Test",
                       "10000",
                       "Check the current time and say it.");
     vTaskDelay(pdMS_TO_TICKS(1000));
@@ -339,8 +339,8 @@ void serial_cmd_task_start(void)
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
 
-    /* Set prompt — "AIClaw> " */
-    repl_config.prompt = "AIClaw> ";
+    /* Set prompt — "AIWearable> " */
+    repl_config.prompt = "AIWearable> ";
     repl_config.max_cmdline_length = 256;
     repl_config.task_stack_size = 4096;
     repl_config.task_priority = 3;
@@ -360,9 +360,9 @@ void serial_cmd_task_start(void)
 #error "No supported console backend is enabled (CONFIG_ESP_CONSOLE_UART_DEFAULT / USB_SERIAL_JTAG / USB_CDC)"
 #endif
 
-    /* Register all AIClaw commands (handles help, h, ? internally) */
+    /* Register all AIWearable commands (handles help, h, ? internally) */
     const esp_console_cmd_t cmds[] = {
-        { .command = "help",    .help = "Show AIClaw command reference",   .func = &cmd_help },
+        { .command = "help",    .help = "Show AIWearable command reference",   .func = &cmd_help },
         { .command = "h",       .help = NULL,                               .func = &cmd_help },
         { .command = "?",       .help = NULL,                               .func = &cmd_help },
         { .command = "status",  .help = "Show device status",              .func = &cmd_status },

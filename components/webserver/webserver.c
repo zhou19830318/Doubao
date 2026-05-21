@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * Web server — REST API + embedded SPA
@@ -12,6 +12,7 @@
 #include "wifi_manager.h"
 #include "board.h"
 #include "notes_manager.h"
+#include "app_state.h"
 
 #include "esp_http_server.h"
 #include "esp_http_client.h"
@@ -780,6 +781,9 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "Saved MP3: %s (%d bytes)", filepath, total_len);
 
+    /* Auto-rescan SD card so AI immediately sees the new file */
+    app_sd_mp3_scan_init();
+
     cJSON *j = cJSON_CreateObject();
     cJSON_AddStringToObject(j, "status", "ok");
     cJSON_AddStringToObject(j, "file", filename);
@@ -1110,10 +1114,10 @@ static void mdns_init_helper(void)
         return;
     }
 
-    /* Hostname: aiclaw.local */
-    mdns_hostname_set("aiclaw");
+    /* Hostname: aiwearable.local */
+    mdns_hostname_set("aiwearable");
     /* Instance name */
-    mdns_instance_name_set("AIClaw AI Assistant");
+    mdns_instance_name_set("AIWearable AI Assistant");
 
     /* Register HTTP service */
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
@@ -1122,7 +1126,7 @@ static void mdns_init_helper(void)
     mdns_service_txt_item_set("_http", "_tcp", "version", esp_app_get_description()->version);
     mdns_service_txt_item_set("_http", "_tcp", "board", board_get_name());
 
-    ESP_LOGI(TAG, "mDNS initialized (aiclaw.local)");
+    ESP_LOGI(TAG, "mDNS initialized (aiwearable.local)");
 }
 
 esp_err_t webserver_start(void)

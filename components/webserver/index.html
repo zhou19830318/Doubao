@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AIClaw</title>
+<title>AIWearable</title>
 <style>
 :root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--dim:#7d8590;--green:#3fb950;--red:#f85149;--orange:#d29922;--blue:#58a6ff;--purple:#bc8cff}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -103,7 +103,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <body>
 
 <div class="header">
-  <h1>🦞 AIClaw <span id="hdr-ver"></span></h1>
+  <h1>🦞 AIWearable <span id="hdr-ver"></span></h1>
   <span id="hdr-status" style="font-size:13px;color:var(--dim)"></span>
 </div>
 
@@ -276,7 +276,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <details style="margin-bottom:8px">
       <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">1. <span data-en="Device Pairing (Required)" data-cn="设备配对 (必填)">Device Pairing (Required)</span></summary>
       <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIClaw authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIClaw 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIClaw authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
+        <p data-en="AIWearable authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIWearable 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIWearable authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
         <p style="margin-top:6px"><b data-en="To pair:" data-cn="配对步骤:">To pair:</b></p>
         <ol style="padding-left:18px;margin-top:4px">
           <li data-en="Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)" data-cn="记录上方显示的 <b>Device Key</b> (或启动时的串口日志: <code>Device identity: &lt;hex&gt;</code>)">Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)</li>
@@ -289,7 +289,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <details style="margin-bottom:8px">
       <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">2. <span data-en="STT — DashScope (Required for voice)" data-cn="STT — 百炼 (语音必选)">STT — DashScope (Required for voice)</span></summary>
       <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIClaw uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text." data-cn="AIClaw 使用 <b>百炼 (DashScope)</b> 实时流式 ASR 进行语音转文字。">AIClaw uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text.</p>
+        <p data-en="AIWearable uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text." data-cn="AIWearable 使用 <b>百炼 (DashScope)</b> 实时流式 ASR 进行语音转文字。">AIWearable uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text.</p>
         <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
         <ol style="padding-left:18px;margin-top:4px">
           <li data-en="Get an API key from <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>DashScope Console</a>" data-cn="从 <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>百炼控制台</a> 获取 API 密钥">Get an API key from <a href="https://dashscope.console.aliyun.com/" target="_blank" style="color:var(--blue)">DashScope Console</a></li>
@@ -787,7 +787,7 @@ function startWizard() {
     ss1: '1. On your OpenClaw server, edit gateway config:',
     ss1_code: '"bind": "lan"',
     ss2: '2. Restart the OpenClaw gateway',
-    ss3: '3. Check AIClaw logs for approval command:',
+    ss3: '3. Check AIWearable logs for approval command:',
     ss3_note: 'Look for: "Approve with: openclaw devices approve <device-id>"',
     ss4: '4. Copy and run the approval command on your server'
   };
@@ -804,7 +804,7 @@ function startWizard() {
     ss1: '1. 在 OpenClaw 服务器上编辑网关配置：',
     ss1_code: '"bind": "lan"',
     ss2: '2. 重启 OpenClaw 网关',
-    ss3: '3. 查看 AIClaw 日志中的批准命令：',
+    ss3: '3. 查看 AIWearable 日志中的批准命令：',
     ss3_note: '查找：“Approve with: openclaw devices approve <device-id>”',
     ss4: '4. 复制并在服务器上运行批准命令'
   };

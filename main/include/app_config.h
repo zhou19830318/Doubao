@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -12,7 +12,7 @@
 #define APP_VERSION_STRING "0.1.0"
 
 // Application name
-#define APP_NAME "AIClaw"
+#define APP_NAME "AIWearable"
 
 // Audio recording buffer size (in samples)
 #define APP_AUDIO_RECORD_BUF_SIZE (16000 * 5) // 5 seconds at 16kHz

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * TTS client — MiMo (Xiaomi MiMo-V2-TTS) streaming via HTTP SSE
@@ -8,7 +8,7 @@
  * Each SSE event: "data: {json with audio.data (base64 pcm16)}"
  * Sample rate: 24000Hz, mono, 16-bit (resampled to 16kHz for playback)
  *
- * Adapted from VoiceClaw project for AIClaw.
+ * Adapted from VoiceClaw project for AIWearable.
  */
 
 #include "tts_client.h"

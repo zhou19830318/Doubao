@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -48,7 +48,7 @@ void ui_show_provisioning_qr(const char *url)
                       "Please follow these steps:\n\n"
                       "1. Open WiFi settings\n\n"
                       "2. Connect to:\n"
-                      "   AIClaw_Config\n\n"
+                      "   AIWearable_Config\n\n"
                       "3. Browser will auto-open\n\n"
                       "4. If not, visit:\n"
                       "   http://192.168.4.1");

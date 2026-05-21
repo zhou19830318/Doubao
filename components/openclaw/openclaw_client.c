@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * OpenClaw Gateway WebSocket client implementation.
@@ -387,7 +387,7 @@ static void send_connect(void)
     cJSON_AddStringToObject(params, "locale", "en-US");
     
     char user_agent[64];
-    snprintf(user_agent, sizeof(user_agent), "AIClaw/0.5.0");
+    snprintf(user_agent, sizeof(user_agent), "AIWearable/0.5.0");
     cJSON_AddStringToObject(params, "userAgent", user_agent);
 
     cJSON *auth = cJSON_AddObjectToObject(params, "auth");
@@ -1357,7 +1357,7 @@ esp_err_t openclaw_connect(void)
         .keep_alive_idle = 30,          /* TCP keepalive: 30s idle */
         .keep_alive_interval = 5,       /* Retry every 5s */
         .keep_alive_count = 3,          /* 3 retries before declaring dead */
-        .user_agent = "AIClaw/0.5.0",
+        .user_agent = "AIWearable/0.5.0",
     };
 
     s_oc.ws = esp_websocket_client_init(&ws_cfg);

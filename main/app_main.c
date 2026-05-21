@@ -1,8 +1,8 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
- * AIClaw — OpenClaw ESP32 Interface Device
+ * AIWearable — OpenClaw ESP32 Interface Device
  *
  * This file handles initialization and main event loop only.
  * Logic is split into: voice_chat.c, serial_cmd.c, app_tasks.c, app_state.c
@@ -48,7 +48,7 @@
 #include "camera.h"
 #include "wake_word.h"
 
-static const char *TAG = "aiclaw";
+static const char *TAG = "aiwearable";
 
 /* ─── WiFi callback ──────────────────────────────────────────────────── */
 /* ─── MP3 player completion callback ──────────────────────────────────── */
@@ -71,6 +71,9 @@ static void on_mp3_complete(void)
      * Without this, the system stays in PLAYING_MP3 state and wake word events
      * are ignored because app_main.c only responds in IDLE or RESPONSE states. */
     app_set_state(UI_STATE_IDLE);
+
+    /* Reset activity timer so sleep countdown starts fresh after playback */
+    app_reset_activity_timer();
     
     /* UI update is handled inside mp3_player event callback via state_cb */
 }
@@ -286,7 +289,7 @@ static void speak_announcement(const char *text)
 void app_main(void)
 {
     ESP_LOGI(TAG, "========================================");
-    ESP_LOGI(TAG, "  AIClaw v%s", APP_VERSION_STRING);
+    ESP_LOGI(TAG, "  AIWearable v%s", APP_VERSION_STRING);
     ESP_LOGI(TAG, "  OpenClaw ESP32 Interface Device");
     ESP_LOGI(TAG, "========================================");
 

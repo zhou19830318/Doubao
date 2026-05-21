@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -21,7 +21,7 @@ static char s_ip_str[16] = {0};
 static int s_retry_count = 0;
 static esp_netif_t *s_ap_netif = NULL;
 #define MAX_RETRIES 10
-#define AP_SSID_PREFIX "AIClaw_"
+#define AP_SSID_PREFIX "AIWearable_"
 
 static void set_state(wifi_state_t st)
 {
@@ -65,7 +65,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t base, int32_t id, voi
         /* Set WiFi power save mode.
          * M5Stick (small battery): MAX_MODEM for aggressive modem sleep.
          * Other devices: MIN_MODEM (allows quick event wakeup). */
-#if defined(CONFIG_AICLAW_BOARD_M5STICKCPLUS2)
+#if defined(CONFIG_HEYCLAWY_BOARD_M5STICKCPLUS2)
         esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
         ESP_LOGI(TAG, "WiFi PS: MAX_MODEM (M5Stick battery optimization)");
 #else
@@ -146,7 +146,7 @@ esp_err_t wifi_manager_reconnect(const char *ssid, const char *password)
 
 esp_err_t wifi_manager_start_ap(const char *ssid, const char *password)
 {
-    if (!ssid) ssid = "AIClaw_Config";
+    if (!ssid) ssid = "AIWearable_Config";
 
     ESP_LOGI(TAG, "Starting AP mode: %s", ssid);
 

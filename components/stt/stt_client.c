@@ -1,10 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIClaw Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
  * SPDX-License-Identifier: MIT
  *
  * STT client — DashScope Fun-ASR Realtime via WebSocket (Streaming version)
  *
- * Adapted from VoiceClaw project for AIClaw.
+ * Adapted from VoiceClaw project for AIWearable.
  * Uses Alibaba DashScope (百炼) ASR service with WebSocket streaming.
  */
 
@@ -217,7 +217,7 @@ static void stt_task(void *arg)
             .crt_bundle_attach = esp_crt_bundle_attach,
             .task_stack = 6144,
             .buffer_size = 2048,
-            .user_agent = "AIClaw/1.0",
+            .user_agent = "AIWearable/1.0",
             .network_timeout_ms = 20000,
             .disable_auto_reconnect = true,
             /* Use global CA store to reduce internal RAM usage */

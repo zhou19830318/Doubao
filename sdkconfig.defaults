@@ -1,4 +1,4 @@
-# AIClaw - Common SDK configuration defaults
+# AIWearable - Common SDK configuration defaults
 
 # Target
 CONFIG_IDF_TARGET="esp32s3"

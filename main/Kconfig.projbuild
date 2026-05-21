@@ -1,10 +1,10 @@
-menu "AIClaw Application Configuration"
+menu "AIWearable Application Configuration"
 
     choice HEYCLAWY_BOARD_SELECT
         prompt "Select target board"
         default HEYCLAWY_BOARD_SENSECAP_WATCHER
         help
-            Select the hardware board target for AIClaw.
+            Select the hardware board target for AIWearable.
 
         config HEYCLAWY_BOARD_SENSECAP_WATCHER
             bool "SenseCAP Watcher"
