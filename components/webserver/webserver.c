@@ -693,30 +693,13 @@ static bool is_safe_filename(const char *filename)
     return true;
 }
 
-/* ── POST /api/mp3/upload — receive MP3 file, save to /sdcard/music/ ─── */
+/* ── POST /api/mp3/upload — receive MP3 file, stream to /sdcard/music/ ── */
 static esp_err_t mp3_upload_handler(httpd_req_t *req)
 {
     int total_len = req->content_len;
     if (total_len <= 0 || total_len > 10 * 1024 * 1024) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
         return ESP_FAIL;
-    }
-
-    char *buf = malloc(total_len);
-    if (!buf) {
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
-    }
-
-    int received = 0;
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, buf + received, total_len - received);
-        if (ret <= 0) {
-            free(buf);
-            httpd_resp_send_500(req);
-            return ESP_FAIL;
-        }
-        received += ret;
     }
 
     /* Extract filename from query parameter ?name= , fallback to uploaded.mp3 */
@@ -737,26 +720,41 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
         mkdir("/sdcard/music", 0755);
     }
 
-    /* Write file */
+    /* Open file first, then stream chunks directly to SD card (no large buffer) */
     char filepath[320];
     snprintf(filepath, sizeof(filepath), "/sdcard/music/%s", filename);
     FILE *f = fopen(filepath, "wb");
     if (!f) {
-        free(buf);
         ESP_LOGE(TAG, "Failed to open %s for writing", filepath);
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 
-    size_t written = fwrite(buf, 1, total_len, f);
-    fclose(f);
-    free(buf);
-
-    if ((int)written != total_len) {
-        ESP_LOGE(TAG, "Wrote only %d/%d bytes to %s", (int)written, total_len, filepath);
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
+    /* Stream upload: read 4KB chunks, write directly to file */
+    int received = 0;
+    uint8_t chunk[4096];
+    while (received < total_len) {
+        int to_read = (total_len - received < (int)sizeof(chunk))
+                      ? total_len - received : (int)sizeof(chunk);
+        int ret = httpd_req_recv(req, (char *)chunk, to_read);
+        if (ret <= 0) {
+            ESP_LOGE(TAG, "recv failed at %d/%d bytes (ret=%d)", received, total_len, ret);
+            fclose(f);
+            unlink(filepath);  /* Remove incomplete file */
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        size_t written = fwrite(chunk, 1, ret, f);
+        if ((int)written != ret) {
+            ESP_LOGE(TAG, "Write failed at %d bytes", received);
+            fclose(f);
+            unlink(filepath);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        received += ret;
     }
+    fclose(f);
 
     ESP_LOGI(TAG, "Saved MP3: %s (%d bytes)", filepath, total_len);
 
@@ -851,30 +849,13 @@ static esp_err_t mp3_delete_handler(httpd_req_t *req)
     return eret;
 }
 
-/* ── POST /api/gif/upload — receive GIF file, save to /sdcard/gifs/ ───── */
+/* ── POST /api/gif/upload — stream GIF file to /sdcard/gifs/ ───── */
 static esp_err_t gif_upload_handler(httpd_req_t *req)
 {
     int total_len = req->content_len;
     if (total_len <= 0 || total_len > 10 * 1024 * 1024) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
         return ESP_FAIL;
-    }
-
-    char *buf = malloc(total_len);
-    if (!buf) {
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
-    }
-
-    int received = 0;
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, buf + received, total_len - received);
-        if (ret <= 0) {
-            free(buf);
-            httpd_resp_send_500(req);
-            return ESP_FAIL;
-        }
-        received += ret;
     }
 
     /* Extract filename from query parameter ?name= , fallback to uploaded.gif */
@@ -895,26 +876,41 @@ static esp_err_t gif_upload_handler(httpd_req_t *req)
         mkdir("/sdcard/gifs", 0755);
     }
 
-    /* Write file */
+    /* Open file first, then stream chunks directly to SD card */
     char filepath[320];
     snprintf(filepath, sizeof(filepath), "/sdcard/gifs/%s", filename);
     FILE *f = fopen(filepath, "wb");
     if (!f) {
-        free(buf);
         ESP_LOGE(TAG, "Failed to open %s for writing", filepath);
         httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 
-    size_t written = fwrite(buf, 1, total_len, f);
-    fclose(f);
-    free(buf);
-
-    if ((int)written != total_len) {
-        ESP_LOGE(TAG, "Wrote only %d/%d bytes to %s", (int)written, total_len, filepath);
-        httpd_resp_send_500(req);
-        return ESP_FAIL;
+    /* Stream upload: read 4KB chunks, write directly to file (no large buffer) */
+    int received = 0;
+    uint8_t chunk[4096];
+    while (received < total_len) {
+        int to_read = (total_len - received < (int)sizeof(chunk))
+                      ? total_len - received : (int)sizeof(chunk);
+        int ret = httpd_req_recv(req, (char *)chunk, to_read);
+        if (ret <= 0) {
+            ESP_LOGE(TAG, "recv failed at %d/%d bytes (ret=%d)", received, total_len, ret);
+            fclose(f);
+            unlink(filepath);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        size_t written = fwrite(chunk, 1, ret, f);
+        if ((int)written != ret) {
+            ESP_LOGE(TAG, "Write failed at %d bytes", received);
+            fclose(f);
+            unlink(filepath);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        received += ret;
     }
+    fclose(f);
 
     ESP_LOGI(TAG, "Saved GIF: %s (%d bytes)", filepath, total_len);
 
