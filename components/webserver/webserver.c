@@ -24,6 +24,10 @@
 #include "freertos/task.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
 
 static const char *TAG = "webserver";
 static httpd_handle_t s_server = NULL;
@@ -630,6 +634,320 @@ static esp_err_t notes_stats_handler(httpd_req_t *req)
 }
 
 
+/* ── GET /api/chat/history?date=YYYY-MM-DD — chat log for a date ──────── */
+static esp_err_t chat_history_handler(httpd_req_t *req)
+{
+    /* Parse query parameter "date" from URI (embedded in req->uri after ?) */
+    const char *qmark = strchr(req->uri, '?');
+    const char *query = qmark ? qmark + 1 : "";
+    char date[16] = {0};
+    esp_err_t err = httpd_query_key_value(query, "date", date, sizeof(date));
+    if (err != ESP_OK || strlen(date) != 10) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req, "{\"error\":\"Missing or invalid date parameter (YYYY-MM-DD)\"}", 57);
+    }
+
+    ESP_LOGI(TAG, "Chat history request for date: %s", date);
+
+    /* Read chat history content (caller must free) */
+    char *content = notes_manager_read_date(date);
+
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddStringToObject(j, "date", date);
+    if (content) {
+        cJSON_AddStringToObject(j, "content", content);
+        free(content);
+    } else {
+        cJSON_AddStringToObject(j, "content", "No chat history for this date");
+    }
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
+/* ── POST /api/mp3/upload — receive MP3 file, save to /sdcard/music/ ─── */
+static esp_err_t mp3_upload_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 10 * 1024 * 1024) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len);
+    if (!buf) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) {
+            free(buf);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+
+    /* Ensure /sdcard/music/ directory exists */
+    struct stat st;
+    if (stat("/sdcard/music", &st) != 0) {
+        mkdir("/sdcard/music", 0755);
+    }
+
+    /* Write file */
+    const char *filepath = "/sdcard/music/uploaded.mp3";
+    FILE *f = fopen(filepath, "wb");
+    if (!f) {
+        free(buf);
+        ESP_LOGE(TAG, "Failed to open %s for writing", filepath);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    size_t written = fwrite(buf, 1, total_len, f);
+    fclose(f);
+    free(buf);
+
+    if ((int)written != total_len) {
+        ESP_LOGE(TAG, "Wrote only %d/%d bytes to %s", (int)written, total_len, filepath);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "Saved MP3: %s (%d bytes)", filepath, total_len);
+
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddStringToObject(j, "status", "ok");
+    cJSON_AddStringToObject(j, "file", "uploaded.mp3");
+    cJSON_AddNumberToObject(j, "size", total_len);
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
+/* ── POST /api/mp3/delete — delete MP3 from /sdcard/music/ ────────────── */
+static esp_err_t mp3_delete_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 256) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len + 1);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) { free(buf); httpd_resp_send_500(req); return ESP_FAIL; }
+        received += ret;
+    }
+    buf[total_len] = '\0';
+
+    cJSON *j = cJSON_Parse(buf);
+    free(buf);
+    if (!j) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
+        return ESP_FAIL;
+    }
+
+    cJSON *file_item = cJSON_GetObjectItem(j, "file");
+    if (!file_item || !cJSON_IsString(file_item) || !file_item->valuestring[0]) {
+        cJSON_Delete(j);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'file' field");
+        return ESP_FAIL;
+    }
+
+    char filepath[320];
+    snprintf(filepath, sizeof(filepath), "/sdcard/music/%s", file_item->valuestring);
+
+    cJSON_Delete(j);
+
+    int ret = unlink(filepath);
+    if (ret != 0) {
+        ESP_LOGE(TAG, "Failed to delete MP3: %s (errno=%d)", filepath, errno);
+        cJSON *err = cJSON_CreateObject();
+        cJSON_AddStringToObject(err, "status", "error");
+        cJSON_AddStringToObject(err, "message", "Failed to delete file");
+        char *str = cJSON_PrintUnformatted(err);
+        cJSON_Delete(err);
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        esp_err_t eret = httpd_resp_send(req, str, strlen(str));
+        free(str);
+        return eret;
+    }
+
+    ESP_LOGI(TAG, "Deleted MP3: %s", filepath);
+
+    cJSON *ok = cJSON_CreateObject();
+    cJSON_AddStringToObject(ok, "status", "ok");
+    cJSON_AddStringToObject(ok, "message", "File deleted");
+    char *str = cJSON_PrintUnformatted(ok);
+    cJSON_Delete(ok);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t eret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return eret;
+}
+
+/* ── POST /api/gif/upload — receive GIF file, save to /sdcard/gifs/ ───── */
+static esp_err_t gif_upload_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 10 * 1024 * 1024) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len);
+    if (!buf) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) {
+            free(buf);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+
+    /* Ensure /sdcard/gifs/ directory exists */
+    struct stat st;
+    if (stat("/sdcard/gifs", &st) != 0) {
+        mkdir("/sdcard/gifs", 0755);
+    }
+
+    /* Write file */
+    const char *filepath = "/sdcard/gifs/uploaded.gif";
+    FILE *f = fopen(filepath, "wb");
+    if (!f) {
+        free(buf);
+        ESP_LOGE(TAG, "Failed to open %s for writing", filepath);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    size_t written = fwrite(buf, 1, total_len, f);
+    fclose(f);
+    free(buf);
+
+    if ((int)written != total_len) {
+        ESP_LOGE(TAG, "Wrote only %d/%d bytes to %s", (int)written, total_len, filepath);
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    ESP_LOGI(TAG, "Saved GIF: %s (%d bytes)", filepath, total_len);
+
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddStringToObject(j, "status", "ok");
+    cJSON_AddStringToObject(j, "file", "uploaded.gif");
+    cJSON_AddNumberToObject(j, "size", total_len);
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
+/* ── POST /api/gif/delete — delete GIF from /sdcard/gifs/ ─────────────── */
+static esp_err_t gif_delete_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 256) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len + 1);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) { free(buf); httpd_resp_send_500(req); return ESP_FAIL; }
+        received += ret;
+    }
+    buf[total_len] = '\0';
+
+    cJSON *j = cJSON_Parse(buf);
+    free(buf);
+    if (!j) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
+        return ESP_FAIL;
+    }
+
+    cJSON *file_item = cJSON_GetObjectItem(j, "file");
+    if (!file_item || !cJSON_IsString(file_item) || !file_item->valuestring[0]) {
+        cJSON_Delete(j);
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'file' field");
+        return ESP_FAIL;
+    }
+
+    char filepath[320];
+    snprintf(filepath, sizeof(filepath), "/sdcard/gifs/%s", file_item->valuestring);
+
+    cJSON_Delete(j);
+
+    int ret = unlink(filepath);
+    if (ret != 0) {
+        ESP_LOGE(TAG, "Failed to delete GIF: %s (errno=%d)", filepath, errno);
+        cJSON *err = cJSON_CreateObject();
+        cJSON_AddStringToObject(err, "status", "error");
+        cJSON_AddStringToObject(err, "message", "Failed to delete file");
+        char *str = cJSON_PrintUnformatted(err);
+        cJSON_Delete(err);
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        esp_err_t eret = httpd_resp_send(req, str, strlen(str));
+        free(str);
+        return eret;
+    }
+
+    ESP_LOGI(TAG, "Deleted GIF: %s", filepath);
+
+    cJSON *ok = cJSON_CreateObject();
+    cJSON_AddStringToObject(ok, "status", "ok");
+    cJSON_AddStringToObject(ok, "message", "File deleted");
+    char *str = cJSON_PrintUnformatted(ok);
+    cJSON_Delete(ok);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t eret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return eret;
+}
+
 /* ── Server start/stop ───────────────────────────────────────────────── */
 
 static void mdns_init_helper(void)
@@ -666,7 +984,7 @@ esp_err_t webserver_start(void)
     mdns_init_helper();
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 20;
+    config.max_uri_handlers = 25;
     config.stack_size = 8192;
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
@@ -694,6 +1012,11 @@ esp_err_t webserver_start(void)
         { .uri = "/api/notes/stats",   .method = HTTP_GET,   .handler = notes_stats_handler },
         { .uri = "/api/notes/*",       .method = HTTP_GET,   .handler = notes_date_handler },
         { .uri = "/api/notes/*",       .method = HTTP_DELETE, .handler = notes_delete_handler },
+        { .uri = "/api/chat/history",  .method = HTTP_GET,    .handler = chat_history_handler },
+        { .uri = "/api/mp3/upload",    .method = HTTP_POST,   .handler = mp3_upload_handler },
+        { .uri = "/api/mp3/delete",    .method = HTTP_POST,   .handler = mp3_delete_handler },
+        { .uri = "/api/gif/upload",    .method = HTTP_POST,   .handler = gif_upload_handler },
+        { .uri = "/api/gif/delete",    .method = HTTP_POST,   .handler = gif_delete_handler },
         { .uri = "/api/reboot",      .method = HTTP_POST,    .handler = reboot_handler },
         { .uri = "/api/*",           .method = HTTP_OPTIONS, .handler = cors_handler },
         // Captive Portal: catch-all handler for unknown URIs
