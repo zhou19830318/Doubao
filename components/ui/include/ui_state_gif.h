@@ -24,7 +24,7 @@ typedef enum {
     GIF_STATE_LISTENING,    /* UI_STATE_LISTENING */
     GIF_STATE_SENDING,      /* UI_STATE_SENDING */
     GIF_STATE_THINKING,     /* UI_STATE_THINKING */
-    GIF_STATE_STREAMING,    /* UI_STATE_STREAMING */
+    GIF_STATE_PLAYING,      /* UI_STATE_PLAYING_MP3 */
     GIF_STATE_RESPONSE,     /* UI_STATE_RESPONSE */
     GIF_STATE_SPEAKING,     /* UI_STATE_TTS_PLAYING */
     GIF_STATE_ERROR,        /* UI_STATE_ERROR */
@@ -63,18 +63,6 @@ esp_err_t ui_state_gif_show(gif_state_type_t gif_type);
  * @return Pointer to current GIF LVGL object, or NULL if none
  */
 lv_obj_t *ui_state_gif_get_current(void);
-
-/**
- * Preload a GIF into memory for faster switching
- * @param gif_type The GIF state type to preload
- * @return ESP_OK on success
- */
-esp_err_t ui_state_gif_preload(gif_state_type_t gif_type);
-
-/**
- * Clear all preloaded GIFs from memory
- */
-void ui_state_gif_clear_cache(void);
 
 #ifdef __cplusplus
 }
