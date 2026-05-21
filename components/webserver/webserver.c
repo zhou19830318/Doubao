@@ -715,7 +715,7 @@ static char *url_decode(char *str)
     return str;
 }
 
-/* ── POST /api/mp3/upload — receive MP3 file, stream to /sdcard/music/ ── */
+/* ── POST /api/mp3/upload — receive MP3 file, stream to /sdcard/mp3/ ── */
 static esp_err_t mp3_upload_handler(httpd_req_t *req)
 {
     int total_len = req->content_len;
@@ -736,15 +736,15 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
         }
     }
 
-    /* Ensure /sdcard/music/ directory exists */
+    /* Ensure /sdcard/mp3/ directory exists */
     struct stat st;
-    if (stat("/sdcard/music", &st) != 0) {
-        mkdir("/sdcard/music", 0755);
+    if (stat("/sdcard/mp3", &st) != 0) {
+        mkdir("/sdcard/mp3", 0755);
     }
 
     /* Open file first, then stream chunks directly to SD card (no large buffer) */
     char filepath[320];
-    snprintf(filepath, sizeof(filepath), "/sdcard/music/%s", filename);
+    snprintf(filepath, sizeof(filepath), "/sdcard/mp3/%s", filename);
     FILE *f = fopen(filepath, "wb");
     if (!f) {
         ESP_LOGE(TAG, "Failed to open %s for writing", filepath);
@@ -795,7 +795,7 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
     return ret;
 }
 
-/* ── POST /api/mp3/delete — delete MP3 from /sdcard/music/ ────────────── */
+/* ── POST /api/mp3/delete — delete MP3 from /sdcard/mp3/ ────────────── */
 static esp_err_t mp3_delete_handler(httpd_req_t *req)
 {
     int total_len = req->content_len;
@@ -837,7 +837,7 @@ static esp_err_t mp3_delete_handler(httpd_req_t *req)
     }
 
     char filepath[320];
-    snprintf(filepath, sizeof(filepath), "/sdcard/music/%s", file_item->valuestring);
+    snprintf(filepath, sizeof(filepath), "/sdcard/mp3/%s", file_item->valuestring);
 
     cJSON_Delete(j);
 
@@ -1027,11 +1027,11 @@ static esp_err_t gif_delete_handler(httpd_req_t *req)
     return eret;
 }
 
-/* ── GET /api/mp3/list — list MP3 files in /sdcard/music/ ───────────────── */
+/* ── GET /api/mp3/list — list MP3 files in /sdcard/mp3/ ───────────────── */
 static esp_err_t mp3_list_handler(httpd_req_t *req)
 {
     cJSON *j = cJSON_CreateArray();
-    DIR *dir = opendir("/sdcard/music");
+    DIR *dir = opendir("/sdcard/mp3");
     if (dir) {
         struct dirent *entry;
         while ((entry = readdir(dir)) != NULL) {
@@ -1042,7 +1042,7 @@ static esp_err_t mp3_list_handler(httpd_req_t *req)
                                 strcasecmp(name + len - 4, ".wav") == 0)) {
                     struct stat st;
                     char fullpath[320];
-                    snprintf(fullpath, sizeof(fullpath), "/sdcard/music/%s", name);
+                    snprintf(fullpath, sizeof(fullpath), "/sdcard/mp3/%s", name);
                     cJSON *item = cJSON_CreateObject();
                     cJSON_AddStringToObject(item, "name", name);
                     if (stat(fullpath, &st) == 0) {
