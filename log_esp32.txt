@@ -1,294 +1,154 @@
-I (468) esp_image: segment 3: paddr=002e3aa8 vaddr=3fca7010 sizeI (951) esp_psram: SPI SRAM memory test OK
+I (468) esp_image: segment 3: paddr=002e3aa8 vaddr=3fca7030 size=04680h ( 18048)                                                                         load
+I (475) esp_image: segment 4: paddr=002e8130 vaddr=40374000 size=1f8d8h (129240)                                                                         load
+I (500) esp_image: segment 5: paddr=00307a10 vaddr=50000000 size=00020h (    32)                                                                         load
+I (500) esp_image: segment 6: paddr=00307a38 vaddr=600fe000 size=0006ch (   108)                                                                         load
+I (513) boot: Loaded app from partition at offset 0x10000
+I (514) boot: Disabling RNG early entropy source...
+I (515) octal_psram: vendor id    : 0x0d (AP)
+I (515) octal_psram: dev id       : 0x02 (generation 3)
+I (515) octal_psram: density      : 0x03 (64 Mbit)
+I (515) octal_psram: good-die     : 0x01 (Pass)
+I (516) octal_psram: Latency      : 0x01 (Fixed)
+I (516) octal_psram: VCC          : 0x01 (3V)
+I (516) octal_psram: SRF          : 0x01 (Fast Refresh)
+I (516) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+I (516) octal_psram: BurstLen     : 0x01 (32 Byte)
+I (517) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+I (517) octal_psram: DriveStrength: 0x00 (1/1)
+I (517) MSPI Timing: Enter psram timing tuning
+I (518) esp_psram: Found 8MB PSRAM device
+I (518) esp_psram: Speed: 80MHz
+I (518) cpu_start: Multicore app
+I (951) esp_psram: SPI SRAM memory test OK
 I (960) cpu_start: Pro cpu start user code
 I (960) cpu_start: cpu freq: 160000000 Hz
 I (960) app_init: Application information:
 I (960) app_init: Project name:     aiwearable
-I (960) app_init: App version:      e6ad1d8-dirty
-I (960) app_init: Compile time:     May 21 2026 09:52:36
-I (960) app_init: ELF file SHA256:  c30f898bf...
+I (960) app_init: App version:      9387a4e-dirty
+I (961) app_init: Compile time:     May 21 2026 10:03:10
+I (961) app_init: ELF file SHA256:  bbcd41d8d...
 I (961) app_init: ESP-IDF:          v5.5.3
 I (961) efuse_init: Min chip rev:     v0.0
 I (961) efuse_init: Max chip rev:     v0.99
 I (961) efuse_init: Chip rev:         v0.2
-I (961) heap_init: Initializing. RAM available for dynamic allocation:
-I (961) heap_init: At 3FCB83C0 len 00031350 (196 KiB): RAM
+I (962) heap_init: Initializing. RAM available for dynamic allocation:
+I (962) heap_init: At 3FCB83C0 len 00031350 (196 KiB): RAM
 I (962) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
 I (962) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
 I (962) heap_init: At 600FE06C len 00001F7C (7 KiB): RTCRAM
-I (962) esp_psram: Adding pool of 8192K of PSRAM memory to heap allocator
-I (963) spi_flash: detected chip: generic
-I (963) spi_flash: flash io: qio
+I (963) esp_psram: Adding pool of 8192K of PSRAM memory to heap allocator
+I (964) spi_flash: detected chip: generic
+I (964) spi_flash: flash io: qio
 I (964) sleep_gpio: Configure to isolate all GPIO pins in sleep state
-I (964) sleep_gpio: Enable automatic switching of GPIO sleep configuration
-I (965) main_task: Started on CPU0
-I (966) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
-I (967) main_task: Calling app_main()
-I (967) aiclaw: ========================================
-I (967) aiclaw:   AIClaw v0.1.0
-I (967) aiclaw:   OpenClaw ESP32 Interface Device
-I (967) aiclaw: ========================================
-I (1013) settings: Settings loaded from NVS
-I (1013) settings: Settings init: vol=55 bright=100 rgb=1 web=1 log=2
-I (1013) aiclaw: Event group created successfully
+I (965) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (966) main_task: Started on CPU0
+I (967) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (968) main_task: Calling app_main()
+I (968) aiclaw: ========================================
+I (968) aiclaw:   AIClaw v0.1.0
+I (968) aiclaw:   OpenClaw ESP32 Interface Device
+I (968) aiclaw: ========================================
+I (1014) settings: Settings loaded from NVS
+I (1014) settings: Settings init: vol=55 bright=100 rgb=1 web=1 log=2
+I (1014) aiclaw: Event group created successfully
 I (1014) board: ========================================
-I (1014) board:  Board: Waveshare ESP32-S3 Audio (ESP32-S3)
-I (1014) board: ========================================
-I (1015) board: I2C0 initialized (SDA=11, SCL=10)
-I (1016) board: IO expander initialized at 0x20
-I (1017) board: RGB LED initialized (GPIO38)
-I (1018) board: Display backlight initialized (GPIO5)
-I (1148) JD9853: New JD9853 panel @0x3fceb95c (RGB565, RGB)
-W (1390) JD9853: COLMOD (0x3A) in vendor cmds will override internal setting
-I (1391) JD9853: Panel init complete
-I (1391) board: LCD initialized (172x320)
-I (1391) LVGL: Starting LVGL task
-I (1395) board: LVGL initialized with display and touch
-I (1565) touch_axs5106l: AXS5106L found at 0x63
-I (1565) touch_axs5106l: AXS5106L Touch hardware initialized at 0x63
-I (1565) touch_axs5106l: AXS5106L Touch registered to LVGL (172x320)
-I (1567) board: Audio I2S initialized (MCLK=12, SCLK=13, LRCK=14, DIN=15, DOUT=16)
-I (1574) ES8311: Work in Slave mode
-I (1578) board: ES8311 speaker codec initialized
-I (1581) ES7210: Work in Slave mode
-I (1588) ES7210: Enable ES7210_INPUT_MIC1
-I (1592) ES7210: Enable ES7210_INPUT_MIC2
-I (1597) I2S_IF: Paired data: 0x3fccaca0, current mode: playback, paired in_enable: 0, paired out_enable: 0
-I (1598) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
-I (1599) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
-I (1616) Adev_Codec: Open codec device OK
-I (1616) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
-I (1617) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x2
-I (1617) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
-I (1619) ES7210: Bits 16
-I (1626) ES7210: Enable ES7210_INPUT_MIC1
-I (1630) ES7210: Enable ES7210_INPUT_MIC2
-I (1638) ES7210: Unmuted
-I (1638) Adev_Codec: Open codec device OK
-I (1640) board: Mic codec initialized (gain=38dB)
-I (1640) board: User buttons initialized (BOOT=0)
-I (1641) board: Board initialization complete
-I (1642) aiclaw: Board: Waveshare ESP32-S3 Audio (ESP32-S3)
-I (1642) pm: Frequency switching config: CPU_MAX: 160, APB_MAX: 80, APB_MIN: 80, Light sleep: DISABLED
-I (1642) aiclaw: PM: CPU scaling 80-160MHz
-I (1643) board: Volume set to 55%
-I (1643) board: Mounting SD card (SDMMC 1-bit)...
+I (1015) board:  Board: Waveshare ESP32-S3 Audio (ESP32-S3)
+I (1015) board: ========================================
+I (1016) board: I2C0 initialized (SDA=11, SCL=10)
+I (1017) board: IO expander initialized at 0x20
+I (1018) board: RGB LED initialized (GPIO38)
+I (1019) board: Display backlight initialized (GPIO5)
+I (1149) JD9853: New JD9853 panel @0x3fceb95c (RGB565, RGB)
+W (1391) JD9853: COLMOD (0x3A) in vendor cmds will override internal setting
+I (1392) JD9853: Panel init complete
+I (1392) board: LCD initialized (172x320)
+I (1392) LVGL: Starting LVGL task
+I (1396) board: LVGL initialized with display and touch
+I (1566) touch_axs5106l: AXS5106L found at 0x63
+I (1566) touch_axs5106l: AXS5106L Touch hardware initialized at 0x63
+I (1569) board: Audio I2S initialized (MCLK=12, SCLK=13, LRCK=14, DIN=15, DOUT=16)
+I (1576) ES8311: Work in Slave mode
+I (1579) board: ES8311 speaker codec initialized
+I (1583) ES7210: Work in Slave mode
+I (1590) ES7210: Enable ES7210_INPUT_MIC1
+I (1593) ES7210: Enable ES7210_INPUT_MIC2
+I (1599) I2S_IF: Paired data: 0x3fccaca0, current mode: playback, paired in_enable: 0, paired out_enable: 0
+I (1599) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (1600) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (1617) Adev_Codec: Open codec device OK
+I (1618) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
+I (1618) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x2
+I (1619) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (1620) ES7210: Bits 16
+I (1628) ES7210: Enable ES7210_INPUT_MIC1
+I (1631) ES7210: Enable ES7210_INPUT_MIC2
+I (1639) ES7210: Unmuted
+I (1639) Adev_Codec: Open codec device OK
+I (1641) board: Mic codec initialized (gain=38dB)
+I (1642) board: User buttons initialized (BOOT=0)
+I (1642) board: Board initialization complete
+I (1643) aiclaw: Board: Waveshare ESP32-S3 Audio (ESP32-S3)
+I (1643) pm: Frequency switching config: CPU_MAX: 160, APB_MAX: 80, APB_MIN: 80, Light sleep: DISABLED
+I (1643) aiclaw: PM: CPU scaling 80-160MHz
+I (1644) board: Volume set to 55%
+I (1644) board: Mounting SD card (SDMMC 1-bit)...
 Name: SA02G
 Type: SDSC
 Speed: 20.00 MHz (limit: 20.00 MHz)
 Size: 1876MB
 CSD: ver=1, sector_size=512, capacity=3842048 read_bl_len=10
 SSR: bus_width=1
-I (1978) board: SD card mounted at /sdcard
-I (1979) ASP_POOL: Dest rate:48000
-I (1980) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
-I (1980) mp3_player: MP3 player initialized (prio=12, stack=8KB)
-I (1980) aiclaw: MP3 player ready
-I (1980) aiclaw: Camera: deferred to first use (power saving)
-I (1981) ui_main: Initializing UI...
-I (1982) ui_main: Timezone set to CST-8 (China Standard Time, UTC+8)
-Guru Meditation Error: Core  0 panic'ed (LoadProhibited). Exception was unhandled.
-
-Core  0 register dump:
-PC      : 0x420b07aa  PS      : 0x00060d30  A0      : 0x820b084a  A1      : 0x3fcec750
-A2      : 0x3fccbd54  A3      : 0x00000000  A4      : 0x00000002  A5      : 0x0001d975
-A6      : 0x00000000  A7      : 0x00000003  A8      : 0x3fccbd94  A9      : 0x3fcec730
-A10     : 0x00000000  A11     : 0x00000016  A12     : 0x3fcec750  A13     : 0x00000000
-A14     : 0x3fcec790  A15     : 0x00000000  SAR     : 0x0000001f  EXCCAUSE: 0x0000001c
-EXCVADDR: 0x0001d97b  LBEG    : 0x40056f5c  LEND    : 0x40056f72  LCOUNT  : 0xffffffff
-
-
-Backtrace: 0x420b07a7:0x3fcec750 0x420b0847:0x3fcec7a0 0x420aef59:0x3fcec7d0 0x420ae3d1:0x3fcec800 0x420ae740:0x3fcec840 0x420ae725:0x3fcec860 0x420ae725:0x3fcec880 0x420ae7c4:0x3fcec8a0 0x420b28f1:0x3fcec8c0 0x420b8cad:0x3fcec8f0 0x420b8d5a:0x3fcec910 0x420a923c:0x3fcec930 0x403846cd:0x3fcec950
-
-
-
-
-ELF file SHA256: c30f898bf
-
-Rebooting...
-ESP-ROM:esp32s3-20210327
-Build:Mar 27 2021
-rst:0xc (RTC_SW_CPU_RST),boot:0x28 (SPI_FAST_FLASH_BOOT)
-Saved PC:0x40383ad1
-SPIWP:0xee
-mode:DIO, clock div:1
-load:0x3fce2820,len:0x16a4
-load:0x403c8700,len:0xe80
-load:0x403cb700,len:0x3188
-entry 0x403c8948
-I (24) boot: ESP-IDF v5.5.3 2nd stage bootloader
-I (24) boot: compile time May 21 2026 08:29:42
-I (24) boot: Multicore bootloader
-I (24) boot: chip revision: v0.2
-I (25) boot: efuse block revision: v1.4
-I (25) qio_mode: Enabling default flash chip QIO
-I (25) boot.esp32s3: Boot SPI Speed : 80MHz
-I (25) boot.esp32s3: SPI Mode       : QIO
-I (25) boot.esp32s3: SPI Flash Size : 16MB
-I (26) boot: Enabling RNG early entropy source...
-I (26) boot: Partition Table:
-I (26) boot: ## Label            Usage          Type ST Offset   Length
-I (26) boot:  0 nvs              WiFi data        01 02 00009000 00006000
-I (27) boot:  1 phy_init         RF data          01 01 0000f000 00001000
-I (27) boot:  2 factory          factory app      00 00 00010000 00400000
-I (27) boot:  3 model            Unknown data     01 82 00410000 000f0000
-I (28) boot:  4 storage          Unknown data     01 82 00500000 00100000
-I (28) boot: End of partition table
-I (28) esp_image: segment 0: paddr=00010020 vaddr=3c1b0020 size=12c8e0h (1231072) map
-I (211) esp_image: segment 1: paddr=0013c908 vaddr=3fca3900 size=03710h ( 14096) load
-I (214) esp_image: segment 2: paddr=00140020 vaddr=42000020 size=1a3a80h (1718912) map
-I (470) esp_image: segment 3: paddr=002e3aa8 vaddr=3fca7010 size=046a0h ( 18080) load
-I (473) esp_image: segment 4: paddr=002e8150 vaddr=40374000 size=1f8d8h (129240) load
-I (498) esp_image: segment 5: paddr=00307a30 vaddr=50000000 size=00020h (    32) load
-I (498) esp_image: segment 6: paddr=00307a58 vaddr=600fe000 size=0006ch (   108) load
-I (511) boot: Loaded app from partition at offset 0x10000
-I (511) boot: Disabling RNG early entropy source...
-I (513) octal_psram: vendor id    : 0x0d (AP)
-I (513) octal_psram: dev id       : 0x02 (generation 3)
-I (513) octal_psram: density      : 0x03 (64 Mbit)
-I (513) octal_psram: good-die     : 0x01 (Pass)
-I (513) octal_psram: Latency      : 0x01 (Fixed)
-I (514) octal_psram: VCC          : 0x01 (3V)
-I (514) octal_psram: SRF          : 0x01 (Fast Refresh)
-I (514) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
-I (514) octal_psram: BurstLen     : 0x01 (32 Byte)
-I (514) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
-I (515) octal_psram: DriveStrength: 0x00 (1/1)
-I (515) MSPI Timing: Enter psram timing tuning
-I (516) esp_psram: Found 8MB PSRAM device
-I (516) esp_psram: Speed: 80MHz
-I (516) cpu_start: Multicore app
-I (949) esp_psram: SPI SRAM memory test OK
-I (958) cpu_start: Pro cpu start user code
-I (958) cpu_start: cpu freq: 160000000 Hz
-I (958) app_init: Application information:
-I (958) app_init: Project name:     aiwearable
-I (958) app_init: App version:      e6ad1d8-dirty
-I (959) app_init: Compile time:     May 21 2026 09:52:36
-I (959) app_init: ELF file SHA256:  c30f898bf...
-I (959) app_init: ESP-IDF:          v5.5.3
-I (959) efuse_init: Min chip rev:     v0.0
-I (959) efuse_init: Max chip rev:     v0.99
-I (959) efuse_init: Chip rev:         v0.2
-I (960) heap_init: Initializing. RAM available for dynamic allocation:
-I (960) heap_init: At 3FCB83C0 len 00031350 (196 KiB): RAM
-I (960) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
-I (960) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
-I (960) heap_init: At 600FE06C len 00001F7C (7 KiB): RTCRAM
-I (961) esp_psram: Adding pool of 8192K of PSRAM memory to heap allocator
-I (962) spi_flash: detected chip: generic
-I (962) spi_flash: flash io: qio
-I (962) sleep_gpio: Configure to isolate all GPIO pins in sleep state
-I (963) sleep_gpio: Enable automatic switching of GPIO sleep configuration
-I (963) main_task: Started on CPU0
-I (964) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
-I (965) main_task: Calling app_main()
-I (965) aiclaw: ========================================
-I (965) aiclaw:   AIClaw v0.1.0
-I (965) aiclaw:   OpenClaw ESP32 Interface Device
-I (965) aiclaw: ========================================
-I (1011) settings: Settings loaded from NVS
-I (1011) settings: Settings init: vol=55 bright=100 rgb=1 web=1 log=2
-I (1011) aiclaw: Event group created successfully
-I (1012) board: ========================================
-I (1012) board:  Board: Waveshare ESP32-S3 Audio (ESP32-S3)
-I (1012) board: ========================================
-I (1013) board: I2C0 initialized (SDA=11, SCL=10)
-I (1014) board: IO expander initialized at 0x20
-I (1015) board: RGB LED initialized (GPIO38)
-I (1016) board: Display backlight initialized (GPIO5)
-I (1146) JD9853: New JD9853 panel @0x3fceb95c (RGB565, RGB)
-W (1388) JD9853: COLMOD (0x3A) in vendor cmds will override internal setting
-I (1389) JD9853: Panel init complete
-I (1389) board: LCD initialized (172x320)
-I (1389) LVGL: Starting LVGL task
-I (1393) board: LVGL initialized with display and touch
-I (1563) touch_axs5106l: AXS5106L found at 0x63
-I (1563) touch_axs5106l: AXS5106L Touch hardware initialized at 0x63
-I (1564) touch_axs5106l: AXS5106L Touch registered to LVGL (172x320)
-I (1566) board: Audio I2S initialized (MCLK=12, SCLK=13, LRCK=14, DIN=15, DOUT=16)
-I (1573) ES8311: Work in Slave mode
-I (1576) board: ES8311 speaker codec initialized
-I (1580) ES7210: Work in Slave mode
-I (1587) ES7210: Enable ES7210_INPUT_MIC1
-I (1590) ES7210: Enable ES7210_INPUT_MIC2
-I (1596) I2S_IF: Paired data: 0x3fccaca0, current mode: playback, paired in_enable: 0, paired out_enable: 0
-I (1596) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
-I (1597) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
-I (1614) Adev_Codec: Open codec device OK
-I (1615) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
-I (1615) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x2
-I (1615) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
-I (1617) ES7210: Bits 16
-I (1625) ES7210: Enable ES7210_INPUT_MIC1
-I (1628) ES7210: Enable ES7210_INPUT_MIC2
-I (1636) ES7210: Unmuted
-I (1636) Adev_Codec: Open codec device OK
-I (1638) board: Mic codec initialized (gain=38dB)
-I (1639) board: User buttons initialized (BOOT=0)
-I (1639) board: Board initialization complete
-I (1640) aiclaw: Board: Waveshare ESP32-S3 Audio (ESP32-S3)
-I (1640) pm: Frequency switching config: CPU_MAX: 160, APB_MAX: 80, APB_MIN: 80, Light sleep: DISABLED
-I (1640) aiclaw: PM: CPU scaling 80-160MHz
-I (1641) board: Volume set to 55%
-I (1641) board: Mounting SD card (SDMMC 1-bit)...
-Name: SA02G
-Type: SDSC
-Speed: 20.00 MHz (limit: 20.00 MHz)
-Size: 1876MB
-CSD: ver=1, sector_size=512, capacity=3842048 read_bl_len=10
-SSR: bus_width=1
-I (1689) board: SD card mounted at /sdcard
-I (1689) ASP_POOL: Dest rate:48000
-I (1690) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
-I (1691) mp3_player: MP3 player initialized (prio=12, stack=8KB)
-I (1691) aiclaw: MP3 player ready
-I (1691) aiclaw: Camera: deferred to first use (power saving)
-I (1692) ui_main: Initializing UI...
-I (1692) ui_main: Timezone set to CST-8 (China Standard Time, UTC+8)
-I (1696) ui_status_bar: Status bar initialized
-I (1699) ui_state_chip: State chip initialized
-I (1752) ui_mp3_ui: MP3 UI initialized (GIF + status text layout)
-I (1752) ui_main: State transition: BOOT → BOOT
-I (1805) ui_state_gif: Showing GIF for state 1: S:gifs/boot.gif
-I (1805) ui_main: Clock update timer started
-I (1806) ui_main: UI initialized successfully
-I (1812) ui_tasks: Tasks screen initialized
-I (1812) ui_main: State transition: BOOT → BOOT
-I (3844) tts: TTS init: MiMo model=mimo-v2-tts voice=mimo_default
-I (3846) stt: STT initialized (DashScope streaming, model=fun-asr-realtime-2026-02-28)
-I (3846) stt: STT background task started
-I (3846) aiclaw: Showing boot animation...
-I (5358) pp: pp rom version: e7ae62f
-I (5359) net80211: net80211 rom version: e7ae62f
-I (5360) wifi:wifi driver task: 3fcd4eb4, prio:23, stack:6656, core=0
-I (5375) wifi:wifi firmware version: 4df78f2
-I (5376) wifi:wifi certification version: v7.0
-I (5376) wifi:config NVS flash: enabled
-I (5376) wifi:config nano formatting: disabled
-I (5377) wifi:Init data frame dynamic rx buffer num: 32
-I (5377) wifi:Init static rx mgmt buffer num: 5
-I (5377) wifi:Init management short buffer num: 32
-I (5377) wifi:Init dynamic tx buffer num: 32
-I (5378) wifi:Init static tx FG buffer num: 2
-I (5378) wifi:Init static rx buffer size: 1600
-I (5378) wifi:Init static rx buffer num: 10
-I (5379) wifi:Init dynamic rx buffer num: 32
-I (5380) wifi_init: rx ba win: 6
-I (5380) wifi_init: accept mbox: 6
-I (5380) wifi_init: tcpip mbox: 32
-I (5380) wifi_init: udp mbox: 6
-I (5380) wifi_init: tcp mbox: 6
-I (5381) wifi_init: tcp tx win: 5760
-I (5381) wifi_init: tcp rx win: 5760
-I (5381) wifi_init: tcp mss: 1440
-I (5381) wifi_init: WiFi IRAM OP enabled
-I (5381) wifi_init: WiFi RX IRAM OP enabled
-I (5382) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10
-I (5424) wifi:mode : sta (a0:f2:62:e3:00:a0)
-I (5424) wifi:enable tsf
-I (5426) wifi_mgr: WiFi STA started, connecting to 'zhou'
-I (5426) ui_main: State transition: BOOT → CONNECTING
-I (5566) ui_state_gif: Showing GIF for state 2: S:gifs/connecting.gif
+I (1970) board: SD card mounted at /sdcard
+I (1970) ASP_POOL: Dest rate:48000
+I (1972) mp3_player: MP3 player initialized (prio=12, stack=8KB)
+I (1972) aiclaw: MP3 player ready
+I (1972) aiclaw: Camera: deferred to first use (power saving)
+I (1973) ui_main: Initializing UI...
+I (1973) ui_main: Timezone set to CST-8 (China Standard Time, UTC+8)
+I (1977) ui_status_bar: Status bar initialized
+I (1980) ui_state_chip: State chip initialized
+I (2083) ui_mp3_ui: MP3 UI initialized (GIF + status text layout)
+I (2083) ui_main: State transition: BOOT → BOOT
+I (2136) ui_state_gif: Showing GIF for state 1: S:gifs/boot.gif
+I (2147) ui_main: Clock update timer started
+I (2147) ui_main: UI initialized successfully
+I (2212) ui_tasks: Tasks screen initialized
+I (2212) ui_main: State transition: BOOT → BOOT
+I (4274) tts: TTS init: MiMo model=mimo-v2-tts voice=mimo_default
+I (4274) stt: STT initialized (DashScope streaming, model=fun-asr-realtime-2026-02-28)
+I (4274) stt: STT background task started
+I (4275) aiclaw: Showing boot animation...
+I (5779) pp: pp rom version: e7ae62f
+I (5780) net80211: net80211 rom version: e7ae62f
+I (5782) wifi:wifi driver task: 3fcd50b8, prio:23, stack:6656, core=0
+I (5801) wifi:wifi firmware version: 4df78f2
+I (5802) wifi:wifi certification version: v7.0
+I (5802) wifi:config NVS flash: enabled
+I (5802) wifi:config nano formatting: disabled
+I (5803) wifi:Init data frame dynamic rx buffer num: 32
+I (5803) wifi:Init static rx mgmt buffer num: 5
+I (5804) wifi:Init management short buffer num: 32
+I (5804) wifi:Init dynamic tx buffer num: 32
+I (5804) wifi:Init static tx FG buffer num: 2
+I (5805) wifi:Init static rx buffer size: 1600
+I (5805) wifi:Init static rx buffer num: 10
+I (5805) wifi:Init dynamic rx buffer num: 32
+I (5806) wifi_init: rx ba win: 6
+I (5807) wifi_init: accept mbox: 6
+I (5807) wifi_init: tcpip mbox: 32
+I (5807) wifi_init: udp mbox: 6
+I (5807) wifi_init: tcp mbox: 6
+I (5808) wifi_init: tcp tx win: 5760
+I (5808) wifi_init: tcp rx win: 5760
+I (5808) wifi_init: tcp mss: 1440
+I (5808) wifi_init: WiFi IRAM OP enabled
+I (5808) wifi_init: WiFi RX IRAM OP enabled
+I (5810) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10
+I (5849) wifi:mode : sta (a0:f2:62:e3:00:a0)
+I (5849) wifi:enable tsf
+I (5851) wifi_mgr: WiFi STA started, connecting to 'zhou'
+I (5851) ui_main: State transition: BOOT → CONNECTING
+I (5934) ui_state_gif: Showing GIF for state 2: S:gifs/connecting.gif
 
 assert failed: xQueueGenericSend queue.c:937 (!( ( pvItemToQueue == ((void *)0) ) && ( pxQueue->uxItemSize != ( UBaseType_t ) 0U ) ))
 
@@ -298,7 +158,7 @@ Backtrace: 0x40383931:0x3fcd2100 0x403838f9:0x3fcd2120 0x4038d035:0x3fcd2140 0x4
 
 
 
-ELF file SHA256: c30f898bf
+ELF file SHA256: bbcd41d8d
 
 Rebooting...
 ESP-ROM:esp32s3-20210327
@@ -329,13 +189,13 @@ I (27) boot:  2 factory          factory app      00 00 00010000 00400000
 I (27) boot:  3 model            Unknown data     01 82 00410000 000f0000
 I (28) boot:  4 storage          Unknown data     01 82 00500000 00100000
 I (28) boot: End of partition table
-I (28) esp_image: segment 0: paddr=00010020 vaddr=3c1b0020 size=12c8e0h (1231072) map
-I (212) esp_image: segment 1: paddr=0013c908 vaddr=3fca3900 size=03710h ( 14096) load
+I (28) esp_image: segment 0: paddr=00010020 vaddr=3c1b0020 size=12c8c0h (1231040) map
+I (212) esp_image: segment 1: paddr=0013c8e8 vaddr=3fca3900 size=03730h ( 14128) load
 I (214) esp_image: segment 2: paddr=00140020 vaddr=42000020 size=1a3a80h (1718912) map
-I (470) esp_image: segment 3: paddr=002e3aa8 vaddr=3fca7010 size=046a0h ( 18080) load
-I (473) esp_image: segment 4: paddr=002e8150 vaddr=40374000 size=1f8d8h (129240) load
-I (498) esp_image: segment 5: paddr=00307a30 vaddr=50000000 size=00020h (    32) load
-I (498) esp_image: segment 6: paddr=00307a58 vaddr=600fe000 size=0006ch (   108) load
+I (470) esp_image: segment 3: paddr=002e3aa8 vaddr=3fca7030 size=04680h ( 18048) load
+I (473) esp_image: segment 4: paddr=002e8130 vaddr=40374000 size=1f8d8h (129240) load
+I (498) esp_image: segment 5: paddr=00307a10 vaddr=50000000 size=00020h (    32) load
+I (498) esp_image: segment 6: paddr=00307a38 vaddr=600fe000 size=0006ch (   108) load
 I (512) boot: Loaded app from partition at offset 0x10000
 I (512) boot: Disabling RNG early entropy source...
 I (513) octal_psram: vendor id    : 0x0d (AP)
@@ -345,7 +205,7 @@ I (514) octal_psram: good-die     : 0x01 (Pass)
 I (514) octal_psram: Latency      : 0x01 (Fixed)
 I (514) octal_psram: VCC          : 0x01 (3V)
 I (514) octal_psram: SRF          : 0x01 (Fast Refresh)
-I (514) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+I (515) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
 I (515) octal_psram: BurstLen     : 0x01 (32 Byte)
 I (515) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
 I (515) octal_psram: DriveStrength: 0x00 (1/1)
@@ -353,15 +213,15 @@ I (515) MSPI Timing: Enter psram timing tuning
 I (516) esp_psram: Found 8MB PSRAM device
 I (516) esp_psram: Speed: 80MHz
 I (517) cpu_start: Multicore app
-I (949) esp_psram: SPI SRAM memory test OK
+I (950) esp_psram: SPI SRAM memory test OK
 I (958) cpu_start: Pro cpu start user code
 I (958) cpu_start: cpu freq: 160000000 Hz
-I (958) app_init: Application information:
+I (959) app_init: Application information:
 I (959) app_init: Project name:     aiwearable
-I (959) app_init: App version:      e6ad1d8-dirty
-I (959) app_init: Compile time:     May 21 2026 09:52:36
-I (959) app_init: ELF file SHA256:  c30f898bf...
-I (959) app_init: ESP-IDF:          v5.5.3
+I (959) app_init: App version:      9387a4e-dirty
+I (959) app_init: Compile time:     May 21 2026 10:03:10
+I (959) app_init: ELF file SHA256:  bbcd41d8d...
+I (960) app_init: ESP-IDF:          v5.5.3
 I (960) efuse_init: Min chip rev:     v0.0
 I (960) efuse_init: Max chip rev:     v0.99
 I (960) efuse_init: Chip rev:         v0.2
@@ -385,10 +245,10 @@ I (966) aiclaw: ========================================
 I (1012) settings: Settings loaded from NVS
 I (1012) settings: Settings init: vol=55 bright=100 rgb=1 web=1 log=2
 I (1012) aiclaw: Event group created successfully
-I (1013) board: ========================================
+I (1012) board: ========================================
 I (1013) board:  Board: Waveshare ESP32-S3 Audio (ESP32-S3)
 I (1013) board: ========================================
-I (1014) board: I2C0 initialized (SDA=11, SCL=10)
+I (1013) board: I2C0 initialized (SDA=11, SCL=10)
 I (1015) board: IO expander initialized at 0x20
 I (1016) board: RGB LED initialized (GPIO38)
 I (1017) board: Display backlight initialized (GPIO5)
@@ -400,637 +260,1264 @@ I (1390) LVGL: Starting LVGL task
 I (1394) board: LVGL initialized with display and touch
 I (1564) touch_axs5106l: AXS5106L found at 0x63
 I (1564) touch_axs5106l: AXS5106L Touch hardware initialized at 0x63
-I (1565) touch_axs5106l: AXS5106L Touch registered to LVGL (172x320)
-I (1567) board: Audio I2S initialized (MCLK=12, SCLK=13, LRCK=14, DIN=15, DOUT=16)
-I (1574) ES8311: Work in Slave mode
+I (1564) touch_axs5106l: AXS5106L Touch registered to LVGL (172x320)
+I (1566) board: Audio I2S initialized (MCLK=12, SCLK=13, LRCK=14, DIN=15, DOUT=16)
+I (1573) ES8311: Work in Slave mode
 I (1577) board: ES8311 speaker codec initialized
-I (1581) ES7210: Work in Slave mode
-I (1588) ES7210: Enable ES7210_INPUT_MIC1
+I (1580) ES7210: Work in Slave mode
+I (1587) ES7210: Enable ES7210_INPUT_MIC1
 I (1591) ES7210: Enable ES7210_INPUT_MIC2
-I (1597) I2S_IF: Paired data: 0x3fccaca0, current mode: playback, paired in_enable: 0, paired out_enable: 0
-I (1598) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
-I (1598) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (1596) I2S_IF: Paired data: 0x3fccaca0, current mode: playback, paired in_enable: 0, paired out_enable: 0
+I (1597) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (1597) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
 I (1615) Adev_Codec: Open codec device OK
-I (1616) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
-I (1617) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x2
-I (1617) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (1615) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
+I (1616) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x2
+I (1616) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
 I (1618) ES7210: Bits 16
 I (1626) ES7210: Enable ES7210_INPUT_MIC1
 I (1629) ES7210: Enable ES7210_INPUT_MIC2
 I (1637) ES7210: Unmuted
-I (1638) Adev_Codec: Open codec device OK
-I (1640) board: Mic codec initialized (gain=38dB)
-I (1640) board: User buttons initialized (BOOT=0)
-I (1641) board: Board initialization complete
+I (1637) Adev_Codec: Open codec device OK
+I (1639) board: Mic codec initialized (gain=38dB)
+I (1639) board: User buttons initialized (BOOT=0)
+I (1640) board: Board initialization complete
 I (1641) aiclaw: Board: Waveshare ESP32-S3 Audio (ESP32-S3)
 I (1641) pm: Frequency switching config: CPU_MAX: 160, APB_MAX: 80, APB_MIN: 80, Light sleep: DISABLED
-I (1642) aiclaw: PM: CPU scaling 80-160MHz
-I (1643) board: Volume set to 55%
-I (1643) board: Mounting SD card (SDMMC 1-bit)...
+I (1641) aiclaw: PM: CPU scaling 80-160MHz
+I (1642) board: Volume set to 55%
+I (1642) board: Mounting SD card (SDMMC 1-bit)...
 Name: SA02G
-Type: SDSC
-Speed: 20.00 MHz (limit: 20.00 MHz)
-Size: 1876MB
-CSD: ver=1, sector_size=512, capacity=3842048 read_bl_len=10
-SSR: bus_width=1
-I (1691) board: SD card mounted at /sdcard
-I (1691) ASP_POOL: Dest rate:48000
-I (1692) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
-I (1693) mp3_player: MP3 player initialized (prio=12, stack=8KB)
-I (1693) aiclaw: MP3 player ready
-I (1693) aiclaw: Camera: deferred to first use (power saving)
-I (1694) ui_main: Initializing UI...
-I (1694) ui_main: Timezone set to CST-8 (China Standard Time, UTC+8)
-I (1698) ui_status_bar: Status bar initialized
-I (1701) ui_state_chip: State chip initialized
-I (1753) ui_mp3_ui: MP3 UI initialized (GIF + status text layout)
-I (1753) ui_main: State transition: BOOT → BOOT
-I (1806) ui_state_gif: Showing GIF for state 1: S:gifs/boot.gif
-I (1807) ui_main: Clock update timer started
-I (1807) ui_main: UI initialized successfully
-I (1813) ui_tasks: Tasks screen initialized
-I (1813) ui_main: State transition: BOOT → BOOT
-I (3815) tts: TTS init: MiMo model=mimo-v2-tts voice=mimo_default
-I (3815) stt: STT initialized (DashScope streaming, model=fun-asr-realtime-2026-02-28)
-I (3816) aiclaw: Showing boot animation...
-I (3837) stt: STT background task started
-I (5327) pp: pp rom version: e7ae62f
-I (5328) net80211: net80211 rom version: e7ae62f
-I (5330) wifi:wifi driver task: 3fcd50bc, prio:23, stack:6656, core=0
-I (5346) wifi:wifi firmware version: 4df78f2
-I (5346) wifi:wifi certification version: v7.0
-I (5346) wifi:config NVS flash: enabled
-I (5347) wifi:config nano formatting: disabled
-I (5347) wifi:Init data frame dynamic rx buffer num: 32
-I (5347) wifi:Init static rx mgmt buffer num: 5
-I (5348) wifi:Init management short buffer num: 32
-I (5348) wifi:Init dynamic tx buffer num: 32
-I (5348) wifi:Init static tx FG buffer num: 2
-I (5349) wifi:Init static rx buffer size: 1600
-I (5349) wifi:Init static rx buffer num: 10
-I (5349) wifi:Init dynamic rx buffer num: 32
-I (5350) wifi_init: rx ba win: 6
-I (5351) wifi_init: accept mbox: 6
-I (5351) wifi_init: tcpip mbox: 32
-I (5351) wifi_init: udp mbox: 6
-I (5351) wifi_init: tcp mbox: 6
-I (5351) wifi_init: tcp tx win: 5760
-I (5351) wifi_init: tcp rx win: 5760
-I (5351) wifi_init: tcp mss: 1440
-I (5352) wifi_init: WiFi IRAM OP enabled
-I (5352) wifi_init: WiFi RX IRAM OP enabled
-I (5353) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10
-I (5394) wifi:mode : sta (a0:f2:62:e3:00:a0)
-I (5395) wifi:enable tsf
-I (5397) ui_main: State transition: BOOT → CONNECTING
-I (5397) wifi_mgr: WiFi STA started, connecting to 'zhou'
-I (5481) ui_state_gif: Showing GIF for state 2: S:gifs/connecting.gif
-I (7917) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
-I (7917) wifi:state: init -> auth (0xb0)
-I (7938) wifi:state: auth -> assoc (0x0)
-I (7968) wifi:state: assoc -> run (0x10)
-I (7997) wifi:<ba-add>idx:0 (ifx:0, 68:77:24:59:8c:8a), tid:5, ssn:0, winSize:64
-I (8091) wifi:connected with zhou, aid = 2, channel 1, BW20, bssid = 68:77:24:59:8c:8a
-I (8092) wifi:security: WPA2-PSK, phy: bgn, rssi: -49
-I (8094) wifi:pm start, type: 1
+I (1690) ASP_POOL: Dest rate:48000
+I (1691) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
+I (1691) mp3_player: MP3 player initialized (prio=12, stack=8KB)
+I (1691) aiclaw: MP3 player ready
+I (1692) aiclaw: Camera: deferred to first use (power saving)
+I (1692) ui_main: Initializing UI...
+I (1693) ui_main: Timezone set to CST-8 (China Standard Time, UTC+8)
+I (1696) ui_status_bar: Status bar initialized
+I (1700) ui_state_chip: State chip initialized
+I (1751) ui_mp3_ui: MP3 UI initialized (GIF + status text layout)
+I (1752) ui_main: State transition: BOOT → BOOT
+I (1805) ui_state_gif: Showing GIF for state 1: S:gifs/boot.gif
+I (1806) ui_main: Clock update timer started
+I (1806) ui_main: UI initialized successfully
+I (1812) ui_tasks: Tasks screen initialized
+I (1812) ui_main: State transition: BOOT → BOOT
+I (3842) tts: TTS init: MiMo model=mimo-v2-tts voice=mimo_default
+I (3844) stt: STT initialized (DashScope streaming, model=fun-asr-realtime-2026-02-28)
+I (3844) stt: STT background task started
+I (3845) aiclaw: Showing boot animation...
+I (5356) pp: pp rom version: e7ae62f
+I (5387) net80211: net80211 rom version: e7ae62f
+I (5389) wifi:wifi driver task: 3fcd4eb4, prio:23, stack:6656, core=0
+I (5404) wifi:wifi firmware version: 4df78f2
+I (5404) wifi:wifi certification version: v7.0
+I (5404) wifi:config NVS flash: enabled
+I (5405) wifi:config nano formatting: disabled
+I (5405) wifi:Init data frame dynamic rx buffer num: 32
+I (5405) wifi:Init static rx mgmt buffer num: 5
+I (5405) wifi:Init management short buffer num: 32
+I (5406) wifi:Init dynamic tx buffer num: 32
+I (5406) wifi:Init static tx FG buffer num: 2
+I (5406) wifi:Init static rx buffer size: 1600
+I (5407) wifi:Init static rx buffer num: 10
+I (5407) wifi:Init dynamic rx buffer num: 32
+I (5408) wifi_init: rx ba win: 6
+I (5408) wifi_init: accept mbox: 6
+I (5408) wifi_init: tcpip mbox: 32
+I (5408) wifi_init: udp mbox: 6
+I (5408) wifi_init: tcp mbox: 6
+I (5411) wifi_init: tcp tx win: 5760
+I (5411) wifi_init: tcp rx win: 5760
+I (5411) wifi_init: tcp mss: 1440
+I (5411) wifi_init: WiFi IRAM OP enabled
+I (5411) wifi_init: WiFi RX IRAM OP enabled
+I (5413) phy_init: phy_version 711,97bcf0a2,Aug 25 2025,19:04:10
+I (5452) wifi:mode : sta (a0:f2:62:e3:00:a0)
+I (5453) wifi:enable tsf
+I (5455) ui_main: State transition: BOOT → CONNECTING
+I (5456) wifi_mgr: WiFi STA started, connecting to 'zhou'
+I (5549) ui_state_gif: Showing GIF for state 2: S:gifs/connecting.gif
+I (7962) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+I (7962) wifi:state: init -> auth (0xb0)
+I (7984) wifi:state: auth -> assoc (0x0)
+I (8016) wifi:state: assoc -> run (0x10)
+I (8030) wifi:<ba-add>idx:0 (ifx:0, 68:77:24:59:8c:8a), tid:5, ssn:0, winSize:64
+I (8121) wifi:connected with zhou, aid = 2, channel 1, BW20, bssid = 68:77:24:59:8c:8a
+I (8121) wifi:security: WPA2-PSK, phy: bgn, rssi: -48
+I (8124) wifi:pm start, type: 1
 
-I (8095) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
-I (8095) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
-I (8117) wifi:AP's beacon interval = 102400 us, DTIM period = 1
-I (9280) esp_netif_handlers: sta ip: 192.168.1.13, mask: 255.255.255.0, gw: 192.168.1.1
-I (9281) aiclaw: WiFi connected
-I (9281) wifi_mgr: Connected, IP: 192.168.1.13
-I (9282) wifi:Set ps type: 1, coexist: 0
+I (8124) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+I (8125) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+I (8141) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+I (9282) esp_netif_handlers: sta ip: 192.168.1.13, mask: 255.255.255.0, gw: 192.168.1.1
+I (9283) aiclaw: WiFi connected
+I (9284) wifi_mgr: Connected, IP: 192.168.1.13
+I (9284) wifi:Set ps type: 1, coexist: 0
 
-I (9283) wifi_mgr: WiFi PS: MIN_MODEM
-I (9283) wifi_mgr: SNTP time sync started
-I (9283) aiclaw: WiFi ready
-I (9283) aiclaw: Waiting for SNTP time sync...
-I (9330) wifi:<ba-add>idx:1 (ifx:0, 68:77:24:59:8c:8a), tid:0, ssn:1, winSize:64
-I (13307) aiclaw: Time synced (attempt 9)
-I (13307) aiclaw: Current time: 2026-05-21 09:55:58 (UTC)
-I (13373) openclaw: Device identity: 8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848
-I (13373) openclaw: OpenClaw client initialized (host=118.25.20.250, port=18789, shared_token=yes, device_token=yes)
-I (13878) ui_main: State transition: CONNECTING → CONNECTING
-I (13882) openclaw: Connecting to ws://118.25.20.250:18789 (TLS=no)
-I (13927) app_tasks: Background tasks started
-I (13927) MODEL_LOADER: The storage free size is 21632 KB
-I (13927) MODEL_LOADER: The partition size is 960 KB
-I (13932) MODEL_LOADER: Successfully load srmodels
-I (13932) wake_word: Loading WakeNet model: wn9_nihaoxiaozhi_tts
-I (13964) openclaw: WebSocket connected (after 0 failures)
-I (13964) ui_main: State transition: CONNECTING → CONNECTING
+I (9285) wifi_mgr: WiFi PS: MIN_MODEM
+I (9286) wifi_mgr: SNTP time sync started
+I (9286) aiclaw: WiFi ready
+I (9286) aiclaw: Waiting for SNTP time sync...
+I (11236) wifi:<ba-add>idx:1 (ifx:0, 68:77:24:59:8c:8a), tid:0, ssn:1, winSize:64
+I (11287) aiclaw: Time synced (attempt 5)
+I (11287) aiclaw: Current time: 2026-05-21 10:07:19 (UTC)
+I (11354) openclaw: Device identity: 8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848
+I (11356) openclaw: OpenClaw client initialized (host=118.25.20.250, port=18789, shared_token=yes, device_token=yes)
+I (11859) ui_main: State transition: CONNECTING → CONNECTING
+I (11862) openclaw: Connecting to ws://118.25.20.250:18789 (TLS=no)
+I (11867) app_tasks: Background tasks started
+I (11868) MODEL_LOADER: The storage free size is 21632 KB
+I (11868) MODEL_LOADER: The partition size is 960 KB
+I (11868) MODEL_LOADER: Successfully load srmodels
+I (11868) wake_word: Loading WakeNet model: wn9_nihaoxiaozhi_tts
+I (11915) openclaw: WebSocket connected (after 0 failures)
+I (11916) ui_main: State transition: CONNECTING → CONNECTING
+I (11921) openclaw: WS msg (122 bytes): {"type":"event","event":"connect.challenge","payload":{"nonce":"45e0069c-5461-4bf9-a3c7-d1b3d805634f...
+I (11922) openclaw: Got connect.challenge
+I (11923) openclaw: Auth payload: v2|8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848|cli|cli|operator|operator.read,operator.write|1779329240576|2f85eb0f6d87614c9885404d6c5df4522cfe5129d3c28d77|45e0069c-5461-4bf9-a3c7-d1b3d805634f
+I (11950) openclaw: Device auth: id=8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848 token=shared
+I (11952) openclaw: Connect req (682 bytes): {"type":"req","id":"1","method":"connect","params":{"minProtocol":3,"maxProtocol":4,"client":{"id":"cli","version":"0.5.0","platform":"esp32s3","mode":"cli"},"role":"operator","scopes":["operator.read","operator.write"],"caps":["tool-events","proactive"],"locale":"en-US","userAgent":"AIClaw/0.5.0","auth":{"token":"2f85eb0f6d87614c9885404d6c5df4522cfe5129d3c28d77"},"device":{"id":"8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848","publicKey":"Jdny8LS3iuwt-EbVpV-PgkF_9enoWaZMb-dLhjxGOeA","signature":"bVXedtixYVdhEPLqam5Fve5qHXc8cwBmDeHm7wW3UOBZ-aSt1q9nkNvhWtAX0vcqCnhDqIt69Ey3coL5gCFcDA","signedAt":1779329240576,"nonce":"45e0069c-5461-4bf9-a3c7-d1b3d805634f"}}}
+I (11957) openclaw: Sent connect request with device authentication
+I (11958) ui_main: State transition: CONNECTING → CONNECTING
 MC Quantized wakenet9: wakenet9l_tts1h8_你好小智_3_0.631_0.635, tigger:v3, mode:1, p:0, (Nov  5 2024 16:02:49)
-I (14098) wake_word: WakeNet ready: wake word="你好小智" model=wn9_nihaoxiaozhi_tts freq=16000Hz chunk=512
-I (14102) wake_word: Wake word detection started
-I (14102) wake_word: Detection task running (chunk=512 samples)
-I (14102) aiclaw: Wake word: "你好小智"
-I (14103) mp3_player: Dynamic scanning: /sdcard/mp3
-I (14240) mp3_player:   [0] 致青春-王菲.mp3 (7442935 bytes)
-I (14241) mp3_player:   [1] G.E.M.+邓紫棋+-+泡沫_1245657.mp3 (10357226 bytes)
-I (14242) mp3_player:   [2] G.E.M.+邓紫棋+-+唯一_321260769.mp3 (10152444 bytes)
-I (14243) mp3_player:   [3] 陈奕迅 - 十年_80403.mp3 (8219359 bytes)
-I (14254) mp3_player:   [4] 陈奕迅+-+孤勇者_198554068.mp3 (10242283 bytes)
-I (14255) mp3_player:   [5] 陈奕迅+-+红玫瑰_1037667.mp3 (9601761 bytes)
-I (14256) mp3_player:   [6] 大欢 - 这一路_192275426.mp3 (11807539 bytes)
-I (14257) mp3_player:   [7] 刀郎 - 西海情歌.mp3 (13754649 bytes)
-I (14258) mp3_player:   [8] 浩然H.R - 你看那远山 (纯享版).mp3 (7267403 bytes)
-I (14259) mp3_player:   [9] 胡杨林 - 香水有毒.mp3 (11663108 bytes)
-I (14262) mp3_player:   [10] 赖美云 & 井朧 - 送你一个拥抱.mp3 (7850000 bytes)
-I (14278) mp3_player:   [11] 李荣浩+-+恋人_386305156.mp3 (11039079 bytes)
-I (14326) mp3_player:   [12] 林俊杰+-+江南_93157.mp3 (10720847 bytes)
-I (14339) mp3_player:   [13] 刘晓 - 霸王别姬.mp3 (16174630 bytes)
-I (14340) mp3_player:   [14] 劉若英 - 後來.mp3 (13704749 bytes)
-I (14341) mp3_player:   [15] 馒小蛮同学 - 金玉良缘.mp3 (8848605 bytes)
-I (14344) mp3_player:   [16] 王力宏+-+天地龙鳞_201182467.mp3 (7870298 bytes)
-I (14344) mp3_player:   [17] 王琪 - 可可托海的牧羊人.mp3 (13662891 bytes)
-I (14345) mp3_player:   [18] 伍佰 & China Blue - 挪威的森林.mp3 (15670192 bytes)
-I (14346) mp3_player:   [19] 央金拉姆 - 不跪的花_556907469.mp3 (7689604 bytes)
-I (14346) mp3_player:   [20] 張韶涵 - 吶喊.mp3 (10284007 bytes)
-I (14350) mp3_player:   [21] 周華健 - 有沒有一首歌會讓你想起我.mp3 (11563552 bytes)
-I (14386) mp3_player:   [22] 周蕙 - 约定_313049.mp3 (10374919 bytes)
-I (14387) mp3_player:   [23] 周深 - 小美满_339923255.mp3 (8570445 bytes)
-I (14388) mp3_player:   [24] 周深+-+大鱼_7095195.mp3 (12551167 bytes)
-I (14389) mp3_player:   [25] S.H.E - 半糖主义.mp3 (8718842 bytes)
-I (14392) mp3_player:   [26] S.H.E - 中国话.mp3 (7763792 bytes)
-I (14392) mp3_player:   [27] 谭咏麟 - 披着羊皮的狼.mp3 (10735479 bytes)
-I (14393) mp3_player:   [28] 若不是因为你(深情版)-林栖.mp3 (10139537 bytes)
-I (14394) mp3_player:   [29] 不要在我寂寞的时候说爱我-郑源.mp3 (9795000 bytes)
-I (14395) mp3_player:   [30] 匆匆那年-王菲.mp3 (9642445 bytes)
-I (14396) mp3_player:   [31] 让我一次爱个够-吴琳Lin.mp3 (8491055 bytes)
-I (14397) mp3_player: Dynamically found 32 MP3 file(s)
-I (14398) app_state: SD MP3 scan: 32 files found on boot
-I (14398) notes_manager: Initializing notes manager
-I (14414) notes_manager: Notes manager initialized
-I (14414) ui_state_gif: Initializing GIF state manager
-I (14414) ui_state_gif: GIF state manager initialized
+I (12089) wake_word: WakeNet ready: wake word="你好小智" model=wn9_nihaoxiaozhi_tts freq=16000Hz chunk=512
+I (12089) openclaw: WS msg (6991 bytes): {"type":"res","id":"1","ok":true,"payload":{"type":"hello-ok","protocol":4,"server":{"version":"2026...
+I (12103) openclaw: Response received (id=1 state=2)
+I (12103) openclaw: Snapshot: v2026.5.18 up=104m wa= agent=main sess=3 last=8m
+I (12104) aiclaw: OpenClaw connected
+I (12108) openclaw: Requesting usage.status (id=3)
+I (12111) wake_word: Wake word detection started
+I (12111) ui_main: State transition: CONNECTING → IDLE
+I (12111) wake_word: Detection task running (chunk=512 samples)
+I (12113) aiclaw: Wake word: "你好小智"
+I (12113) mp3_player: Dynamic scanning: /sdcard/mp3
+I (12251) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (12252) openclaw: Connected to OpenClaw gateway
+I (12260) openclaw: WS msg (2262 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329240826,"durationMs":32,"eventLoop"...
+I (12312) mp3_player:   [0] 致青春-王菲.mp3 (7442935 bytes)
+I (12313) mp3_player:   [1] G.E.M.+邓紫棋+-+泡沫_1245657.mp3 (10357226 bytes)
+I (12314) mp3_player:   [2] G.E.M.+邓紫棋+-+唯一_321260769.mp3 (10152444 bytes)
+I (12315) mp3_player:   [3] 陈奕迅 - 十年_80403.mp3 (8219359 bytes)
+I (12318) mp3_player:   [4] 陈奕迅+-+孤勇者_198554068.mp3 (10242283 bytes)
+I (12319) mp3_player:   [5] 陈奕迅+-+红玫瑰_1037667.mp3 (9601761 bytes)
+I (12319) mp3_player:   [6] 大欢 - 这一路_192275426.mp3 (11807539 bytes)
+I (12320) mp3_player:   [7] 刀郎 - 西海情歌.mp3 (13754649 bytes)
+I (12321) mp3_player:   [8] 浩然H.R - 你看那远山 (纯享版).mp3 (7267403 bytes)
+I (12322) mp3_player:   [9] 胡杨林 - 香水有毒.mp3 (11663108 bytes)
+I (12332) mp3_player:   [10] 赖美云 & 井朧 - 送你一个拥抱.mp3 (7850000 bytes)
+I (12334) mp3_player:   [11] 李荣浩+-+恋人_386305156.mp3 (11039079 bytes)
+I (12335) mp3_player:   [12] 林俊杰+-+江南_93157.mp3 (10720847 bytes)
+I (12335) mp3_player:   [13] 刘晓 - 霸王别姬.mp3 (16174630 bytes)
+I (12336) mp3_player:   [14] 劉若英 - 後來.mp3 (13704749 bytes)
+I (12337) mp3_player:   [15] 馒小蛮同学 - 金玉良缘.mp3 (8848605 bytes)
+I (12339) mp3_player:   [16] 王力宏+-+天地龙鳞_201182467.mp3 (7870298 bytes)
+I (12340) mp3_player:   [17] 王琪 - 可可托海的牧羊人.mp3 (13662891 bytes)
+I (12340) mp3_player:   [18] 伍佰 & China Blue - 挪威的森林.mp3 (15670192 bytes)
+I (12341) mp3_player:   [19] 央金拉姆 - 不跪的花_556907469.mp3 (7689604 bytes)
+I (12342) mp3_player:   [20] 張韶涵 - 吶喊.mp3 (10284007 bytes)
+I (12363) openclaw: WS msg (2211 bytes): {"type":"res","id":"2","ok":true,"payload":{"ok":true,"ts":1779329240826,"durationMs":32,"eventLoop"...
+I (12368) openclaw: Response received (id=2 state=3)
+I (12368) openclaw: Health: ok=1 agent=main sess=3 last=560s wa=
+I (12390) mp3_player:   [21] 周華健 - 有沒有一首歌會讓你想起我.mp3 (11563552 bytes)
+I (12391) mp3_player:   [22] 周蕙 - 约定_313049.mp3 (10374919 bytes)
+I (12392) mp3_player:   [23] 周深 - 小美满_339923255.mp3 (8570445 bytes)
+I (12393) mp3_player:   [24] 周深+-+大鱼_7095195.mp3 (12551167 bytes)
+I (12393) mp3_player:   [25] S.H.E - 半糖主义.mp3 (8718842 bytes)
+I (12396) mp3_player:   [26] S.H.E - 中国话.mp3 (7763792 bytes)
+I (12397) mp3_player:   [27] 谭咏麟 - 披着羊皮的狼.mp3 (10735479 bytes)
+I (12398) mp3_player:   [28] 若不是因为你(深情版)-林栖.mp3 (10139537 bytes)
+I (12399) mp3_player:   [29] 不要在我寂寞的时候说爱我-郑源.mp3 (9795000 bytes)
+I (12400) mp3_player:   [30] 匆匆那年-王菲.mp3 (9642445 bytes)
+I (12401) mp3_player:   [31] 让我一次爱个够-吴琳Lin.mp3 (8491055 bytes)
+I (12401) mp3_player: Dynamically found 32 MP3 file(s)
+I (12402) app_state: SD MP3 scan: 32 files found on boot
+I (12403) notes_manager: Initializing notes manager
+I (12406) notes_manager: Notes manager initialized
+I (12406) ui_state_gif: Initializing GIF state manager
+I (12406) ui_state_gif: GIF state manager initialized
+I (12553) openclaw: WS msg (2244 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329241178,"durationMs":39,"eventLoop"...
+I (12757) openclaw: WS msg (86 bytes): {"type":"res","id":"3","ok":true,"payload":{"updatedAt":1779329241060,"providers":[]}}39,"eventLoop"
+I (12759) openclaw: Response received (id=3 state=3)
 
 Type 'help' to get the list of commands.
 Use UP/DOWN arrows to navigate through command history.
 Press TAB when typing command name to auto-complete.
-I (14500) cli: Serial CLI started — type 'help' or press Enter
-                                                                                                                                                       I (14535) aiclaw: All tasks started. Ready.
-I (14538) mdns_mem: mDNS task will be created from internal RAM
-I (14541) webserver: mDNS initialized (aiclaw.local)
-I (14549) webserver: Web server started on port 80
-I (14550) aiclaw: Web server started on http://192.168.1.13
-I (14560) settings: Settings saved to NVS
-I (14566) aiclaw: TTS announce start: 网页服务器已启动，请访问 192.168.1.13
-AIClaw>  I (14677) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
-I (14679) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"网页服务器已启动，请访问 192.168.1.13"}]}
-I (14875) esp-x509-crt-bundle: Certificate validated
-I (14989) openclaw: WS msg (122 bytes): {"type":"event","event":"connect.challenge","payload":{"nonce":"bb9bc33e-d0f1-4343-bfd5-3635445647be...
-I (14992) openclaw: Got connect.challenge
-I (14994) openclaw: Auth payload: v2|8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848|cli|cli|operator|operator.read,operator.write|1779328559934|2f85eb0f6d87614c9885404d6c5df4522cfe5129d3c28d77|bb9bc33e-d0f1-4343-bfd5-3635445647be
-I (15021) openclaw: Device auth: id=8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848 token=shared
-I (15024) openclaw: Connect req (682 bytes): {"type":"req","id":"1","method":"connect","params":{"minProtocol":3,"maxProtocol":4,"client":{"id":"cli","version":"0.5.0","platform":"esp32s3","mode":"cli"},"role":"operator","scopes":["operator.read","operator.write"],"caps":["tool-events","proactive"],"locale":"en-US","userAgent":"AIClaw/0.5.0","auth":{"token":"2f85eb0f6d87614c9885404d6c5df4522cfe5129d3c28d77"},"device":{"id":"8666e3fd61a550258b13a6dcd06a303fc20952fd53b9dd548d6754b6de104848","publicKey":"Jdny8LS3iuwt-EbVpV-PgkF_9enoWaZMb-dLhjxGOeA","signature":"5gexpOjqK0lKMBIIxSHz6QVLB_4WCg3uSnzOfv3g3KV_1QjmJpkTD4jh9-QHlfI95DcZYaqHT574_xCk6g5LAg","signedAt":1779328559934,"nonce":"bb9bc33e-d0f1-4343-bfd5-3635445647be"}}}
-I (15041) openclaw: Sent connect request with device authentication
-I (15043) ui_main: State transition: CONNECTING → CONNECTING
-I (15121) ui_state_gif: Showing GIF for state 2: S:gifs/connecting.gif
-I (15148) openclaw: WS msg (6997 bytes): {"type":"res","id":"1","ok":true,"payload":{"type":"hello-ok","protocol":4,"server":{"version":"2026...
-I (15165) openclaw: Response received (id=1 state=2)
-I (15166) openclaw: Snapshot: v2026.5.18 up=93m wa= agent=main sess=3 last=21m
-I (15168) aiclaw: OpenClaw connected
-I (15173) openclaw: Requesting usage.status (id=3)
-I (15176) ui_main: State transition: CONNECTING → IDLE
-I (15375) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
-I (15377) openclaw: Connected to OpenClaw gateway
-I (15386) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328560167,"durationMs":25,"eventLoop"...
-I (15399) openclaw: WS msg (2215 bytes): {"type":"res","id":"2","ok":true,"payload":{"ok":true,"ts":1779328560167,"durationMs":25,"eventLoop"...
-I (15406) openclaw: Response received (id=2 state=3)
-I (15407) openclaw: Health: ok=1 agent=main sess=3 last=1297s wa=
-I (15519) openclaw: WS msg (2248 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328560461,"durationMs":39,"eventLoop"...
-I (15705) openclaw: WS msg (86 bytes): {"type":"res","id":"3","ok":true,"payload":{"updatedAt":1779328560341,"providers":[]}}39,"eventLoop"
-I (15708) openclaw: Response received (id=3 state=3)
-I (15979) tts: MiMo HTTP 200, content_len=0
-I (15980) tts: MiMo play task started (prebuf=9600 bytes)
-I (15981) tts: MiMo reading SSE stream (streaming playback)...
-I (16650) tts: MiMo prebuf done (23040 bytes), starting playback
-I (19563) ui_main: State transition: IDLE → IDLE
-I (21298) tts: MiMo SSE [DONE], total PCM=330240 bytes, chunks=14
-I (21299) tts: MiMo waiting for playback to finish...
-I (22251) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779328567180},"seq":3}"providers":[]}}39,"eventLoop"
-I (23422) tts: MiMo play task exiting
-I (23428) tts: MiMo total played: 330240/330240 bytes
-I (23457) tts: MiMo TTS session ended
-I (23457) wake_word: Wake word resumed - detection task will continue
-I (23458) aiclaw: TTS announce complete
+I (13310) cli: Serial CLI started — type 'help' or press Enter
 
-AIClaw>  I (43922) app_tasks: Memory status - Free heap: 6932528 bytes (min: 6165884), Free PSRAM: 6903828 bytes (min: 6903828)
-I (43993) app_tasks: SLEEP_DEBUG: state=4 idle_ms=30065 timeout=60000 is_active=0 last_act=1297
-I (51569) wake_word: Audio monitor: RMS=90
-I (52077) openclaw: WS msg (2267 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328597020,"durationMs":25,"eventLoop"...
-I (52234) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779328597180},"seq":5}20,"durationMs":25,"eventLoop"
-I (74005) app_tasks: SLEEP_DEBUG: state=4 idle_ms=60077 timeout=60000 is_active=0 last_act=1334
-I (74011) app_tasks: Idle for 60077 ms, entering light sleep
-I (74124) app_tasks: Wake word paused for sleep (use button to wake)
-I (74127) wifi:Set ps type: 2, coexist: 0
+Your terminal application does not support escape sequences.
 
-I (74864) webserver: Saved MP3: /sdcard/music/一厢情愿-大哲.mp3 (10140436 bytes)
-I (82234) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779328627180},"seq":6}20,"durationMs":25,"eventLoop"
-I (84178) app_tasks: Wake from light sleep (knob press)
-I (84179) wifi:Set ps type: 1, coexist: 0
+Line editing and history features are disabled.
 
-I (84180) wake_word: Wake word resumed - detection task will continue
-I (84204) app_tasks: Memory status - Free heap: 6942360 bytes (min: 6165884), Free PSRAM: 6903652 bytes (min: 6903652)
-I (84211) aiclaw: Woke from sleep via event — ignoring action
-I (85727) openclaw: Requesting cron.list
-I (85768) openclaw: WS msg (143 bytes): {"type":"res","id":"4","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fals...
-I (85771) openclaw: Response received (id=4 state=3)
-I (85772) openclaw: Cron: 0 tasks (0 active)
-I (86325) wake_word: *** Wake word detected: "你好小智" ***
-I (86328) aiclaw: Wake word detected!
-I (86610) ui_main: State transition: IDLE → LISTENING
-I (86611) stt: Connecting to DashScope STT... Free internal heap: 53607
-W (86613) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
-I (86799) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
-I (86802) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
-I (87017) esp-x509-crt-bundle: Certificate validated
-I (87386) voice_chat: DC offset: 0 | Noise floor: 76 → threshold: 300
-I (87513) stt: WebSocket connected
-I (87847) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"task-started","attributes":{}},"payload":{}}
-I (87850) stt: Task started: 2b5578822b54014e2b54360c00000001
-I (87955) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
-I (87963) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
-I (87991) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
-I (88011) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
-I (88021) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
-I (88754) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":600,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
-I (88861) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":600,"end_time":null,"text":"播","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":600,"end_time":1080,"text":"播","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (89074) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":920,"end_time":null,"text":"播放","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":920,"end_time":1320,"text":"播放","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (89676) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":920,"end_time":null,"text":"播放NP3 ","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":920,"end_time":1480,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1480,"end_time":2040,"text":"NP3 ","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (90353) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":920,"end_time":null,"text":"播放MP31 ","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":920,"end_time":1840,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1840,"end_time":2760,"text":"MP31 ","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (90453) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
-I (90901) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":920,"end_time":null,"text":"播放MP31 愿","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":920,"end_time":1773,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1773,"end_time":2626,"text":"MP31 ","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2626,"end_time":3480,"text":"愿","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (91556) voice_chat: Silence detected after speech (rms=78 < 300), stopping
-I (91678) voice_chat: Recorded 77824 samples 4.9s (min=-4140 max=3411 avg_abs=228 noise_floor=76)
-I (91680) ui_main: State transition: LISTENING → SENDING
-I (91851) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
-I (91854) stt: Finalizing STT, waiting for result...
-I (91942) stt: Stopping: ringbuffer empty, sending finish-task
-I (91943) stt: Audio upload done: 152 chunks, 155648 bytes total. State: 4
-I (91954) stt: Sent finish-task (ret=124)
-I (92055) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":920,"end_time":3740,"text":"播放MP3 一厢情愿。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":920,"end_time":1625,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1625,"end_time":2330,"text":"MP3 ","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2330,"end_time":3035,"text":"一厢","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":3035,"end_time":3740,"text":"情愿","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":3740,"current_time":3740,"words":[]}}},"usage":{"duration":4}}}
-I (92070) stt: Result [final]: 播放MP3 一厢情愿。
-I (92076) stt: STT response: {"header":{"task_id":"2b5578822b54014e2b54360c00000001","event":"task-finished","attributes":{}},"payload":{"output":{}}}
-I (92079) stt: Task finished. Result: '播放MP3 一厢情愿。' (len=25)
-I (92081) voice_chat: STT result: '播放MP3 一厢情愿。'
-I (92244) ui_main: State transition: SENDING → THINKING
-I (92279) openclaw: WS msg (85 bytes): {"type":"res","id":"5","ok":true,"payload":{"runId":"hc-91274-5","status":"started"}},"hasMore":fals
-I (92281) openclaw: Response received (id=5 state=5)
-I (92456) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
-I (92460) openclaw: Chat sent: 播放MP3 一厢情愿。
-I (92461) wake_word: Wake word resumed - detection task will continue
-I (93095) stt: STT session ended
-I (93530) openclaw: WS msg (226 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"lifecycle","data":{"phase"...
-I (96481) wake_word: Audio monitor: RMS=51
-I (98235) openclaw: WS msg (217 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98243) openclaw: WS msg (252 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-91274-5","sessionKey":"agent:main:default","se...
-I (98249) ui_main: State transition: THINKING → STREAMING
-I (98549) openclaw: WS msg (280 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98557) openclaw: WS msg (276 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98563) openclaw: WS msg (345 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-91274-5","sessionKey":"agent:main:default","se...
-I (98567) ui_main: State transition: STREAMING → STREAMING
-I (98607) openclaw: WS msg (412 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98615) openclaw: WS msg (349 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98623) openclaw: WS msg (459 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-91274-5","sessionKey":"agent:main:default","se...
-I (98626) ui_main: State transition: STREAMING → STREAMING
-I (98851) openclaw: WS msg (439 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98859) openclaw: WS msg (415 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"assistant","data":{"text":...
-I (98866) openclaw: WS msg (498 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-91274-5","sessionKey":"agent:main:default","se...
-I (98870) ui_main: State transition: STREAMING → STREAMING
-I (98877) openclaw: WS msg (250 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-91274-5","stream":"lifecycle","data":{"phase"...
-I (98885) openclaw: WS msg (423 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-91274-5","sessionKey":"agent:main:default","se...
-I (98888) app_state: Response (6653 ms): 没有找到
+On Windows, try using Windows Terminal or Putty instead.
+AIClaw>  [0nI (13319) aiclaw: All tasks started. Ready.
+I (13324) mdns_mem: mDNS task will be created from internal RAM
+I (13332) webserver: mDNS initialized (aiclaw.local)
+I (13339) webserver: Web server started on port 80
+I (13340) aiclaw: Web server started on http://192.168.1.13
+I (13379) settings: Settings saved to NVS
+I (13385) aiclaw: TTS announce start: 网页服务器已启动，请访问 192.168.1.13
+I (13497) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
+I (13499) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"网页服务器已启动，请访问 192.168.1.13"}]}
+I (13685) esp-x509-crt-bundle: Certificate validated
+I (14811) tts: MiMo HTTP 200, content_len=0
+I (14812) tts: MiMo play task started (prebuf=9600 bytes)
+I (14813) tts: MiMo reading SSE stream (streaming playback)...
+I (15403) tts: MiMo prebuf done (23040 bytes), starting playback
+I (18382) ui_main: State transition: IDLE → IDLE
+I (18437) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (22004) tts: MiMo SSE [DONE], total PCM=483840 bytes, chunks=21
+I (22005) tts: MiMo waiting for playback to finish...
+I (25374) tts: MiMo play task exiting
+I (25379) tts: MiMo total played: 483840/483840 bytes
+I (25386) tts: MiMo TTS session ended
+I (25387) wake_word: Wake word resumed - detection task will continue
+I (25388) aiclaw: TTS announce complete
+I (28424) openclaw: WS msg (2263 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329257021,"durationMs":25,"eventLoop"...
+I (28626) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779329257185},"seq":4}21,"durationMs":25,"eventLoop"
+I (41742) app_tasks: Memory status - Free heap: 6936352 bytes (min: 6152556), Free PSRAM: 6903828 bytes (min: 6903828)
+I (46869) app_tasks: SLEEP_DEBUG: state=4 idle_ms=35002 timeout=60000 is_active=0 last_act=576
+I (52721) wake_word: Audio monitor: RMS=100
+I (58531) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779329287185},"seq":5}21,"durationMs":25,"eventLoop"
+I (71752) webserver: Saved MP3: /sdcard/mp3/一厢情愿-大哲.mp3 (10140436 bytes)
+I (71883) app_tasks: Idle for 60015 ms, entering light sleep
+I (71997) app_tasks: Wake word paused for sleep (use button to wake)
+I (71998) wifi:Set ps type: 2, coexist: 0
 
-歌单里没有《一厢情愿》这首，我帮你看看有没有其他喜欢的？▒...
-I (98913) app_state: Continuous conversation mode: active
-I (98914) app_state: Raw resp (182 bytes): 没有找到
+I (86244) wifi:Set ps type: 1, coexist: 0
 
-歌单里没有《一厢情愿》这首，我帮你看看有没有其他喜欢的？像《匆匆那年》《十年》《后来》这些经典都不错，想听哪首？
-I (98918) app_state: Short: '没有找到' | Long: '歌单里没有《一厢情愿》这首，我帮你看看有没有其他喜欢▒...'
-I (98921) ui_main: State transition: STREAMING → RESPONSE
-I (99162) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
-I (99164) ui_main: Response: 没有找到
-I (99165) aiclaw: OpenClaw connected
-I (99165) ui_main: State transition: RESPONSE → SPEAKING
-I (99170) openclaw: Requesting usage.status (id=7)
-I (99362) openclaw: WS msg (2215 bytes): {"type":"res","id":"6","ok":true,"payload":{"ok":true,"ts":1779328597020,"durationMs":25,"eventLoop"...
-I (99369) openclaw: Response received (id=6 state=3)
-I (99370) openclaw: Health: ok=1 agent=main sess=3 last=1334s wa=
-I (99431) ui_state_gif: Showing GIF for state 9: S:gifs/speaking.gif
-I (99433) app_tasks: TTS: speaking 歌单里没有《一厢情愿》这首，我帮你看看有...
-I (99544) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
-I (99546) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"歌单里没有《一厢情愿》这首，我帮你看看有没有其他喜欢的？像《匆匆那年》《十年》《后来》这些经典都不错，想听哪首？"}]}
-I (99560) openclaw: WS msg (2241 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328644476,"durationMs":37,"eventLoop"...
-I (99681) esp-x509-crt-bundle: Certificate validated
-I (99712) openclaw: WS msg (86 bytes): {"type":"res","id":"7","ok":true,"payload":{"updatedAt":1779328644360,"providers":[]}}37,"eventLoop"
-I (99715) openclaw: Response received (id=7 state=3)
-I (99902) openclaw: Requesting usage.status (id=9)
-I (99917) openclaw: Requesting cron.list
-I (100004) openclaw: WS msg (2189 bytes): {"type":"res","id":"8","ok":true,"payload":{"ok":true,"ts":1779328644476,"durationMs":37,"eventLoop"...
-I (100011) openclaw: Response received (id=8 state=3)
-I (100012) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
-I (100099) openclaw: WS msg (2243 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328645042,"durationMs":24,"eventLoop"...
-I (100189) openclaw: WS msg (144 bytes): {"type":"res","id":"10","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (100192) openclaw: Response received (id=10 state=3)
-I (100193) openclaw: Cron: 0 tasks (0 active)
-I (100385) openclaw: WS msg (86 bytes): {"type":"res","id":"9","ok":true,"payload":{"updatedAt":1779328645043,"providers":[]}},"hasMore":fal
-I (100388) openclaw: Response received (id=9 state=3)
-I (100795) tts: MiMo HTTP 200, content_len=0
-I (100796) tts: MiMo reading SSE stream (streaming playback)...
-I (100796) tts: MiMo play task started (prebuf=9600 bytes)
-I (101356) tts: MiMo prebuf done (23040 bytes), starting playback
-I (105033) openclaw: Requesting usage.status (id=12)
-I (105096) openclaw: Requesting cron.list
-I (105143) openclaw: WS msg (2192 bytes): {"type":"res","id":"11","ok":true,"payload":{"ok":true,"ts":1779328645042,"durationMs":24,"eventLoop...
-I (105150) openclaw: Response received (id=11 state=3)
-I (105151) openclaw: Health: ok=1 agent=main sess=3 last=1s wa=
-I (105238) openclaw: WS msg (2243 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328650179,"durationMs":24,"eventLoop"...
-I (105329) openclaw: WS msg (144 bytes): {"type":"res","id":"13","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (105332) openclaw: Response received (id=13 state=3)
-I (105333) openclaw: Cron: 0 tasks (0 active)
-I (105513) openclaw: WS msg (87 bytes): {"type":"res","id":"12","ok":true,"payload":{"updatedAt":1779328650180,"providers":[]}}"hasMore":fal
-I (105516) openclaw: Response received (id=12 state=3)
-I (107311) tts: MiMo SSE [DONE], total PCM=537600 bytes, chunks=23
-I (107312) tts: MiMo waiting for playback to finish...
-I (110248) openclaw: Requesting usage.status (id=15)
-I (110253) openclaw: Requesting cron.list
-I (110626) openclaw: WS msg (2192 bytes): {"type":"res","id":"14","ok":true,"payload":{"ok":true,"ts":1779328650179,"durationMs":24,"eventLoop...
-I (110633) openclaw: Response received (id=14 state=3)
-I (110634) openclaw: Health: ok=1 agent=main sess=3 last=6s wa=
-I (110728) openclaw: WS msg (144 bytes): {"type":"res","id":"16","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (110732) openclaw: Response received (id=16 state=3)
-I (110733) openclaw: Cron: 0 tasks (0 active)
-I (110740) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328655650,"durationMs":44,"eventLoop"...
-I (110932) openclaw: WS msg (87 bytes): {"type":"res","id":"15","ok":true,"payload":{"updatedAt":1779328655527,"providers":[]}}4,"eventLoop"
-I (110935) openclaw: Response received (id=15 state=3)
-I (112265) openclaw: WS msg (2263 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328657179,"durationMs":189,"eventLoop...
-I (112276) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779328657180},"seq":26}9,"durationMs":189,"eventLoop
-I (112446) tts: MiMo play task exiting
-I (112449) tts: MiMo total played: 537600/537600 bytes
-I (112452) tts: MiMo TTS session ended
-I (112453) wake_word: Wake word resumed - detection task will continue
-I (112454) ui_main: State transition: SPEAKING → IDLE
-I (112719) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
-I (112720) app_tasks: Auto-listen: continuing conversation
-I (113549) aiclaw: Wake word detected!
-I (113830) ui_main: State transition: IDLE → LISTENING
-I (113830) stt: Connecting to DashScope STT... Free internal heap: 52603
-W (113833) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
-I (114056) esp-x509-crt-bundle: Certificate validated
-I (114063) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
-I (114067) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
-I (114345) notes_manager: Found 4 note files
-I (114535) stt: WebSocket connected
-I (114608) voice_chat: DC offset: 0 | Noise floor: 78 → threshold: 300
-I (114765) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"task-started","attributes":{}},"payload":{}}
-I (114767) stt: Task started: 97c147f197c001b897c0ff1300000001
-I (114880) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
-I (114886) app_tasks: Memory status - Free heap: 6116284 bytes (min: 5604896), Free PSRAM: 6090208 bytes (min: 6090208)
-I (114888) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
-I (114904) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
-I (114914) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
-I (114943) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
-I (115404) openclaw: Requesting usage.status (id=18)
-I (115414) openclaw: Requesting cron.list
-I (115505) openclaw: WS msg (2211 bytes): {"type":"res","id":"17","ok":true,"payload":{"ok":true,"ts":1779328657179,"durationMs":189,"eventLoo...
-I (115512) openclaw: Response received (id=17 state=3)
-I (115513) openclaw: Health: ok=1 agent=main sess=3 last=13s wa=
-I (115692) openclaw: WS msg (2243 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328660636,"durationMs":40,"eventLoop"...
-I (115872) openclaw: WS msg (87 bytes): {"type":"res","id":"18","ok":true,"payload":{"updatedAt":1779328660519,"providers":[]}}0,"eventLoop"
-I (115874) openclaw: Response received (id=18 state=3)
-I (115879) openclaw: WS msg (144 bytes): {"type":"res","id":"19","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (115882) openclaw: Response received (id=19 state=3)
-I (115884) openclaw: Cron: 0 tasks (0 active)
-I (117193) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
-I (117941) openclaw: WS msg (169 bytes): {"type":"event","event":"heartbeat","payload":{"ts":1779328662886,"status":"ok-token","reason":"inte...
-I (120250) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":5740,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
-I (120362) stt: Sent audio chunk #200: 1024 bytes (total=204800, ret=1024, state=3)
-I (120363) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":5740,"end_time":null,"text":"我","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":5740,"end_time":6220,"text":"我","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (120439) openclaw: Requesting usage.status (id=21)
-I (120450) openclaw: Requesting cron.list
-I (120541) openclaw: WS msg (2195 bytes): {"type":"res","id":"20","ok":true,"payload":{"ok":true,"ts":1779328660636,"durationMs":40,"eventLoop...
-I (120548) openclaw: Response received (id=20 state=3)
-I (120549) openclaw: Health: ok=1 agent=main sess=3 last=16s wa=
-I (120597) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":6060,"end_time":null,"text":"我刚刚","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":6060,"end_time":6260,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6260,"end_time":6460,"text":"刚","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (120729) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328665671,"durationMs":40,"eventLoop"...
-I (120909) openclaw: WS msg (87 bytes): {"type":"res","id":"21","ok":true,"payload":{"updatedAt":1779328665553,"providers":[]}}0,"eventLoop"
-I (120912) openclaw: Response received (id=21 state=3)
-I (120916) openclaw: WS msg (144 bytes): {"type":"res","id":"22","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (120919) openclaw: Response received (id=22 state=3)
-I (120920) openclaw: Cron: 0 tasks (0 active)
-I (121330) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":6060,"end_time":null,"text":"我刚刚上传了","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":6060,"end_time":6433,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6433,"end_time":6806,"text":"刚上","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6806,"end_time":7180,"text":"传了","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (122771) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":6060,"end_time":null,"text":"我刚刚上传了你扫","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":6060,"end_time":6700,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6700,"end_time":7340,"text":"刚上","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":7340,"end_time":7980,"text":"传了","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":7980,"end_time":8620,"text":"你扫","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (123466) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":6060,"end_time":null,"text":"我刚刚上传了你扫描一下看","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":6060,"end_time":6606,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6606,"end_time":7152,"text":"刚上","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":7152,"end_time":7698,"text":"传了","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":7698,"end_time":8244,"text":"你扫","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":8244,"end_time":8790,"text":"描一","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":8790,"end_time":9340,"text":"下看","punctuation":"","fixed":false,"speaker_id":null}]}}}}
-I (123596) stt: Sent audio chunk #300: 1024 bytes (total=307200, ret=1024, state=3)
-I (125348) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":6060,"end_time":9960,"text":"我刚刚上传了，你扫描一下看有没有。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":6060,"end_time":6540,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":6540,"end_time":7020,"text":"刚上","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":7020,"end_time":7500,"text":"传了","punctuation":"，","fixed":false,"speaker_id":null},{"begin_time":8380,"end_time":8696,"text":"你扫","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":8696,"end_time":9012,"text":"描一","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":9012,"end_time":9328,"text":"下看","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":9328,"end_time":9644,"text":"有没","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":9644,"end_time":9960,"text":"有","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":9960,"current_time":9960,"words":[]}}},"usage":{"duration":10}}}
-I (125366) stt: Result [final]: 我刚刚上传了，你扫描一下看有没有。
-I (125522) openclaw: Requesting usage.status (id=24)
-I (125530) openclaw: Requesting cron.list
-I (125669) openclaw: WS msg (2187 bytes): {"type":"res","id":"23","ok":true,"payload":{"ok":true,"ts":1779328665671,"durationMs":40,"eventLoop...
-I (125676) openclaw: Response received (id=23 state=3)
-I (125677) openclaw: Health: ok=1 agent=main sess=3 last=2s wa=
-I (125858) openclaw: WS msg (144 bytes): {"type":"res","id":"25","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (125862) openclaw: Response received (id=25 state=3)
-I (125863) openclaw: Cron: 0 tasks (0 active)
-I (125869) openclaw: WS msg (2238 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328670804,"durationMs":41,"eventLoop"...
-I (126039) openclaw: WS msg (87 bytes): {"type":"res","id":"24","ok":true,"payload":{"updatedAt":1779328670685,"providers":[]}}1,"eventLoop"
-I (126042) openclaw: Response received (id=24 state=3)
-I (126274) voice_chat: Silence detected after speech (rms=58 < 300), stopping
-I (126499) voice_chat: Recorded 197120 samples 12.3s (min=-6498 max=5094 avg_abs=167 noise_floor=78)
-I (126502) ui_main: State transition: LISTENING → SENDING
-I (126699) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
-I (126703) stt: Finalizing STT, waiting for result...
-I (126731) stt: Stopping: ringbuffer empty, sending finish-task
-I (126732) stt: Audio upload done: 385 chunks, 394240 bytes total. State: 4
-I (126787) stt: Sent finish-task (ret=124)
-I (126810) stt: STT response: {"header":{"task_id":"97c147f197c001b897c0ff1300000001","event":"task-finished","attributes":{}},"payload":{"output":{}}}
-I (126813) stt: Task finished. Result: '我刚刚上传了，你扫描一下看有没有。' (len=51)
-I (126814) voice_chat: STT result: '我刚刚上传了，你扫描一下看有没有。'
-I (126871) ui_main: State transition: SENDING → THINKING
-I (126906) openclaw: WS msg (88 bytes): {"type":"res","id":"26","ok":true,"payload":{"runId":"hc-125902-26","status":"started"}},"eventLoop"
-I (126909) openclaw: Response received (id=26 state=5)
-I (127100) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
-I (127104) openclaw: Chat sent: 我刚刚上传了，你扫描一下看有没有。
-I (127106) wake_word: Wake word resumed - detection task will continue
-I (127867) stt: STT session ended
-I (128041) openclaw: WS msg (229 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"lifecycle","data":{"phas...
-I (130183) openclaw: WS msg (220 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (130190) openclaw: WS msg (255 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (130193) ui_main: State transition: THINKING → STREAMING
-I (130396) openclaw: WS msg (324 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (130403) openclaw: WS msg (287 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (130410) openclaw: WS msg (377 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (130413) ui_main: State transition: STREAMING → STREAMING
-I (130904) openclaw: WS msg (386 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (130907) ui_main: State transition: STREAMING → STREAMING
-I (130914) openclaw: WS msg (351 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (130922) openclaw: WS msg (1827 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"tool","data":{"phase":"s...
-I (130930) openclaw: Agent using tool: exec → Exec (device, phase=start)
-I (130937) openclaw: WS msg (481 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"item","data":{"itemId":"...
-I (130945) openclaw: WS msg (490 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"item","data":{"itemId":"...
-I (132853) openclaw: WS msg (1990 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"tool","data":{"phase":"r...
-I (132861) openclaw: Agent using tool: exec → Exec (device, phase=result)
-I (132868) openclaw: WS msg (505 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"item","data":{"itemId":"...
-I (132877) openclaw: WS msg (514 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"item","data":{"itemId":"...
-I (132885) openclaw: WS msg (476 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"command_output","data":{...
-I (134895) openclaw: WS msg (233 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (134902) openclaw: WS msg (374 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (134905) ui_main: State transition: STREAMING → STREAMING
-I (135100) openclaw: WS msg (359 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (135107) openclaw: WS msg (302 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (135116) openclaw: WS msg (512 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (135119) ui_main: State transition: STREAMING → STREAMING
-I (135170) openclaw: WS msg (414 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (135176) openclaw: WS msg (367 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (135183) openclaw: WS msg (567 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (135186) ui_main: State transition: STREAMING → STREAMING
-I (135306) openclaw: WS msg (451 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"assistant","data":{"text...
-I (135312) openclaw: WS msg (273 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125902-26","stream":"lifecycle","data":{"phas...
-I (135321) openclaw: WS msg (592 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (135324) ui_main: State transition: STREAMING → STREAMING
-I (135331) openclaw: WS msg (532 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125902-26","sessionKey":"agent:main:default","...
-I (135334) app_state: Response (8471 ms): 好的，先扫描一下
+I (86245) wake_word: Wake word resumed - detection task will continue
+I (86246) app_tasks: Wake from light sleep (activity)
+I (86247) aiclaw: Woke from sleep via event — ignoring action
+I (87941) wake_word: *** Wake word detected: "你好小智" ***
+I (87946) aiclaw: Wake word detected!
+I (88075) app_tasks: Memory status - Free heap: 6942500 bytes (min: 6152556), Free PSRAM: 6903660 bytes (min: 6903660)
+I (88258) stt: Connecting to DashScope STT... Free internal heap: 53407
+I (88258) ui_main: State transition: IDLE → LISTENING
+W (88259) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (88485) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (88490) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (88550) esp-x509-crt-bundle: Certificate validated
+I (88612) openclaw: Requesting cron.list
+I (88625) openclaw: WS msg (70 bytes): {"type":"event","event":"tick","payload":{"ts":1779329317185},"seq":6}21,"durationMs":25,"eventLoop"
+I (88655) openclaw: WS msg (143 bytes): {"type":"res","id":"4","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fals...
+I (88658) openclaw: Response received (id=4 state=3)
+I (88659) openclaw: Cron: 0 tasks (0 active)
+I (88859) openclaw: WS msg (2263 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329317439,"durationMs":441,"eventLoop...
+I (89017) voice_chat: DC offset: 2 | Noise floor: 536 → threshold: 800
+I (89055) stt: WebSocket connected
+I (89301) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"task-started","attributes":{}},"payload":{}}
+I (89303) stt: Task started: ddbbe33dddba0154ddbab7c300000001
+I (89382) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (89410) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (89421) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (89436) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (89455) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (89718) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":40,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
+I (89885) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":40,"end_time":null,"text":"播","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":40,"end_time":520,"text":"播","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (90052) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":320,"end_time":null,"text":"播放","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":320,"end_time":760,"text":"播放","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (90825) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":360,"end_time":null,"text":"播放一乡","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":360,"end_time":920,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":920,"end_time":1480,"text":"一乡","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (91238) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":360,"end_time":null,"text":"播放一厢情愿","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":360,"end_time":973,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":973,"end_time":1586,"text":"一厢","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1586,"end_time":2200,"text":"情愿","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (91589) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (91932) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":360,"end_time":2240,"text":"播放一厢情愿。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":360,"end_time":986,"text":"播放","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":986,"end_time":1612,"text":"一厢","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1612,"end_time":2240,"text":"情愿","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":2240,"current_time":2240,"words":[]}}},"usage":{"duration":2}}}
+I (91942) stt: Result [final]: 播放一厢情愿。
+I (94802) stt: Sent audio chunk #200: 1024 bytes (total=204800, ret=1024, state=3)
+I (98003) stt: Sent audio chunk #300: 1024 bytes (total=307200, ret=1024, state=3)
+I (101207) stt: Sent audio chunk #400: 1024 bytes (total=409600, ret=1024, state=3)
+I (103646) voice_chat: Recorded 240000 samples 15.0s (min=-3392 max=3177 avg_abs=115 noise_floor=536)
+I (103683) ui_main: State transition: LISTENING → SENDING
+I (103825) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (103827) stt: Finalizing STT, waiting for result...
+I (103915) stt: Stopping: ringbuffer empty, sending finish-task
+I (103916) stt: Audio upload done: 469 chunks, 480000 bytes total. State: 4
+I (103923) stt: Sent finish-task (ret=124)
+I (103994) stt: STT response: {"header":{"task_id":"ddbbe33dddba0154ddbab7c300000001","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (103997) stt: Task finished. Result: '播放一厢情愿。' (len=21)
+I (104001) voice_chat: Local VAD missed speech but STT recognized: '播放一厢情愿。'
+I (104007) voice_chat: STT result: '播放一厢情愿。'
+I (104108) ui_main: State transition: SENDING → THINKING
+I (104186) openclaw: WS msg (86 bytes): {"type":"res","id":"5","ok":true,"payload":{"runId":"hc-103134-5","status":"started"}}none","ackMaxC
+I (104189) openclaw: Response received (id=5 state=5)
+I (104310) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
+I (104314) openclaw: Chat sent: 播放一厢情愿。
+I (104315) wake_word: Wake word resumed - detection task will continue
+I (105003) stt: STT session ended
+I (105429) openclaw: WS msg (227 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"lifecycle","data":{"phase...
+I (106664) openclaw: WS msg (230 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (106672) openclaw: WS msg (266 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-103134-5","sessionKey":"agent:main:default","s...
+I (106675) ui_main: State transition: THINKING → STREAMING
+I (106864) openclaw: WS msg (383 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (106870) openclaw: WS msg (373 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (106876) openclaw: WS msg (490 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-103134-5","sessionKey":"agent:main:default","s...
+I (106879) ui_main: State transition: STREAMING → STREAMING
+I (107069) openclaw: WS msg (414 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (107076) openclaw: WS msg (400 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (107083) openclaw: WS msg (473 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-103134-5","sessionKey":"agent:main:default","s...
+I (107087) ui_main: State transition: STREAMING → STREAMING
+I (107093) openclaw: WS msg (418 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"assistant","data":{"text"...
+I (107102) openclaw: WS msg (251 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-103134-5","stream":"lifecycle","data":{"phase...
+I (107109) openclaw: WS msg (453 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-103134-5","sessionKey":"agent:main:default","s...
+I (107113) ui_main: State transition: STREAMING → STREAMING
+I (107120) openclaw: WS msg (423 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-103134-5","sessionKey":"agent:main:default","s...
+I (107123) app_state: Response (3027 ms): 抱歉没有找到
+
+歌单里没有《一厢情愿》这首歌哦，你看看是不是上传的时▒...
+I (107157) app_state: Continuous conversation mode: active
+I (107158) app_state: Raw resp (181 bytes): 抱歉没有找到
+
+歌单里没有《一厢情愿》这首歌哦，你看看是不是上传的时候文件名不一样？现有歌单里的32首歌都没有匹配到这个名字。
+I (107161) app_state: Short: '抱歉没有找到' | Long: '歌单里没有《一厢情愿》这首歌哦，你看看是不是上传的时▒...'
+I (107163) ui_main: State transition: STREAMING → RESPONSE
+I (107379) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
+I (107381) ui_main: Response: 抱歉没有找到
+I (107382) aiclaw: OpenClaw connected
+I (107383) ui_main: State transition: RESPONSE → SPEAKING
+I (107387) openclaw: Requesting usage.status (id=7)
+I (107637) ui_state_gif: Showing GIF for state 9: S:gifs/speaking.gif
+I (107639) app_tasks: TTS: speaking 歌单里没有《一厢情愿》这首歌哦，你看看是...
+I (107683) openclaw: WS msg (2213 bytes): {"type":"res","id":"6","ok":true,"payload":{"ok":true,"ts":1779329317439,"durationMs":441,"eventLoop...
+I (107691) openclaw: Response received (id=6 state=3)
+I (107692) openclaw: Health: ok=1 agent=main sess=3 last=636s wa=
+I (107750) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
+I (107751) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"歌单里没有《一厢情愿》这首歌哦，你看看是不是上传的时候文件名不一样？现有歌单里的32首歌都没有匹配到这个名字。"}]}
+I (107767) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329336420,"durationMs":39,"eventLoop"...
+I (107898) esp-x509-crt-bundle: Certificate validated
+I (107994) openclaw: WS msg (86 bytes): {"type":"res","id":"7","ok":true,"payload":{"updatedAt":1779329336303,"providers":[]}}39,"eventLoop"
+I (107997) openclaw: Response received (id=7 state=3)
+I (108286) openclaw: Requesting usage.status (id=9)
+I (108293) openclaw: Requesting cron.list
+I (108388) openclaw: WS msg (2188 bytes): {"type":"res","id":"8","ok":true,"payload":{"ok":true,"ts":1779329336420,"durationMs":39,"eventLoop"...
+I (108395) openclaw: Response received (id=8 state=3)
+I (108396) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
+I (108575) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329337227,"durationMs":38,"eventLoop"...
+I (108814) openclaw: WS msg (86 bytes): {"type":"res","id":"9","ok":true,"payload":{"updatedAt":1779329337111,"providers":[]}}38,"eventLoop"
+I (108816) openclaw: Response received (id=9 state=3)
+I (108823) openclaw: WS msg (144 bytes): {"type":"res","id":"10","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (108827) openclaw: Response received (id=10 state=3)
+I (108828) openclaw: Cron: 0 tasks (0 active)
+I (108832) tts: MiMo HTTP 200, content_len=0
+I (108833) tts: MiMo play task started (prebuf=9600 bytes)
+I (108834) tts: MiMo reading SSE stream (streaming playback)...
+I (109482) tts: MiMo prebuf done (23040 bytes), starting playback
+I (113400) openclaw: Requesting usage.status (id=12)
+I (113414) openclaw: Requesting cron.list
+I (113503) openclaw: WS msg (2190 bytes): {"type":"res","id":"11","ok":true,"payload":{"ok":true,"ts":1779329337227,"durationMs":38,"eventLoop...
+I (113510) openclaw: Response received (id=11 state=3)
+I (113511) openclaw: Health: ok=1 agent=main sess=3 last=1s wa=
+I (113691) openclaw: WS msg (2241 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329342343,"durationMs":38,"eventLoop"...
+I (113871) openclaw: WS msg (87 bytes): {"type":"res","id":"12","ok":true,"payload":{"updatedAt":1779329342227,"providers":[]}}8,"eventLoop"
+I (113874) openclaw: Response received (id=12 state=3)
+I (113880) openclaw: WS msg (144 bytes): {"type":"res","id":"13","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (113883) openclaw: Response received (id=13 state=3)
+I (113884) openclaw: Cron: 0 tasks (0 active)
+I (115337) tts: MiMo SSE [DONE], total PCM=499200 bytes, chunks=22
+I (115338) tts: MiMo waiting for playback to finish...
+I (118518) app_tasks: Memory status - Free heap: 6261672 bytes (min: 6097924), Free PSRAM: 6234868 bytes (min: 6234868)
+I (118529) openclaw: Requesting usage.status (id=15)
+I (118533) openclaw: Requesting cron.list
+I (118537) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329347185},"seq":24}t":0,"limit":50,"hasMore":fal
+I (118748) openclaw: WS msg (2189 bytes): {"type":"res","id":"14","ok":true,"payload":{"ok":true,"ts":1779329342343,"durationMs":38,"eventLoop...
+I (118755) openclaw: Response received (id=14 state=3)
+I (118756) openclaw: Health: ok=1 agent=main sess=3 last=6s wa=
+I (118849) openclaw: WS msg (144 bytes): {"type":"res","id":"16","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (118852) openclaw: Response received (id=16 state=3)
+I (118854) openclaw: Cron: 0 tasks (0 active)
+I (118860) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329347485,"durationMs":43,"eventLoop"...
+I (119048) openclaw: WS msg (87 bytes): {"type":"res","id":"15","ok":true,"payload":{"updatedAt":1779329347365,"providers":[]}}3,"eventLoop"
+I (119050) openclaw: Response received (id=15 state=3)
+I (119774) tts: MiMo play task exiting
+I (119783) tts: MiMo total played: 499200/499200 bytes
+I (119786) tts: MiMo TTS session ended
+I (119788) wake_word: Wake word resumed - detection task will continue
+I (119789) ui_main: State transition: SPEAKING → IDLE
+I (119980) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (119982) app_tasks: Auto-listen: continuing conversation
+I (120785) aiclaw: Wake word detected!
+I (121094) ui_main: State transition: IDLE → LISTENING
+I (121094) stt: Connecting to DashScope STT... Free internal heap: 52283
+W (121096) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (121316) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (121321) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (121324) esp-x509-crt-bundle: Certificate validated
+I (121812) stt: WebSocket connected
+I (121861) voice_chat: DC offset: 0 | Noise floor: 93 → threshold: 300
+I (122069) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"task-started","attributes":{}},"payload":{}}
+I (122071) stt: Task started: 0f891a2b0f8801d5f88cf6900000001
+I (122194) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (122203) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (122212) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (122223) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (122254) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (123032) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":660,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
+I (123101) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":660,"end_time":null,"text":"我","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":660,"end_time":1140,"text":"我","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (123284) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":980,"end_time":null,"text":"我刚","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":980,"end_time":1380,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (123627) openclaw: Requesting usage.status (id=18)
+I (123643) openclaw: Requesting cron.list
+I (123710) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1020,"end_time":null,"text":"我刚上传呢你","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1020,"end_time":1380,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1380,"end_time":1740,"text":"上传","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1740,"end_time":2100,"text":"呢你","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (123729) openclaw: WS msg (2191 bytes): {"type":"res","id":"17","ok":true,"payload":{"ok":true,"ts":1779329347485,"durationMs":43,"eventLoop...
+I (123736) openclaw: Response received (id=17 state=3)
+I (123737) openclaw: Health: ok=1 agent=main sess=3 last=11s wa=
+I (123831) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329352477,"durationMs":25,"eventLoop"...
+I (123915) openclaw: WS msg (144 bytes): {"type":"res","id":"19","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (123918) openclaw: Response received (id=19 state=3)
+I (123919) openclaw: Cron: 0 tasks (0 active)
+I (124116) openclaw: WS msg (87 bytes): {"type":"res","id":"18","ok":true,"payload":{"updatedAt":1779329352477,"providers":[]}}"hasMore":fal
+I (124119) openclaw: Response received (id=18 state=3)
+I (124398) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1020,"end_time":null,"text":"我刚上传的，你再扫描一","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1020,"end_time":1353,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1353,"end_time":1686,"text":"上传","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1686,"end_time":2019,"text":"的","punctuation":"，","fixed":false,"speaker_id":null},{"begin_time":2100,"end_time":2340,"text":"你再","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2340,"end_time":2580,"text":"扫描","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2580,"end_time":2820,"text":"一","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (124429) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (125681) voice_chat: Silence detected after speech (rms=96 < 300), stopping
+I (125797) voice_chat: Recorded 71680 samples 4.5s (min=-5704 max=4793 avg_abs=365 noise_floor=93)
+I (125799) ui_main: State transition: LISTENING → SENDING
+I (125965) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (125968) stt: Finalizing STT, waiting for result...
+I (125992) stt: Stopping: ringbuffer empty, sending finish-task
+I (125993) stt: Audio upload done: 140 chunks, 143360 bytes total. State: 4
+I (126036) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1020,"end_time":3380,"text":"我刚上传的，你再扫描一下。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":1020,"end_time":1353,"text":"我刚","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1353,"end_time":1686,"text":"上传","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1686,"end_time":2019,"text":"的","punctuation":"，","fixed":false,"speaker_id":null},{"begin_time":2100,"end_time":2526,"text":"你再","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2526,"end_time":2952,"text":"扫描","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2952,"end_time":3380,"text":"一下","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":3380,"current_time":3380,"words":[]}}},"usage":{"duration":3}}}
+I (126054) stt: Result [final]: 我刚上传的，你再扫描一下。
+I (126058) stt: Sent finish-task (ret=123)
+I (126072) stt: STT response: {"header":{"task_id":"0f891a2b0f8801d5f88cf6900000001","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (126074) stt: Task finished. Result: '我刚上传的，你再扫描一下。' (len=39)
+I (126077) voice_chat: STT result: '我刚上传的，你再扫描一下。'
+I (126153) ui_main: State transition: SENDING → THINKING
+I (126191) openclaw: WS msg (88 bytes): {"type":"res","id":"20","ok":true,"payload":{"runId":"hc-125183-20","status":"started"}}hasMore":fal
+I (126193) openclaw: Response received (id=20 state=5)
+I (126392) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
+I (126396) openclaw: Chat sent: 我刚上传的，你再扫描一下。
+I (126398) wake_word: Wake word resumed - detection task will continue
+I (127081) stt: STT session ended
+I (127241) openclaw: WS msg (229 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125183-20","stream":"lifecycle","data":{"phas...
+I (129085) openclaw: WS msg (214 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125183-20","stream":"assistant","data":{"text...
+I (129094) openclaw: WS msg (249 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125183-20","sessionKey":"agent:main:default","...
+I (129097) ui_main: State transition: THINKING → STREAMING
+I (129104) openclaw: WS msg (513 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125183-20","stream":"assistant","data":{"text...
+I (129112) openclaw: WS msg (251 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-125183-20","stream":"lifecycle","data":{"phas...
+I (129120) openclaw: WS msg (548 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125183-20","sessionKey":"agent:main:default","...
+I (129123) ui_main: State transition: STREAMING → STREAMING
+I (129130) openclaw: WS msg (382 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-125183-20","sessionKey":"agent:main:default","...
+I (129133) app_state: Response (2989 ms): 好，再扫一次
 
 [DEVICE:mp3=scan]
 
-扫描完成，让我检查一下现在有哪些文件▒...
-I (135379) app_state: Continuous conversation mode: active
-I (135380) app_state: Device cmd: mp3 (value len=4)
-I (135381) app_state: Executed 1 device command(s)
-I (135382) app_state: Raw resp (269 bytes): 好的，先扫描一下
+已发送扫描指令，刷新一下看看有没有新的文▒...
+I (129159) app_state: Continuous conversation mode: active
+I (129161) app_state: Device cmd: mp3 (value len=4)
+I (129162) app_state: Executed 1 device command(s)
+I (129163) app_state: Raw resp (120 bytes): 好，再扫一次
 
 
-扫描完成，让我检查一下现在有哪些文件。扫描指令已发送。不过我是在服务器端运行的，没法直接看到设备SD卡上的文件列表。你那边扫描之后，能帮我看看歌单里新增了哪些歌吗？
-I (135387) app_state: Short: '好的，先扫描一下' | Long: '扫描完成，让我检查一下现在有哪些文件。扫描指令已发送▒...'
-I (135390) ui_main: State transition: STREAMING → RESPONSE
-I (135401) app_state: MP3 cmd (deferred): scan
-I (135408) mp3_player: Dynamic scanning: /sdcard/mp3
-I (135590) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
-I (135592) ui_main: Response: 好的，先扫描一下
-I (135593) aiclaw: OpenClaw connected
-I (135598) openclaw: Requesting usage.status (id=28)
-I (135707) mp3_player:   [0] 致青春-王菲.mp3 (7442935 bytes)
-I (135790) mp3_player:   [1] G.E.M.+邓紫棋+-+泡沫_1245657.mp3 (10357226 bytes)
-I (135804) mp3_player:   [2] G.E.M.+邓紫棋+-+唯一_321260769.mp3 (10152444 bytes)
-I (135806) mp3_player:   [3] 陈奕迅 - 十年_80403.mp3 (8219359 bytes)
-I (135824) openclaw: WS msg (2190 bytes): {"type":"res","id":"27","ok":true,"payload":{"ok":true,"ts":1779328670804,"durationMs":41,"eventLoop...
-I (135835) openclaw: Response received (id=27 state=3)
-I (135836) openclaw: Health: ok=1 agent=main sess=3 last=7s wa=
-I (135902) mp3_player:   [4] 陈奕迅+-+孤勇者_198554068.mp3 (10242283 bytes)
-I (135991) mp3_player:   [5] 陈奕迅+-+红玫瑰_1037667.mp3 (9601761 bytes)
-I (136017) mp3_player:   [6] 大欢 - 这一路_192275426.mp3 (11807539 bytes)
-I (136033) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328680929,"durationMs":37,"eventLoop"...
-I (136037) mp3_player:   [7] 刀郎 - 西海情歌.mp3 (13754649 bytes)
-I (136133) mp3_player:   [8] 浩然H.R - 你看那远山 (纯享版).mp3 (7267403 bytes)
-I (136135) mp3_player:   [9] 胡杨林 - 香水有毒.mp3 (11663108 bytes)
-I (136139) mp3_player:   [10] 赖美云 & 井朧 - 送你一个拥抱.mp3 (7850000 bytes)
-I (136141) mp3_player:   [11] 李荣浩+-+恋人_386305156.mp3 (11039079 bytes)
-I (136144) mp3_player:   [12] 林俊杰+-+江南_93157.mp3 (10720847 bytes)
-I (136146) mp3_player:   [13] 刘晓 - 霸王别姬.mp3 (16174630 bytes)
-I (136147) mp3_player:   [14] 劉若英 - 後來.mp3 (13704749 bytes)
-I (136222) mp3_player:   [15] 馒小蛮同学 - 金玉良缘.mp3 (8848605 bytes)
-I (136227) openclaw: WS msg (87 bytes): {"type":"res","id":"28","ok":true,"payload":{"updatedAt":1779328680813,"providers":[]}}7,"eventLoop"
-I (136230) openclaw: Response received (id=28 state=3)
-I (136233) mp3_player:   [16] 王力宏+-+天地龙鳞_201182467.mp3 (7870298 bytes)
-I (136235) mp3_player:   [17] 王琪 - 可可托海的牧羊人.mp3 (13662891 bytes)
-I (136238) mp3_player:   [18] 伍佰 & China Blue - 挪威的森林.mp3 (15670192 bytes)
-I (136240) mp3_player:   [19] 央金拉姆 - 不跪的花_556907469.mp3 (7689604 bytes)
-I (136242) mp3_player:   [20] 張韶涵 - 吶喊.mp3 (10284007 bytes)
-I (136261) mp3_player:   [21] 周華健 - 有沒有一首歌會讓你想起我.mp3 (11563552 bytes)
-I (136316) mp3_player:   [22] 周蕙 - 约定_313049.mp3 (10374919 bytes)
-I (136318) mp3_player:   [23] 周深 - 小美满_339923255.mp3 (8570445 bytes)
-I (136320) mp3_player:   [24] 周深+-+大鱼_7095195.mp3 (12551167 bytes)
-I (136322) mp3_player:   [25] S.H.E - 半糖主义.mp3 (8718842 bytes)
-I (136326) mp3_player:   [26] S.H.E - 中国话.mp3 (7763792 bytes)
-I (136328) mp3_player:   [27] 谭咏麟 - 披着羊皮的狼.mp3 (10735479 bytes)
-I (136331) mp3_player:   [28] 若不是因为你(深情版)-林栖.mp3 (10139537 bytes)
-I (136333) mp3_player:   [29] 不要在我寂寞的时候说爱我-郑源.mp3 (9795000 bytes)
-I (136335) mp3_player:   [30] 匆匆那年-王菲.mp3 (9642445 bytes)
-I (136337) mp3_player:   [31] 让我一次爱个够-吴琳Lin.mp3 (8491055 bytes)
-I (136349) mp3_player: Dynamically found 32 MP3 file(s)
-I (136354) app_state: MP3 scan: found 32 files
-I (139308) openclaw: Requesting usage.status (id=30)
-I (139312) openclaw: Requesting cron.list
-I (139409) openclaw: WS msg (2185 bytes): {"type":"res","id":"29","ok":true,"payload":{"ok":true,"ts":1779328680929,"durationMs":37,"eventLoop...
-I (139421) openclaw: Response received (id=29 state=3)
-I (139422) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
-I (139606) openclaw: WS msg (2238 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328684446,"durationMs":25,"eventLoop"...
-I (139620) openclaw: WS msg (144 bytes): {"type":"res","id":"31","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (139622) openclaw: Response received (id=31 state=3)
-I (139624) openclaw: Cron: 0 tasks (0 active)
-I (139810) openclaw: WS msg (87 bytes): {"type":"res","id":"30","ok":true,"payload":{"updatedAt":1779328684447,"providers":[]}}"hasMore":fal
-I (139813) openclaw: Response received (id=30 state=3)
-I (142274) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779328687181},"seq":58}"providers":[]}}"hasMore":fal
-I (144351) openclaw: Requesting usage.status (id=33)
-I (144358) openclaw: Requesting cron.list
-I (144522) openclaw: WS msg (2188 bytes): {"type":"res","id":"32","ok":true,"payload":{"ok":true,"ts":1779328684446,"durationMs":25,"eventLoop...
-I (144529) openclaw: Response received (id=32 state=3)
-I (144530) openclaw: Health: ok=1 agent=main sess=3 last=4s wa=
-I (144732) openclaw: WS msg (144 bytes): {"type":"res","id":"34","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (144735) openclaw: Response received (id=34 state=3)
-I (144736) openclaw: Cron: 0 tasks (0 active)
-I (144742) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328689584,"durationMs":40,"eventLoop"...
-I (144930) openclaw: WS msg (87 bytes): {"type":"res","id":"33","ok":true,"payload":{"updatedAt":1779328689467,"providers":[]}}0,"eventLoop"
-I (144933) openclaw: Response received (id=33 state=3)
-I (145372) app_tasks: Memory status - Free heap: 6941364 bytes (min: 5604896), Free PSRAM: 6903652 bytes (min: 6090208)
-I (149414) openclaw: Requesting usage.status (id=36)
-I (149422) openclaw: Requesting cron.list
-I (149545) openclaw: WS msg (2186 bytes): {"type":"res","id":"35","ok":true,"payload":{"ok":true,"ts":1779328689584,"durationMs":40,"eventLoop...
-I (149553) openclaw: Response received (id=35 state=3)
-I (149554) openclaw: Health: ok=1 agent=main sess=3 last=9s wa=
-I (149744) openclaw: WS msg (144 bytes): {"type":"res","id":"37","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (149746) openclaw: Response received (id=37 state=3)
-I (149748) openclaw: Cron: 0 tasks (0 active)
-I (149753) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328694671,"durationMs":43,"eventLoop"...
-I (149953) openclaw: WS msg (87 bytes): {"type":"res","id":"36","ok":true,"payload":{"updatedAt":1779328694550,"providers":[]}}3,"eventLoop"
-I (149955) openclaw: Response received (id=36 state=3)
-I (151665) wake_word: Audio monitor: RMS=39
-I (154567) openclaw: Requesting usage.status (id=39)
-I (154598) openclaw: Requesting cron.list
-I (154669) openclaw: WS msg (2189 bytes): {"type":"res","id":"38","ok":true,"payload":{"ok":true,"ts":1779328694671,"durationMs":43,"eventLoop...
-I (154679) openclaw: Response received (id=38 state=3)
-I (154680) openclaw: Health: ok=1 agent=main sess=3 last=14s wa=
-I (154871) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328699711,"durationMs":24,"eventLoop"...
-I (154883) openclaw: WS msg (144 bytes): {"type":"res","id":"40","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (154886) openclaw: Response received (id=40 state=3)
-I (154888) openclaw: Cron: 0 tasks (0 active)
-I (155073) openclaw: WS msg (87 bytes): {"type":"res","id":"39","ok":true,"payload":{"updatedAt":1779328699711,"providers":[]}}"hasMore":fal
-I (155076) openclaw: Response received (id=39 state=3)
-I (159657) openclaw: Requesting usage.status (id=42)
-I (159664) openclaw: Requesting cron.list
-I (159882) openclaw: WS msg (2190 bytes): {"type":"res","id":"41","ok":true,"payload":{"ok":true,"ts":1779328699711,"durationMs":24,"eventLoop...
-I (159890) openclaw: Response received (id=41 state=3)
-I (159891) openclaw: Health: ok=1 agent=main sess=3 last=19s wa=
-I (160085) openclaw: WS msg (144 bytes): {"type":"res","id":"43","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (160088) openclaw: Response received (id=43 state=3)
-I (160089) openclaw: Cron: 0 tasks (0 active)
-I (160095) openclaw: WS msg (2241 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328705002,"durationMs":40,"eventLoop"...
-I (160297) openclaw: WS msg (87 bytes): {"type":"res","id":"42","ok":true,"payload":{"updatedAt":1779328704884,"providers":[]}}0,"eventLoop"
-I (160300) openclaw: Response received (id=42 state=3)
-I (164701) openclaw: Requesting usage.status (id=45)
-I (164705) openclaw: Requesting cron.list
-I (164901) openclaw: WS msg (2188 bytes): {"type":"res","id":"44","ok":true,"payload":{"ok":true,"ts":1779328705002,"durationMs":40,"eventLoop...
-I (164909) openclaw: Response received (id=44 state=3)
-I (164911) openclaw: Health: ok=1 agent=main sess=3 last=24s wa=
-I (165104) openclaw: WS msg (144 bytes): {"type":"res","id":"46","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (165107) openclaw: Response received (id=46 state=3)
-I (165108) openclaw: Cron: 0 tasks (0 active)
-I (165114) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328709943,"durationMs":40,"eventLoop"...
-I (165211) openclaw: WS msg (87 bytes): {"type":"res","id":"45","ok":true,"payload":{"updatedAt":1779328709817,"providers":[]}}0,"eventLoop"
-I (165213) openclaw: Response received (id=45 state=3)
-I (169732) openclaw: Requesting usage.status (id=48)
-I (169735) openclaw: Requesting cron.list
-I (169836) openclaw: WS msg (2189 bytes): {"type":"res","id":"47","ok":true,"payload":{"ok":true,"ts":1779328709943,"durationMs":40,"eventLoop...
-I (169844) openclaw: Response received (id=47 state=3)
-I (169845) openclaw: Health: ok=1 agent=main sess=3 last=29s wa=
-I (170121) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328714979,"durationMs":46,"eventLoop"...
-I (170325) openclaw: WS msg (87 bytes): {"type":"res","id":"48","ok":true,"payload":{"updatedAt":1779328714848,"providers":[]}}6,"eventLoop"
-I (170327) openclaw: Response received (id=48 state=3)
-I (170332) openclaw: WS msg (144 bytes): {"type":"res","id":"49","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
-I (170335) openclaw: Response received (id=49 state=3)
-I (170336) openclaw: Cron: 0 tasks (0 active)
-I (172170) openclaw: WS msg (2258 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779328717031,"durationMs":29,"eventLoop"...
-I (172277) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779328717182},"seq":66}1,"durationMs":29,"eventLoop"
+已发送扫描指令，刷新一下看看有没有新的文件。你那边扫描后有更新吗？
+I (129165) app_state: Short: '好，再扫一次' | Long: '已发送扫描指令，刷新一下看看有没有新的文件。你那边扫▒...'
+I (129167) ui_main: State transition: STREAMING → RESPONSE
+I (129164) app_state: MP3 cmd (deferred): scan
+I (129174) mp3_player: Dynamic scanning: /sdcard/mp3
+I (129400) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
+I (129402) ui_main: Response: 好，再扫一次
+I (129403) aiclaw: OpenClaw connected
+I (129408) openclaw: Requesting usage.status (id=22)
+I (129481) mp3_player:   [0] 致青春-王菲.mp3 (7442935 bytes)
+I (129483) mp3_player:   [1] G.E.M.+邓紫棋+-+泡沫_1245657.mp3 (10357226 bytes)
+I (129485) mp3_player:   [2] G.E.M.+邓紫棋+-+唯一_321260769.mp3 (10152444 bytes)
+I (129490) mp3_player:   [3] 陈奕迅 - 十年_80403.mp3 (8219359 bytes)
+I (129494) mp3_player:   [4] 陈奕迅+-+孤勇者_198554068.mp3 (10242283 bytes)
+I (129496) mp3_player:   [5] 陈奕迅+-+红玫瑰_1037667.mp3 (9601761 bytes)
+I (129498) mp3_player:   [6] 大欢 - 这一路_192275426.mp3 (11807539 bytes)
+I (129500) mp3_player:   [7] 刀郎 - 西海情歌.mp3 (13754649 bytes)
+I (129502) mp3_player:   [8] 浩然H.R - 你看那远山 (纯享版).mp3 (7267403 bytes)
+I (129504) mp3_player:   [9] 胡杨林 - 香水有毒.mp3 (11663108 bytes)
+I (129563) mp3_player:   [10] 赖美云 & 井朧 - 送你一个拥抱.mp3 (7850000 bytes)
+I (129565) mp3_player:   [11] 李荣浩+-+恋人_386305156.mp3 (11039079 bytes)
+I (129567) mp3_player:   [12] 林俊杰+-+江南_93157.mp3 (10720847 bytes)
+I (129579) openclaw: WS msg (2193 bytes): {"type":"res","id":"21","ok":true,"payload":{"ok":true,"ts":1779329352477,"durationMs":25,"eventLoop...
+I (129587) openclaw: Response received (id=21 state=3)
+I (129588) openclaw: Health: ok=1 agent=main sess=3 last=16s wa=
+I (129592) mp3_player:   [13] 刘晓 - 霸王别姬.mp3 (16174630 bytes)
+I (129594) mp3_player:   [14] 劉若英 - 後來.mp3 (13704749 bytes)
+I (129596) mp3_player:   [15] 馒小蛮同学 - 金玉良缘.mp3 (8848605 bytes)
+I (129599) mp3_player:   [16] 王力宏+-+天地龙鳞_201182467.mp3 (7870298 bytes)
+I (129602) mp3_player:   [17] 王琪 - 可可托海的牧羊人.mp3 (13662891 bytes)
+I (129604) mp3_player:   [18] 伍佰 & China Blue - 挪威的森林.mp3 (15670192 bytes)
+I (129707) mp3_player:   [19] 央金拉姆 - 不跪的花_556907469.mp3 (7689604 bytes)
+I (129746) mp3_player:   [20] 張韶涵 - 吶喊.mp3 (10284007 bytes)
+I (129749) mp3_player:   [21] 周華健 - 有沒有一首歌會讓你想起我.mp3 (11563552 bytes)
+I (129752) mp3_player:   [22] 周蕙 - 约定_313049.mp3 (10374919 bytes)
+I (129754) mp3_player:   [23] 周深 - 小美满_339923255.mp3 (8570445 bytes)
+I (129756) mp3_player:   [24] 周深+-+大鱼_7095195.mp3 (12551167 bytes)
+I (129758) mp3_player:   [25] S.H.E - 半糖主义.mp3 (8718842 bytes)
+I (129788) mp3_player:   [26] S.H.E - 中国话.mp3 (7763792 bytes)
+I (129790) mp3_player:   [27] 谭咏麟 - 披着羊皮的狼.mp3 (10735479 bytes)
+I (129792) mp3_player:   [28] 若不是因为你(深情版)-林栖.mp3 (10139537 bytes)
+I (129796) mp3_player:   [29] 不要在我寂寞的时候说爱我-郑源.mp3 (9795000 bytes)
+I (129804) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329358415,"durationMs":37,"eventLoop"...
+I (129825) wake_word: Audio monitor: RMS=114
+I (129887) mp3_player:   [30] 匆匆那年-王菲.mp3 (9642445 bytes)
+I (129907) mp3_player:   [31] 让我一次爱个够-吴琳Lin.mp3 (8491055 bytes)
+I (129977) mp3_player:   [32] 一厢情愿-大哲.mp3 (10140436 bytes)
+I (130006) openclaw: WS msg (87 bytes): {"type":"res","id":"22","ok":true,"payload":{"updatedAt":1779329358301,"providers":[]}}:300},"sessio
+I (130009) openclaw: Response received (id=22 state=3)
+I (130061) mp3_player: Dynamically found 33 MP3 file(s)
+I (130064) app_state: MP3 scan: found 33 files
+I (132299) openclaw: Requesting usage.status (id=24)
+I (132311) openclaw: Requesting cron.list
+I (132470) openclaw: WS msg (2187 bytes): {"type":"res","id":"23","ok":true,"payload":{"ok":true,"ts":1779329358415,"durationMs":37,"eventLoop...
+I (132477) openclaw: Response received (id=23 state=3)
+I (132478) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
+I (132668) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329361245,"durationMs":37,"eventLoop"...
+I (132871) openclaw: WS msg (87 bytes): {"type":"res","id":"24","ok":true,"payload":{"updatedAt":1779329361130,"providers":[]}}7,"eventLoop"
+I (132874) openclaw: Response received (id=24 state=3)
+I (132879) openclaw: WS msg (144 bytes): {"type":"res","id":"25","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (132882) openclaw: Response received (id=25 state=3)
+I (132883) openclaw: Cron: 0 tasks (0 active)
+I (137382) openclaw: Requesting usage.status (id=27)
+I (137391) openclaw: Requesting cron.list
+I (137487) openclaw: WS msg (2189 bytes): {"type":"res","id":"26","ok":true,"payload":{"ok":true,"ts":1779329361245,"durationMs":37,"eventLoop...
+I (137494) openclaw: Response received (id=26 state=3)
+I (137495) openclaw: Health: ok=1 agent=main sess=3 last=3s wa=
+I (137692) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329366322,"durationMs":37,"eventLoop"...
+I (137890) openclaw: WS msg (87 bytes): {"type":"res","id":"27","ok":true,"payload":{"updatedAt":1779329366206,"providers":[]}}7,"eventLoop"
+I (137893) openclaw: Response received (id=27 state=3)
+I (137898) openclaw: WS msg (144 bytes): {"type":"res","id":"28","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (137901) openclaw: Response received (id=28 state=3)
+I (137902) openclaw: Cron: 0 tasks (0 active)
+I (142441) openclaw: Requesting usage.status (id=30)
+I (142456) openclaw: Requesting cron.list
+I (142545) openclaw: WS msg (2189 bytes): {"type":"res","id":"29","ok":true,"payload":{"ok":true,"ts":1779329366322,"durationMs":37,"eventLoop...
+I (142552) openclaw: Response received (id=29 state=3)
+I (142553) openclaw: Health: ok=1 agent=main sess=3 last=8s wa=
+I (142706) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329371292,"durationMs":24,"eventLoop"...
+I (142731) openclaw: WS msg (144 bytes): {"type":"res","id":"31","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (142735) openclaw: Response received (id=31 state=3)
+I (142736) openclaw: Cron: 0 tasks (0 active)
+I (142914) openclaw: WS msg (87 bytes): {"type":"res","id":"30","ok":true,"payload":{"updatedAt":1779329371293,"providers":[]}}"hasMore":fal
+I (142916) openclaw: Response received (id=30 state=3)
+I (145669) wake_word: *** Wake word detected: "你好小智" ***
+I (145706) aiclaw: Wake word detected!
+I (145986) ui_main: State transition: RESPONSE → LISTENING
+I (145986) stt: Connecting to DashScope STT... Free internal heap: 53383
+W (145988) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (146187) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (146191) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (146208) esp-x509-crt-bundle: Certificate validated
+I (146730) voice_chat: DC offset: 0 | Noise floor: 74 → threshold: 300
+I (146769) stt: WebSocket connected
+I (146944) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"task-started","attributes":{}},"payload":{}}
+I (146946) stt: Task started: 39cae87d39c8023639c8de0300000002
+I (147006) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (147049) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (147057) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (147067) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (147143) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (147580) openclaw: Requesting usage.status (id=33)
+I (147597) openclaw: Requesting cron.list
+I (147689) openclaw: WS msg (2192 bytes): {"type":"res","id":"32","ok":true,"payload":{"ok":true,"ts":1779329371292,"durationMs":24,"eventLoop...
+I (147696) openclaw: Response received (id=32 state=3)
+I (147697) openclaw: Health: ok=1 agent=main sess=3 last=13s wa=
+I (147873) openclaw: WS msg (2243 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329376524,"durationMs":38,"eventLoop"...
+I (147977) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":740,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
+I (148055) openclaw: WS msg (87 bytes): {"type":"res","id":"33","ok":true,"payload":{"updatedAt":1779329376408,"providers":[]}}8,"eventLoop"
+I (148058) openclaw: Response received (id=33 state=3)
+I (148062) openclaw: WS msg (144 bytes): {"type":"res","id":"34","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (148065) openclaw: Response received (id=34 state=3)
+I (148066) openclaw: Cron: 0 tasks (0 active)
+I (148090) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":740,"end_time":null,"text":"最","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":740,"end_time":1220,"text":"最","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (148266) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1100,"end_time":null,"text":"最后一","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1100,"end_time":1280,"text":"最后","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1280,"end_time":1460,"text":"一","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (148365) openclaw: WS msg (2261 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329377018,"durationMs":24,"eventLoop"...
+I (148531) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329377185},"seq":40}8,"durationMs":24,"eventLoop"
+I (148763) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1100,"end_time":null,"text":"最后一首不是一向","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1100,"end_time":1370,"text":"最后","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1370,"end_time":1640,"text":"一首","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1640,"end_time":1910,"text":"不是","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1910,"end_time":2180,"text":"一向","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (149110) app_tasks: Memory status - Free heap: 6118080 bytes (min: 6082760), Free PSRAM: 6090200 bytes (min: 6090200)
+I (149296) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (149366) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1100,"end_time":null,"text":"最后一首不是一厢情愿吗","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1100,"end_time":1400,"text":"最后","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1400,"end_time":1700,"text":"一首","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1700,"end_time":2000,"text":"不是","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2000,"end_time":2300,"text":"一厢","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2300,"end_time":2600,"text":"情愿","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2600,"end_time":2900,"text":"吗","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (150181) voice_chat: Silence detected after speech (rms=68 < 300), stopping
+I (150298) voice_chat: Recorded 65536 samples 4.1s (min=-3319 max=2563 avg_abs=202 noise_floor=74)
+I (150303) ui_main: State transition: LISTENING → SENDING
+I (150558) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (150561) stt: Finalizing STT, waiting for result...
+I (150618) stt: Stopping: ringbuffer empty, sending finish-task
+I (150619) stt: Audio upload done: 128 chunks, 131072 bytes total. State: 4
+I (150648) stt: Sent finish-task (ret=124)
+I (150902) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1100,"end_time":3340,"text":"最后一首不是一厢情愿吗。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":1100,"end_time":1473,"text":"最后","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1473,"end_time":1846,"text":"一首","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1846,"end_time":2219,"text":"不是","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2219,"end_time":2592,"text":"一厢","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2592,"end_time":2965,"text":"情愿","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2965,"end_time":3340,"text":"吗","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":3340,"current_time":3340,"words":[]}}},"usage":{"duration":3}}}
+I (150917) stt: Result [final]: 最后一首不是一厢情愿吗。
+I (150922) stt: STT response: {"header":{"task_id":"39cae87d39c8023639c8de0300000002","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (150924) stt: Task finished. Result: '最后一首不是一厢情愿吗。' (len=36)
+I (150927) voice_chat: STT result: '最后一首不是一厢情愿吗。'
+I (151183) ui_main: State transition: SENDING → THINKING
+I (151225) openclaw: WS msg (88 bytes): {"type":"res","id":"35","ok":true,"payload":{"runId":"hc-150213-35","status":"started"}},"eventLoop"
+I (151228) openclaw: Response received (id=35 state=5)
+I (151396) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
+I (151400) openclaw: Chat sent: 最后一首不是一厢情愿吗。
+I (151402) wake_word: Wake word resumed - detection task will continue
+I (151929) stt: STT session ended
+I (152328) openclaw: WS msg (229 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-150213-35","stream":"lifecycle","data":{"phas...
+I (153866) openclaw: WS msg (220 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-150213-35","stream":"assistant","data":{"text...
+I (153873) openclaw: WS msg (255 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-150213-35","sessionKey":"agent:main:default","...
+I (153878) ui_main: State transition: THINKING → STREAMING
+I (154069) openclaw: WS msg (366 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-150213-35","stream":"assistant","data":{"text...
+I (154077) openclaw: WS msg (320 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-150213-35","stream":"assistant","data":{"text...
+I (154084) openclaw: WS msg (431 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-150213-35","sessionKey":"agent:main:default","...
+I (154087) ui_main: State transition: STREAMING → STREAMING
+I (154093) openclaw: WS msg (251 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-150213-35","stream":"lifecycle","data":{"phas...
+I (154100) openclaw: WS msg (325 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-150213-35","sessionKey":"agent:main:default","...
+I (154104) app_state: Response (2930 ms): 你说得对！
 
+为您找到《一厢情愿》——大哲，要播放这首吗？
+
+[LISTEN]
+I (154136) app_state: Continuous conversation mode: active
+I (154137) app_state: Raw resp (83 bytes): 你说得对！
+
+为您找到《一厢情愿》——大哲，要播放这首吗？
+I (154139) app_state: Short: '你说得对！' | Long: '为您找到《一厢情愿》——大哲，要播放这首吗？'
+I (154140) ui_main: State transition: STREAMING → RESPONSE
+I (154343) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
+I (154345) ui_main: Response: 你说得对！
+I (154346) aiclaw: OpenClaw connected
+I (154347) ui_main: State transition: RESPONSE → SPEAKING
+I (154352) openclaw: Requesting usage.status (id=37)
+I (154586) openclaw: WS msg (2210 bytes): {"type":"res","id":"36","ok":true,"payload":{"ok":true,"ts":1779329377018,"durationMs":24,"eventLoop...
+I (154593) openclaw: Response received (id=36 state=3)
+I (154594) openclaw: Health: ok=1 agent=main sess=3 last=19s wa=
+I (154622) ui_state_gif: Showing GIF for state 9: S:gifs/speaking.gif
+I (154624) app_tasks: TTS: speaking 为您找到《一厢情愿》——大哲，要播放这首...
+I (154736) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
+I (154738) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"为您找到《一厢情愿》——大哲，要播放这首吗？"}]}
+I (154753) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329383403,"durationMs":38,"eventLoop"...
+I (154890) esp-x509-crt-bundle: Certificate validated
+I (154990) openclaw: WS msg (87 bytes): {"type":"res","id":"37","ok":true,"payload":{"updatedAt":1779329383288,"providers":[]}}8,"eventLoop"
+I (154992) openclaw: Response received (id=37 state=3)
+I (155771) openclaw: Requesting usage.status (id=39)
+I (155786) openclaw: Requesting cron.list
+I (155871) openclaw: WS msg (2187 bytes): {"type":"res","id":"38","ok":true,"payload":{"ok":true,"ts":1779329383403,"durationMs":38,"eventLoop...
+I (155879) openclaw: Response received (id=38 state=3)
+I (155880) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
+I (156021) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329384619,"durationMs":25,"eventLoop"...
+I (156055) openclaw: WS msg (144 bytes): {"type":"res","id":"40","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (156059) openclaw: Response received (id=40 state=3)
+I (156060) openclaw: Cron: 0 tasks (0 active)
+I (156148) tts: MiMo HTTP 200, content_len=0
+I (156149) tts: MiMo reading SSE stream (streaming playback)...
+I (156150) tts: MiMo play task started (prebuf=9600 bytes)
+I (156326) openclaw: WS msg (87 bytes): {"type":"res","id":"39","ok":true,"payload":{"updatedAt":1779329384620,"providers":[]}}"hasMore":fal
+I (156329) openclaw: Response received (id=39 state=3)
+I (156831) tts: MiMo prebuf done (23040 bytes), starting playback
+I (158985) tts: MiMo SSE [DONE], total PCM=192000 bytes, chunks=8
+I (158986) tts: MiMo waiting for playback to finish...
+I (160718) tts: MiMo play task exiting
+I (160722) tts: MiMo total played: 192000/192000 bytes
+I (160725) tts: MiMo TTS session ended
+I (160726) wake_word: Wake word resumed - detection task will continue
+I (160727) ui_main: State transition: SPEAKING → IDLE
+I (160849) openclaw: Requesting usage.status (id=42)
+I (160853) openclaw: Requesting cron.list
+I (160895) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (160896) app_tasks: Auto-listen: continuing conversation
+I (161035) openclaw: WS msg (2190 bytes): {"type":"res","id":"41","ok":true,"payload":{"ok":true,"ts":1779329384619,"durationMs":25,"eventLoop...
+I (161043) openclaw: Response received (id=41 state=3)
+I (161045) openclaw: Health: ok=1 agent=main sess=3 last=1s wa=
+I (161236) openclaw: WS msg (144 bytes): {"type":"res","id":"43","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (161239) openclaw: Response received (id=43 state=3)
+I (161240) openclaw: Cron: 0 tasks (0 active)
+I (161246) openclaw: WS msg (2241 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329389797,"durationMs":39,"eventLoop"...
+I (161339) openclaw: WS msg (87 bytes): {"type":"res","id":"42","ok":true,"payload":{"updatedAt":1779329389679,"providers":[]}}9,"eventLoop"
+I (161342) openclaw: Response received (id=42 state=3)
+I (161703) aiclaw: Wake word detected!
+I (162009) ui_main: State transition: IDLE → LISTENING
+I (162009) stt: Connecting to DashScope STT... Free internal heap: 52655
+W (162012) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (162240) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (162242) esp-x509-crt-bundle: Certificate validated
+I (162245) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (162742) stt: WebSocket connected
+I (162776) voice_chat: DC offset: 0 | Noise floor: 91 → threshold: 300
+I (162900) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"task-started","attributes":{}},"payload":{}}
+I (162902) stt: Task started: c7689d0bc76a0275c76ae81e00000002
+I (163028) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (163037) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (163046) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (163067) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (163099) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (163944) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":720,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
+I (164046) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":720,"end_time":null,"text":"啊","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":720,"end_time":960,"text":"啊","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (164159) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1040,"end_time":null,"text":"好的","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1040,"end_time":1440,"text":"好的","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (164728) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1040,"end_time":null,"text":"好的，就播放","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":1040,"end_time":1440,"text":"好的","punctuation":"，","fixed":false,"speaker_id":null},{"begin_time":1760,"end_time":1960,"text":"就播","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":1960,"end_time":2160,"text":"放","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (165341) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (165915) openclaw: Requesting usage.status (id=45)
+I (165919) openclaw: Requesting cron.list
+I (166019) openclaw: WS msg (2188 bytes): {"type":"res","id":"44","ok":true,"payload":{"ok":true,"ts":1779329389797,"durationMs":39,"eventLoop...
+I (166027) openclaw: Response received (id=44 state=3)
+I (166028) openclaw: Health: ok=1 agent=main sess=3 last=7s wa=
+I (166033) voice_chat: Silence detected after speech (rms=74 < 300), stopping
+I (166127) voice_chat: Recorded 62464 samples 3.9s (min=-6522 max=4914 avg_abs=187 noise_floor=91)
+I (166129) ui_main: State transition: LISTENING → SENDING
+I (166263) openclaw: WS msg (144 bytes): {"type":"res","id":"46","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (166264) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":1040,"end_time":2800,"text":"好的，就播放它。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":1040,"end_time":1440,"text":"好的","punctuation":"，","fixed":false,"speaker_id":null},{"begin_time":1760,"end_time":2280,"text":"就播","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":2280,"end_time":2800,"text":"放它","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":2800,"current_time":2800,"words":[]}}},"usage":{"duration":3}}}
+I (166266) openclaw: Response received (id=46 state=3)
+I (166276) openclaw: Cron: 0 tasks (0 active)
+I (166277) stt: Result [final]: 好的，就播放它。
+I (166282) openclaw: WS msg (2241 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329394859,"durationMs":40,"eventLoop"...
+I (166382) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (166386) stt: Finalizing STT, waiting for result...
+I (166459) openclaw: WS msg (87 bytes): {"type":"res","id":"45","ok":true,"payload":{"updatedAt":1779329394741,"providers":[]}}0,"eventLoop"
+I (166462) openclaw: Response received (id=45 state=3)
+I (166467) stt: Stopping: ringbuffer empty, sending finish-task
+I (166468) stt: Audio upload done: 122 chunks, 124928 bytes total. State: 4
+I (166477) stt: Sent finish-task (ret=124)
+I (166549) stt: STT response: {"header":{"task_id":"c7689d0bc76a0275c76ae81e00000002","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (166552) stt: Task finished. Result: '好的，就播放它。' (len=24)
+I (166555) voice_chat: STT result: '好的，就播放它。'
+I (166598) ui_main: State transition: SENDING → THINKING
+I (166634) openclaw: WS msg (88 bytes): {"type":"res","id":"47","ok":true,"payload":{"runId":"hc-165624-47","status":"started"}},"eventLoop"
+I (166637) openclaw: Response received (id=47 state=5)
+I (166799) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
+I (166802) openclaw: Chat sent: 好的，就播放它。
+I (166804) wake_word: Wake word resumed - detection task will continue
+I (167576) stt: STT session ended
+I (167689) openclaw: WS msg (229 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-165624-47","stream":"lifecycle","data":{"phas...
+I (169027) openclaw: WS msg (308 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-165624-47","stream":"assistant","data":{"text...
+I (169033) openclaw: WS msg (343 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-165624-47","sessionKey":"agent:main:default","...
+I (169037) ui_main: State transition: THINKING → STREAMING
+I (169044) openclaw: WS msg (300 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-165624-47","stream":"assistant","data":{"text...
+I (169052) openclaw: WS msg (251 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-165624-47","stream":"lifecycle","data":{"phas...
+I (169059) openclaw: WS msg (335 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-165624-47","sessionKey":"agent:main:default","...
+I (169063) ui_main: State transition: STREAMING → STREAMING
+I (169069) openclaw: WS msg (299 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-165624-47","sessionKey":"agent:main:default","...
+I (169073) app_state: Response (2488 ms): 好的，为您播放《一厢情愿》
+
+[DEVICE:mp3=index:33]
+[END]
+I (169097) app_state: Continuous conversation mode: active
+I (169098) app_state: Device cmd: mp3 (value len=8)
+I (169099) app_state: Executed 1 device command(s)
+I (169100) app_state: Raw resp (41 bytes): 好的，为您播放《一厢情愿》
+
+
+I (169101) app_state: Short: '好的，为您播放《一厢情愿》' | Long: '好的，为您播放《一厢情愿》'
+I (169103) ui_main: State transition: STREAMING → RESPONSE
+I (169212) app_state: MP3 cmd (deferred): index:33
+I (169334) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
+I (169336) ui_main: Response: 好的，为您播放《一厢情愿》
+I (169337) aiclaw: OpenClaw connected
+I (169342) openclaw: Requesting usage.status (id=49)
+I (169345) board: Reconfig audio: rate=48000, ch=2
+I (169419) I2S_IF: Pending out channel for in channel running
+E (169421) I2S_IF: Current mode playback conflict sample_rate 48000 with peer mode sample_rate 16000
+I (169460) Adev_Codec: Open codec device OK
+I (169503) board: Audio reconfigured to 48000 Hz, 2 ch
+I (169504) mp3_player: I2S pre-configured to 48kHz stereo (waiting for stabilization)
+I (169526) mp3_player: Playing: file://sdcard/mp3/一厢情愿-大哲.mp3
+I (169532) openclaw: WS msg (2193 bytes): {"type":"res","id":"48","ok":true,"payload":{"ok":true,"ts":1779329394859,"durationMs":40,"eventLoop...
+I (169538) mp3_player: Memory before MP3: internal=40791 bytes, PSRAM=6903828 bytes
+W (169540) mp3_player: WARNING: Low internal RAM (40791 bytes) before MP3 playback
+I (169540) openclaw: Response received (id=48 state=3)
+I (169543) openclaw: Health: ok=1 agent=main sess=3 last=12s wa=
+I (169546) wifi:Set ps type: 0, coexist: 0
+
+I (169592) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x3c428c40, run:0]
+I (169594) ESP_GMF_FILE: Open, dir:1, uri:file://sdcard/mp3/一厢情愿-大哲.mp3
+I (169628) ESP_GMF_FILE: File size: 10140436 byte, file position: 0
+I (169630) ESP_GMF_TASK: One times job is complete, del[wk:0x3c428c40, ctx:0x3c428890, label:aud_dec_open]
+I (169632) ESP_GMF_PORT: ACQ IN, new self payload:0x3c428c40, port:0x3c428b90, el:0x3c428890-aud_dec
+W (169653) ESP_GMF_ASMP_DEC: Not enough memory for out, need:4608, old: 1024, new: 4608
+I (169716) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329398369,"durationMs":37,"eventLoop"...
+I (169811) mp3_player: Music info: rate=48000, ch=2, bits=16, bitrate=0
+I (169813) mp3_player: I2S already configured for 48000 Hz, 2 ch (no reconfig needed)
+I (169815) mp3_player: Player state: 1 (ESP_AUD_SIMPLE_PLAYER_RUNNING)
+I (169820) ESP_GMF_TASK: One times job is complete, del[wk:0x3c428ee8, ctx:0x3c42898c, label:aud_rate_cvt_open]
+I (169884) app_state: MP3 play index 33: 一厢情愿-大哲.mp3
+I (169885) ui_main: State transition: RESPONSE → MP3
+I (169894) openclaw: WS msg (87 bytes): {"type":"res","id":"49","ok":true,"payload":{"updatedAt":1779329398253,"providers":[]}}7,"eventLoop"
+I (169897) openclaw: Response received (id=49 state=3)
+I (173559) openclaw: Requesting usage.status (id=51)
+I (173575) openclaw: Requesting cron.list
+I (173665) openclaw: WS msg (2186 bytes): {"type":"res","id":"50","ok":true,"payload":{"ok":true,"ts":1779329398369,"durationMs":37,"eventLoop...
+I (173673) openclaw: Response received (id=50 state=3)
+I (173674) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
+I (173764) openclaw: WS msg (2239 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329402417,"durationMs":25,"eventLoop"...
+I (173853) openclaw: WS msg (144 bytes): {"type":"res","id":"52","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (173855) openclaw: Response received (id=52 state=3)
+I (173856) openclaw: Cron: 0 tasks (0 active)
+I (174042) openclaw: WS msg (87 bytes): {"type":"res","id":"51","ok":true,"payload":{"updatedAt":1779329402417,"providers":[]}}"hasMore":fal
+I (174045) openclaw: Response received (id=51 state=3)
+I (178531) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329407185},"seq":62}"providers":[]}}"hasMore":fal
+I (178610) openclaw: Requesting usage.status (id=54)
+I (178613) openclaw: Requesting cron.list
+I (178715) openclaw: WS msg (2189 bytes): {"type":"res","id":"53","ok":true,"payload":{"ok":true,"ts":1779329402417,"durationMs":25,"eventLoop...
+I (178722) openclaw: Response received (id=53 state=3)
+I (178723) openclaw: Health: ok=1 agent=main sess=3 last=4s wa=
+I (178899) openclaw: WS msg (144 bytes): {"type":"res","id":"55","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (178902) openclaw: Response received (id=55 state=3)
+I (178903) openclaw: Cron: 0 tasks (0 active)
+I (178908) openclaw: WS msg (2240 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329407554,"durationMs":41,"eventLoop"...
+I (179084) openclaw: WS msg (87 bytes): {"type":"res","id":"54","ok":true,"payload":{"updatedAt":1779329407435,"providers":[]}}1,"eventLoop"
+I (179087) openclaw: Response received (id=54 state=3)
+I (179629) app_tasks: Memory status - Free heap: 7000652 bytes (min: 6080700), Free PSRAM: 6980552 bytes (min: 6090200)
+I (183661) openclaw: Requesting usage.status (id=57)
+I (183665) openclaw: Requesting cron.list
+I (183772) openclaw: WS msg (2189 bytes): {"type":"res","id":"56","ok":true,"payload":{"ok":true,"ts":1779329407554,"durationMs":41,"eventLoop...
+I (183779) openclaw: Response received (id=56 state=3)
+I (183780) openclaw: Health: ok=1 agent=main sess=3 last=9s wa=
+I (183969) openclaw: WS msg (144 bytes): {"type":"res","id":"58","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (183971) openclaw: Response received (id=58 state=3)
+I (183973) openclaw: Cron: 0 tasks (0 active)
+I (183978) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329412622,"durationMs":41,"eventLoop"...
+I (184153) openclaw: WS msg (87 bytes): {"type":"res","id":"57","ok":true,"payload":{"updatedAt":1779329412493,"providers":[]}}1,"eventLoop"
+I (184155) openclaw: Response received (id=57 state=3)
+I (188707) openclaw: Requesting usage.status (id=60)
+I (188725) openclaw: Requesting cron.list
+I (188815) openclaw: WS msg (2191 bytes): {"type":"res","id":"59","ok":true,"payload":{"ok":true,"ts":1779329412622,"durationMs":41,"eventLoop...
+I (188822) openclaw: Response received (id=59 state=3)
+I (188823) openclaw: Health: ok=1 agent=main sess=3 last=14s wa=
+I (189008) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329417659,"durationMs":44,"eventLoop"...
+I (189190) openclaw: WS msg (87 bytes): {"type":"res","id":"60","ok":true,"payload":{"updatedAt":1779329417538,"providers":[]}}4,"eventLoop"
+I (189192) openclaw: Response received (id=60 state=3)
+I (189197) openclaw: WS msg (144 bytes): {"type":"res","id":"61","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (189199) openclaw: Response received (id=61 state=3)
+I (189200) openclaw: Cron: 0 tasks (0 active)
+I (193766) openclaw: Requesting usage.status (id=63)
+I (193771) openclaw: Requesting cron.list
+I (193871) openclaw: WS msg (2191 bytes): {"type":"res","id":"62","ok":true,"payload":{"ok":true,"ts":1779329417659,"durationMs":44,"eventLoop...
+I (193878) openclaw: Response received (id=62 state=3)
+I (193879) openclaw: Health: ok=1 agent=main sess=3 last=19s wa=
+I (194060) openclaw: WS msg (144 bytes): {"type":"res","id":"64","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (194063) openclaw: Response received (id=64 state=3)
+I (194064) openclaw: Cron: 0 tasks (0 active)
+I (194072) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329422715,"durationMs":40,"eventLoop"...
+I (194256) openclaw: WS msg (87 bytes): {"type":"res","id":"63","ok":true,"payload":{"updatedAt":1779329422593,"providers":[]}}0,"eventLoop"
+I (194258) openclaw: Response received (id=63 state=3)
+I (198827) openclaw: Requesting usage.status (id=66)
+I (198831) openclaw: Requesting cron.list
+I (198941) openclaw: WS msg (2191 bytes): {"type":"res","id":"65","ok":true,"payload":{"ok":true,"ts":1779329422715,"durationMs":40,"eventLoop...
+I (198960) openclaw: Response received (id=65 state=3)
+I (198962) openclaw: Health: ok=1 agent=main sess=3 last=25s wa=
+I (199127) openclaw: WS msg (144 bytes): {"type":"res","id":"67","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (199129) openclaw: Response received (id=67 state=3)
+I (199130) openclaw: Cron: 0 tasks (0 active)
+I (199136) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329427776,"durationMs":40,"eventLoop"...
+I (199303) openclaw: WS msg (87 bytes): {"type":"res","id":"66","ok":true,"payload":{"updatedAt":1779329427658,"providers":[]}}0,"eventLoop"
+I (199305) openclaw: Response received (id=66 state=3)
+I (208367) openclaw: WS msg (2259 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329437018,"durationMs":25,"eventLoop"...
+I (208533) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329437186},"seq":69}8,"durationMs":25,"eventLoop"
+I (209887) app_tasks: Memory status - Free heap: 7000652 bytes (min: 6080700), Free PSRAM: 6980552 bytes (min: 6090200)
+I (238531) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329467185},"seq":70}8,"durationMs":25,"eventLoop"
+I (240055) app_tasks: Memory status - Free heap: 7000136 bytes (min: 6080700), Free PSRAM: 6980572 bytes (min: 6090200)
+I (259160) openclaw: Requesting cron.list
+I (259212) openclaw: WS msg (144 bytes): {"type":"res","id":"68","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (259216) openclaw: Response received (id=68 state=3)
+I (259218) openclaw: Cron: 0 tasks (0 active)
+I (268393) openclaw: WS msg (2261 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329497046,"durationMs":32,"eventLoop"...
+I (268530) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329497185},"seq":72}6,"durationMs":32,"eventLoop"
+I (270249) app_tasks: Memory status - Free heap: 6994588 bytes (min: 6080700), Free PSRAM: 6974276 bytes (min: 6090200)
+I (298530) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329527186},"seq":73}6,"durationMs":32,"eventLoop"
+I (300427) app_tasks: Memory status - Free heap: 7001096 bytes (min: 6080700), Free PSRAM: 6980572 bytes (min: 6090200)
+I (319547) openclaw: Requesting cron.list
+I (319587) openclaw: WS msg (144 bytes): {"type":"res","id":"69","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (319589) openclaw: Response received (id=69 state=3)
+I (319590) openclaw: Cron: 0 tasks (0 active)
+I (328393) openclaw: WS msg (2264 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329557032,"durationMs":26,"eventLoop"...
+I (328530) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329557185},"seq":75}2,"durationMs":26,"eventLoop"
+I (330605) app_tasks: Memory status - Free heap: 7000540 bytes (min: 6080700), Free PSRAM: 6980552 bytes (min: 6090200)
+I (358530) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329587185},"seq":76}2,"durationMs":26,"eventLoop"
+I (360734) app_tasks: Memory status - Free heap: 7000540 bytes (min: 6080700), Free PSRAM: 6980552 bytes (min: 6090200)
+I (379891) openclaw: Requesting cron.list
+I (379936) openclaw: WS msg (144 bytes): {"type":"res","id":"70","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (379938) openclaw: Response received (id=70 state=3)
+I (379940) openclaw: Cron: 0 tasks (0 active)
+I (388386) openclaw: WS msg (2263 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329617034,"durationMs":30,"eventLoop"...
+I (388531) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329617185},"seq":78}4,"durationMs":30,"eventLoop"
+I (390988) app_tasks: Memory status - Free heap: 7001808 bytes (min: 6080700), Free PSRAM: 6980552 bytes (min: 6090200)
+I (418529) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329647184},"seq":79}4,"durationMs":30,"eventLoop"
+I (421128) app_tasks: Memory status - Free heap: 7001848 bytes (min: 6080700), Free PSRAM: 6980572 bytes (min: 6090200)
+I (424134) ESP_GMF_FILE: No more data, ret: 0
+I (424135) ESP_GMF_TASK: Job is done, [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x3c428c78, job:0x3c428890-aud_dec_proc]
+I (424136) ESP_GMF_TASK: Job is done, [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x3c428f0c, job:0x3c42898c-aud_rate_cvt_proc]
+I (424138) ESP_GMF_FILE: CLose, 0x3c428ae0, pos = 10140436/10140436
+I (424140) ESP_GMF_TASK: One times job is complete, del[wk:0x3c428c64, ctx:0x3c428890, label:aud_dec_close]
+I (424141) ESP_GMF_TASK: One times job is complete, del[wk:0x3c428c88, ctx:0x3c42898c, label:aud_rate_cvt_close]
+I (424143) mp3_player: Player state: 4 (ESP_AUD_SIMPLE_PLAYER_FINISHED)
+I (424144) wifi:Set ps type: 1, coexist: 0
+
+I (424145) board: Reconfig audio: rate=16000, ch=1
+I (424153) I2S_IF: Pending out channel for in channel running
+I (424156) I2S_IF: Current mode(playback) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
+I (424158) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (424160) I2S_IF: STD: TX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (424179) Adev_Codec: Open codec device OK
+I (424190) board: Audio reconfigured to 16000 Hz, 1 ch
+I (424191) board: Volume set to 55%
+I (424392) board: Reopening ADC for wake word detection
+I (424397) I2S_IF: Current mode(record) and peer mode have same sample_rate 16000, channel 2, bits_per_sample 16
+I (424399) I2S_IF: STD: RX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (424401) I2S_IF: STD: RX, sample_rate_hz: 16000, mclk_multiple: 256, clk_src: 6
+I (424404) ES7210: Bits 16
+I (424413) ES7210: Enable ES7210_INPUT_MIC1
+I (424418) ES7210: Enable ES7210_INPUT_MIC2
+I (424427) ES7210: Unmuted
+I (424428) Adev_Codec: Open codec device OK
+I (424438) board: ADC reopened successfully at 16000 Hz
+I (424439) mp3_player: ADC reopened successfully for wake word detection
+I (424440) mp3_player: Resuming wake word detection after MP3 playback
+I (424441) wake_word: Wake word resumed - detection task will continue
+I (424442) aiclaw: MP3 playback finished
+I (424443) aiclaw: Resetting continuous conversation mode after MP3
+I (424444) ui_main: State transition: MP3 → IDLE
+I (424615) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (424617) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
+I (424619) ESP_GMF_TASK: Waiting to run... [tsk:TSK_0x3fccb708-0x3fccb708, wk:0x0, run:0]
+I (430483) wake_word: Audio monitor: RMS=125
+I (440561) openclaw: Requesting cron.list
+I (440608) openclaw: WS msg (144 bytes): {"type":"res","id":"71","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (440611) openclaw: Response received (id=71 state=3)
+I (440612) openclaw: Cron: 0 tasks (0 active)
+I (448476) openclaw: WS msg (2265 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329677033,"durationMs":26,"eventLoop"...
+I (448531) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329677185},"seq":81}3,"durationMs":26,"eventLoop"
+I (451764) app_tasks: Memory status - Free heap: 6932972 bytes (min: 6080700), Free PSRAM: 6891884 bytes (min: 6090200)
+I (459283) wake_word: Audio monitor: RMS=99
+I (478583) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329707185},"seq":82}3,"durationMs":26,"eventLoop"
+I (482212) app_tasks: Memory status - Free heap: 6926696 bytes (min: 6080700), Free PSRAM: 6885608 bytes (min: 6090200)
+I (488083) wake_word: Audio monitor: RMS=97
+I (501638) openclaw: Requesting cron.list
+I (501682) openclaw: WS msg (144 bytes): {"type":"res","id":"72","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (501685) openclaw: Response received (id=72 state=3)
+I (501687) openclaw: Cron: 0 tasks (0 active)
+I (508489) openclaw: WS msg (2265 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329737025,"durationMs":25,"eventLoop"...
+I (508528) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329737184},"seq":84}5,"durationMs":25,"eventLoop"
+I (512805) app_tasks: Memory status - Free heap: 6932972 bytes (min: 6080700), Free PSRAM: 6891884 bytes (min: 6090200)
+I (516883) wake_word: Audio monitor: RMS=84
+I (538585) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329767185},"seq":85}5,"durationMs":25,"eventLoop"
+I (543276) app_tasks: Memory status - Free heap: 6932972 bytes (min: 6080700), Free PSRAM: 6891884 bytes (min: 6090200)
+I (545683) wake_word: Audio monitor: RMS=107
+I (562698) openclaw: Requesting cron.list
+I (562740) openclaw: WS msg (144 bytes): {"type":"res","id":"73","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (562743) openclaw: Response received (id=73 state=3)
+I (562745) openclaw: Cron: 0 tasks (0 active)
+I (568487) openclaw: WS msg (2265 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329797039,"durationMs":26,"eventLoop"...
+I (568528) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329797185},"seq":87}9,"durationMs":26,"eventLoop"
+I (573837) app_tasks: Memory status - Free heap: 6932936 bytes (min: 6080700), Free PSRAM: 6891884 bytes (min: 6090200)
+I (574483) wake_word: Audio monitor: RMS=69
+I (598590) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329827185},"seq":88}9,"durationMs":26,"eventLoop"
+I (603283) wake_word: Audio monitor: RMS=88
+I (604542) app_tasks: Memory status - Free heap: 6932972 bytes (min: 6080700), Free PSRAM: 6891884 bytes (min: 6090200)
+I (605591) wake_word: *** Wake word detected: "你好小智" ***
+I (605595) aiclaw: Wake word detected!
+I (605911) ui_main: State transition: IDLE → LISTENING
+I (605912) stt: Connecting to DashScope STT... Free internal heap: 54783
+W (605916) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (606147) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (606152) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (606218) esp-x509-crt-bundle: Certificate validated
+I (606689) voice_chat: DC offset: -1 | Noise floor: 194 → threshold: 485
+I (606745) stt: WebSocket connected
+I (607048) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"task-started","attributes":{}},"payload":{}}
+I (607050) stt: Task started: 93b83c4693b1093b93b1075500000009
+I (607152) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (607161) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (607170) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (607210) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (607219) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (607673) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":180,"end_time":null,"text":"","channel_id":0,"speaker_id":null,"sentence_end":false,"sentence_begin":true,"words":[]}}}}
+I (607757) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":180,"end_time":null,"text":"退下","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":180,"end_time":660,"text":"退下","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (608002) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":420,"end_time":null,"text":"退下吗","channel_id":0,"speaker_id":null,"sentence_end":false,"words":[{"begin_time":420,"end_time":660,"text":"退下","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":660,"end_time":900,"text":"吗","punctuation":"","fixed":false,"speaker_id":null}]}}}}
+I (609673) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"result-generated","attributes":{}},"payload":{"output":{"sentence":{"sentence_id":1,"begin_time":420,"end_time":1200,"text":"退下吧。","channel_id":0,"speaker_id":null,"sentence_end":true,"words":[{"begin_time":420,"end_time":810,"text":"退下","punctuation":"","fixed":false,"speaker_id":null},{"begin_time":810,"end_time":1200,"text":"吧","punctuation":"。","fixed":false,"speaker_id":null}],"stash":{"sentence_id":2,"text":"","begin_time":1200,"current_time":1200,"words":[]}}},"usage":{"duration":1}}}
+I (609683) stt: Result [final]: 退下吧。
+I (610027) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (612459) stt: Sent audio chunk #200: 1024 bytes (total=204800, ret=1024, state=3)
+I (615645) stt: Sent audio chunk #300: 1024 bytes (total=307200, ret=1024, state=3)
+I (618841) stt: Sent audio chunk #400: 1024 bytes (total=409600, ret=1024, state=3)
+I (621482) voice_chat: Recorded 240000 samples 15.0s (min=-1987 max=2477 avg_abs=78 noise_floor=194)
+I (621484) ui_main: State transition: LISTENING → SENDING
+I (621681) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (621685) stt: Finalizing STT, waiting for result...
+I (621693) stt: Stopping: ringbuffer empty, sending finish-task
+I (621694) stt: Audio upload done: 469 chunks, 480000 bytes total. State: 4
+I (621702) stt: Sent finish-task (ret=124)
+I (621785) stt: STT response: {"header":{"task_id":"93b83c4693b1093b93b1075500000009","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (621788) stt: Task finished. Result: '退下吧。' (len=12)
+I (621789) voice_chat: Local VAD missed speech but STT recognized: '退下吧。'
+I (621796) voice_chat: STT result: '退下吧。'
+I (621930) ui_main: State transition: SENDING → THINKING
+I (621967) openclaw: WS msg (88 bytes): {"type":"res","id":"74","ok":true,"payload":{"runId":"hc-620960-74","status":"started"}},"eventLoop"
+I (621969) openclaw: Response received (id=74 state=5)
+I (622077) ui_state_gif: Showing GIF for state 6: S:gifs/thinking.gif
+I (622081) openclaw: Chat sent: 退下吧。
+I (622082) wake_word: Wake word resumed - detection task will continue
+I (622809) stt: STT session ended
+I (623167) openclaw: WS msg (229 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-620960-74","stream":"lifecycle","data":{"phas...
+I (624807) openclaw: WS msg (258 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-620960-74","stream":"assistant","data":{"text...
+I (624813) openclaw: WS msg (293 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-620960-74","sessionKey":"agent:main:default","...
+I (624816) ui_main: State transition: THINKING → STREAMING
+I (624825) openclaw: WS msg (281 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-620960-74","stream":"assistant","data":{"text...
+I (624833) openclaw: WS msg (251 bytes): {"type":"event","event":"agent","payload":{"runId":"hc-620960-74","stream":"lifecycle","data":{"phas...
+I (624840) openclaw: WS msg (316 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-620960-74","sessionKey":"agent:main:default","...
+I (624844) ui_main: State transition: STREAMING → STREAMING
+I (624851) openclaw: WS msg (277 bytes): {"type":"event","event":"chat","payload":{"runId":"hc-620960-74","sessionKey":"agent:main:default","...
+I (624854) app_state: Response (2933 ms): 好的
+
+好的，有事随时叫我。
+
+[END]
+I (624878) app_state: Continuous conversation mode: active
+I (624879) app_state: Raw resp (38 bytes): 好的
+
+好的，有事随时叫我。
+I (624881) app_state: Short: '好的' | Long: '好的，有事随时叫我。'
+I (624882) ui_main: State transition: STREAMING → RESPONSE
+I (625102) ui_state_gif: Showing GIF for state 8: S:gifs/response.gif
+I (625104) ui_main: Response: 好的
+I (625105) aiclaw: OpenClaw connected
+I (625106) ui_main: State transition: RESPONSE → SPEAKING
+I (625111) openclaw: Requesting usage.status (id=76)
+I (625369) ui_state_gif: Showing GIF for state 9: S:gifs/speaking.gif
+I (625371) app_tasks: TTS: speaking 好的，有事随时叫我。
+I (625421) openclaw: WS msg (2215 bytes): {"type":"res","id":"75","ok":true,"payload":{"ok":true,"ts":1779329797039,"durationMs":26,"eventLoop...
+I (625428) openclaw: Response received (id=75 state=3)
+I (625429) openclaw: Health: ok=1 agent=main sess=3 last=399s wa=
+I (625482) tts: MiMo URL: https://api.xiaomimimo.com/v1/chat/completions
+I (625483) tts: MiMo request: {"model":"mimo-v2-tts","stream":true,"audio":{"format":"pcm16","voice":"mimo_default"},"messages":[{"role":"assistant","content":"好的，有事随时叫我。"}]}
+I (625504) openclaw: WS msg (2242 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329854158,"durationMs":39,"eventLoop"...
+I (625660) esp-x509-crt-bundle: Certificate validated
+I (625750) openclaw: WS msg (87 bytes): {"type":"res","id":"76","ok":true,"payload":{"updatedAt":1779329854040,"providers":[]}}9,"eventLoop"
+I (625752) openclaw: Response received (id=76 state=3)
+I (625755) openclaw: Requesting usage.status (id=78)
+I (625811) openclaw: Requesting cron.list
+I (625850) openclaw: WS msg (2191 bytes): {"type":"res","id":"77","ok":true,"payload":{"ok":true,"ts":1779329854158,"durationMs":39,"eventLoop...
+I (625857) openclaw: Response received (id=77 state=3)
+I (625858) openclaw: Health: ok=1 agent=main sess=3 last=0s wa=
+I (625948) openclaw: WS msg (2244 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329854602,"durationMs":25,"eventLoop"...
+I (626102) openclaw: WS msg (144 bytes): {"type":"res","id":"79","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (626105) openclaw: Response received (id=79 state=3)
+I (626107) openclaw: Cron: 0 tasks (0 active)
+I (626225) openclaw: WS msg (87 bytes): {"type":"res","id":"78","ok":true,"payload":{"updatedAt":1779329854603,"providers":[]}}"hasMore":fal
+I (626228) openclaw: Response received (id=78 state=3)
+I (626752) tts: MiMo HTTP 200, content_len=0
+I (626753) tts: MiMo reading SSE stream (streaming playback)...
+I (626754) tts: MiMo play task started (prebuf=9600 bytes)
+I (627369) tts: MiMo prebuf done (23040 bytes), starting playback
+I (628337) tts: MiMo SSE [DONE], total PCM=115200 bytes, chunks=5
+I (628339) tts: MiMo waiting for playback to finish...
+I (628393) openclaw: WS msg (2262 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329857021,"durationMs":25,"eventLoop"...
+I (628596) openclaw: WS msg (71 bytes): {"type":"event","event":"tick","payload":{"ts":1779329857185},"seq":99}1,"durationMs":25,"eventLoop"
+I (629665) tts: MiMo play task exiting
+I (629674) tts: MiMo total played: 115200/115200 bytes
+I (629677) tts: MiMo TTS session ended
+I (629678) wake_word: Wake word resumed - detection task will continue
+I (629679) ui_main: State transition: SPEAKING → IDLE
+I (629847) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (629849) app_tasks: Auto-listen: continuing conversation
+I (630678) aiclaw: Wake word detected!
+I (630940) openclaw: Requesting usage.status (id=81)
+I (630951) openclaw: Requesting cron.list
+I (630972) ui_main: State transition: IDLE → LISTENING
+I (630988) stt: Connecting to DashScope STT... Free internal heap: 53975
+W (630990) websocket_client: `reconnect_timeout_ms` is not set, or it is less than or equal to zero, using default time out 10000 (milliseconds)
+I (631052) openclaw: WS msg (2209 bytes): {"type":"res","id":"80","ok":true,"payload":{"ok":true,"ts":1779329857021,"durationMs":25,"eventLoop...
+I (631059) openclaw: Response received (id=80 state=3)
+I (631060) openclaw: Health: ok=1 agent=main sess=3 last=3s wa=
+I (631183) ui_state_gif: Showing GIF for state 4: S:gifs/listening.gif
+I (631187) voice_chat: Recording + streaming to DashScope (silence=1500ms thresh=500 continuous=15s)...
+I (631221) esp-x509-crt-bundle: Certificate validated
+I (631259) openclaw: WS msg (2243 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329859889,"durationMs":38,"eventLoop"...
+I (631462) openclaw: WS msg (87 bytes): {"type":"res","id":"81","ok":true,"payload":{"updatedAt":1779329859773,"providers":[]}}8,"eventLoop"
+I (631465) openclaw: Response received (id=81 state=3)
+I (631469) openclaw: WS msg (144 bytes): {"type":"res","id":"82","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (631472) openclaw: Response received (id=82 state=3)
+I (631473) openclaw: Cron: 0 tasks (0 active)
+I (631703) stt: WebSocket connected
+I (631717) voice_chat: DC offset: 0 | Noise floor: 83 → threshold: 300
+I (632026) stt: STT response: {"header":{"task_id":"39edc19b39e4099d39e45c9300000009","event":"task-started","attributes":{}},"payload":{}}
+I (632028) stt: Task started: 39edc19b39e4099d39e45c9300000009
+I (632113) stt: Sent audio chunk #1: 1024 bytes (total=1024, ret=1024, state=3)
+I (632122) stt: Sent audio chunk #2: 1024 bytes (total=2048, ret=1024, state=3)
+I (632141) stt: Sent audio chunk #3: 1024 bytes (total=3072, ret=1024, state=3)
+I (632166) stt: Sent audio chunk #4: 1024 bytes (total=4096, ret=1024, state=3)
+I (632174) stt: Sent audio chunk #5: 1024 bytes (total=5120, ret=1024, state=3)
+I (634302) stt: Sent audio chunk #100: 1024 bytes (total=102400, ret=1024, state=3)
+I (635019) app_tasks: Memory status - Free heap: 6108172 bytes (min: 6066244), Free PSRAM: 6078420 bytes (min: 6078420)
+I (636026) openclaw: Requesting usage.status (id=84)
+I (636030) openclaw: Requesting cron.list
+I (636131) openclaw: WS msg (2191 bytes): {"type":"res","id":"83","ok":true,"payload":{"ok":true,"ts":1779329859889,"durationMs":38,"eventLoop...
+I (636138) openclaw: Response received (id=83 state=3)
+I (636139) openclaw: Health: ok=1 agent=main sess=3 last=6s wa=
+I (636324) openclaw: WS msg (144 bytes): {"type":"res","id":"85","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (636327) openclaw: Response received (id=85 state=3)
+I (636328) openclaw: Cron: 0 tasks (0 active)
+I (636333) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329864982,"durationMs":41,"eventLoop"...
+I (636508) openclaw: WS msg (87 bytes): {"type":"res","id":"84","ok":true,"payload":{"updatedAt":1779329864863,"providers":[]}}1,"eventLoop"
+I (636511) openclaw: Response received (id=84 state=3)
+I (637521) stt: Sent audio chunk #200: 1024 bytes (total=204800, ret=1024, state=3)
+I (640691) stt: Sent audio chunk #300: 1024 bytes (total=307200, ret=1024, state=3)
+I (641054) openclaw: Requesting usage.status (id=87)
+I (641058) openclaw: Requesting cron.list
+I (641165) openclaw: WS msg (2193 bytes): {"type":"res","id":"86","ok":true,"payload":{"ok":true,"ts":1779329864982,"durationMs":41,"eventLoop...
+I (641172) openclaw: Response received (id=86 state=3)
+I (641173) openclaw: Health: ok=1 agent=main sess=3 last=11s wa=
+I (641344) openclaw: WS msg (144 bytes): {"type":"res","id":"88","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (641347) openclaw: Response received (id=88 state=3)
+I (641348) openclaw: Cron: 0 tasks (0 active)
+I (641353) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329870003,"durationMs":40,"eventLoop"...
+I (641530) openclaw: WS msg (87 bytes): {"type":"res","id":"87","ok":true,"payload":{"updatedAt":1779329869884,"providers":[]}}0,"eventLoop"
+I (641533) openclaw: Response received (id=87 state=3)
+I (643910) stt: Sent audio chunk #400: 1024 bytes (total=409600, ret=1024, state=3)
+I (646117) openclaw: Requesting usage.status (id=90)
+I (646128) openclaw: Requesting cron.list
+I (646218) openclaw: WS msg (2193 bytes): {"type":"res","id":"89","ok":true,"payload":{"ok":true,"ts":1779329870003,"durationMs":40,"eventLoop...
+I (646226) openclaw: Response received (id=89 state=3)
+I (646227) openclaw: Health: ok=1 agent=main sess=3 last=16s wa=
+I (646405) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329875060,"durationMs":37,"eventLoop"...
+I (646584) openclaw: WS msg (87 bytes): {"type":"res","id":"90","ok":true,"payload":{"updatedAt":1779329874944,"providers":[]}}7,"eventLoop"
+I (646587) openclaw: Response received (id=90 state=3)
+I (646592) openclaw: WS msg (144 bytes): {"type":"res","id":"91","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (646594) openclaw: Response received (id=91 state=3)
+I (646596) openclaw: Cron: 0 tasks (0 active)
+I (646700) voice_chat: No speech for 15s, starting 5s countdown...
+I (646702) voice_chat: Playing countdown beep step 1 (amp=24000, samples=2400)
+I (647282) stt: Sent audio chunk #500: 1024 bytes (total=512000, ret=1024, state=3)
+I (650434) stt: Sent audio chunk #600: 1024 bytes (total=614400, ret=1024, state=3)
+I (651177) openclaw: Requesting usage.status (id=93)
+I (651182) openclaw: Requesting cron.list
+I (651283) openclaw: WS msg (2193 bytes): {"type":"res","id":"92","ok":true,"payload":{"ok":true,"ts":1779329875060,"durationMs":37,"eventLoop...
+I (651290) openclaw: Response received (id=92 state=3)
+I (651291) openclaw: Health: ok=1 agent=main sess=3 last=21s wa=
+I (651471) openclaw: WS msg (144 bytes): {"type":"res","id":"94","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (651473) openclaw: Response received (id=94 state=3)
+I (651474) openclaw: Cron: 0 tasks (0 active)
+I (651480) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329880128,"durationMs":41,"eventLoop"...
+I (651652) openclaw: WS msg (87 bytes): {"type":"res","id":"93","ok":true,"payload":{"updatedAt":1779329880009,"providers":[]}}1,"eventLoop"
+I (651655) openclaw: Response received (id=93 state=3)
+I (653628) stt: Sent audio chunk #700: 1024 bytes (total=716800, ret=1024, state=3)
+I (656246) openclaw: Requesting usage.status (id=96)
+I (656250) openclaw: Requesting cron.list
+I (656454) openclaw: WS msg (2193 bytes): {"type":"res","id":"95","ok":true,"payload":{"ok":true,"ts":1779329880128,"durationMs":41,"eventLoop...
+I (656461) openclaw: Response received (id=95 state=3)
+I (656463) openclaw: Health: ok=1 agent=main sess=3 last=26s wa=
+I (656538) voice_chat: Recorded 400000 samples 25.0s (min=-7905 max=7843 avg_abs=72 noise_floor=83)
+I (656547) ui_main: State transition: LISTENING → SENDING
+I (656553) openclaw: WS msg (144 bytes): {"type":"res","id":"97","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (656556) openclaw: Response received (id=97 state=3)
+I (656558) openclaw: Cron: 0 tasks (0 active)
+I (656564) openclaw: WS msg (2245 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329885195,"durationMs":41,"eventLoop"...
+I (656728) ui_state_gif: Showing GIF for state 5: S:gifs/sending.gif
+I (656732) stt: Finalizing STT, waiting for result...
+I (656755) openclaw: WS msg (87 bytes): {"type":"res","id":"96","ok":true,"payload":{"updatedAt":1779329885077,"providers":[]}}1,"eventLoop"
+I (656757) openclaw: Response received (id=96 state=3)
+I (656817) stt: Stopping: ringbuffer empty, sending finish-task
+I (656818) stt: Audio upload done: 782 chunks, 800000 bytes total. State: 4
+I (656829) stt: Sent finish-task (ret=124)
+I (656905) stt: STT response: {"header":{"task_id":"39edc19b39e4099d39e45c9300000009","event":"task-finished","attributes":{}},"payload":{"output":{}}}
+I (656907) stt: Task finished. Result: '' (len=0)
+W (656908) stt: WARNING: STT returned empty result despite audio being sent
+W (656909) stt: This could be due to:
+W (656910) stt:   1. Audio quality issues (too quiet, too noisy)
+W (656911) stt:   2. Language mismatch (speaking Chinese but model expects English)
+W (656912) stt:   3. Network timeout during processing
+W (656913) stt:   4. Server-side recognition failure
+W (656914) voice_chat: No speech detected (avg_abs=72, noise=83), discarding
+I (657917) stt: STT session ended
+I (658418) ui_main: State transition: SENDING → IDLE
+I (658597) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779329887185},"seq":106}providers":[]}}1,"eventLoop"
+I (658601) ui_state_gif: Showing GIF for state 3: S:gifs/idle.gif
+I (658604) wake_word: Wake word resumed - detection task will continue
+I (665430) app_tasks: Memory status - Free heap: 6932748 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (680515) wake_word: Audio monitor: RMS=69
+I (688399) openclaw: WS msg (2264 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329917022,"durationMs":25,"eventLoop"...
+I (688601) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779329917185},"seq":108},"durationMs":25,"eventLoop"
+I (695894) app_tasks: Memory status - Free heap: 6932748 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (709315) wake_word: Audio monitor: RMS=82
+I (717206) openclaw: Requesting cron.list
+I (717248) openclaw: WS msg (144 bytes): {"type":"res","id":"98","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (717250) openclaw: Response received (id=98 state=3)
+I (717252) openclaw: Cron: 0 tasks (0 active)
+I (718603) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779329947185},"seq":109}":0,"limit":50,"hasMore":fal
+I (726367) app_tasks: Memory status - Free heap: 6932748 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (738115) wake_word: Audio monitor: RMS=73
+I (748609) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779329977186},"seq":110}":0,"limit":50,"hasMore":fal
+I (748617) openclaw: WS msg (2267 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779329977216,"durationMs":217,"eventLoop...
+I (756785) app_tasks: Memory status - Free heap: 6932960 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (766915) wake_word: Audio monitor: RMS=68
+I (778079) openclaw: Requesting cron.list
+I (778126) openclaw: WS msg (144 bytes): {"type":"res","id":"99","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fal...
+I (778129) openclaw: Response received (id=99 state=3)
+I (778130) openclaw: Cron: 0 tasks (0 active)
+I (778613) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330007186},"seq":112}":0,"limit":50,"hasMore":fal
+I (787284) app_tasks: Memory status - Free heap: 6932960 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (795715) wake_word: Audio monitor: RMS=68
+I (808414) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330037024,"durationMs":26,"eventLoop"...
+I (808615) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330037186},"seq":114},"durationMs":26,"eventLoop"
+I (817689) app_tasks: Memory status - Free heap: 6932960 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (824515) wake_word: Audio monitor: RMS=52
+I (838618) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330067187},"seq":115},"durationMs":26,"eventLoop"
+I (838941) openclaw: Requesting cron.list
+I (838981) openclaw: WS msg (145 bytes): {"type":"res","id":"100","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (838984) openclaw: Response received (id=100 state=3)
+I (838985) openclaw: Cron: 0 tasks (0 active)
+I (848091) app_tasks: Memory status - Free heap: 6932960 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (853315) wake_word: Audio monitor: RMS=33
+I (868420) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330097024,"durationMs":26,"eventLoop"...
+I (868623) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330097188},"seq":117},"durationMs":26,"eventLoop"
+I (878543) app_tasks: Memory status - Free heap: 6932388 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (882115) wake_word: Audio monitor: RMS=57
+I (898632) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330127188},"seq":118},"durationMs":26,"eventLoop"
+I (899874) openclaw: Requesting cron.list
+I (899923) openclaw: WS msg (145 bytes): {"type":"res","id":"101","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (899926) openclaw: Response received (id=101 state=3)
+I (899927) openclaw: Cron: 0 tasks (0 active)
+I (909090) app_tasks: Memory status - Free heap: 6932960 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (910915) wake_word: Audio monitor: RMS=69
+I (928433) openclaw: WS msg (2267 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330157023,"durationMs":26,"eventLoop"...
+I (928636) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330157189},"seq":120},"durationMs":26,"eventLoop"
+I (939517) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (939715) wake_word: Audio monitor: RMS=69
+I (958634) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330187189},"seq":121},"durationMs":26,"eventLoop"
+I (960868) openclaw: Requesting cron.list
+I (960909) openclaw: WS msg (145 bytes): {"type":"res","id":"102","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (960912) openclaw: Response received (id=102 state=3)
+I (960913) openclaw: Cron: 0 tasks (0 active)
+I (968515) wake_word: Audio monitor: RMS=54
+I (970064) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (988433) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330217026,"durationMs":26,"eventLoop"...
+I (988643) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330217189},"seq":123},"durationMs":26,"eventLoop"
+I (997315) wake_word: Audio monitor: RMS=46
+I (1000353) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1018639) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330247189},"seq":124},"durationMs":26,"eventLoop"
+I (1021707) openclaw: Requesting cron.list
+I (1021751) openclaw: WS msg (145 bytes): {"type":"res","id":"103","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (1021754) openclaw: Response received (id=103 state=3)
+I (1021755) openclaw: Cron: 0 tasks (0 active)
+I (1026115) wake_word: Audio monitor: RMS=34
+I (1030901) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1048446) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330277024,"durationMs":25,"eventLoop"...
+I (1048531) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330277189},"seq":126},"durationMs":25,"eventLoop"
+I (1054915) wake_word: Audio monitor: RMS=55
+I (1061296) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1078545) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330307190},"seq":127},"durationMs":25,"eventLoop"
+I (1082795) openclaw: Requesting cron.list
+I (1082835) openclaw: WS msg (145 bytes): {"type":"res","id":"104","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (1082838) openclaw: Response received (id=104 state=3)
+I (1082839) openclaw: Cron: 0 tasks (0 active)
+I (1083715) wake_word: Audio monitor: RMS=41
+I (1091918) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1108448) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330337025,"durationMs":25,"eventLoop"...
+I (1108549) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330337189},"seq":129},"durationMs":25,"eventLoop"
+I (1112515) wake_word: Audio monitor: RMS=41
+I (1122251) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1138552) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330367190},"seq":130},"durationMs":25,"eventLoop"
+I (1141315) wake_word: Audio monitor: RMS=105
+I (1143561) openclaw: Requesting cron.list
+I (1143609) openclaw: WS msg (145 bytes): {"type":"res","id":"105","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (1143612) openclaw: Response received (id=105 state=3)
+I (1143613) openclaw: Cron: 0 tasks (0 active)
+I (1152723) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1168462) openclaw: WS msg (2266 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330397026,"durationMs":26,"eventLoop"...
+I (1168556) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330397190},"seq":132},"durationMs":26,"eventLoop"
+I (1170115) wake_word: Audio monitor: RMS=65
+I (1183091) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1198565) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330427190},"seq":133},"durationMs":26,"eventLoop"
+I (1198915) wake_word: Audio monitor: RMS=47
+I (1204557) openclaw: Requesting cron.list
+I (1204601) openclaw: WS msg (145 bytes): {"type":"res","id":"106","ok":true,"payload":{"jobs":[],"total":0,"offset":0,"limit":50,"hasMore":fa...
+I (1204604) openclaw: Response received (id=106 state=3)
+I (1204606) openclaw: Cron: 0 tasks (0 active)
+I (1213669) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
+I (1227715) wake_word: Audio monitor: RMS=66
+I (1228462) openclaw: WS msg (2267 bytes): {"type":"event","event":"health","payload":{"ok":true,"ts":1779330457023,"durationMs":25,"eventLoop"...
+I (1228561) openclaw: WS msg (72 bytes): {"type":"event","event":"tick","payload":{"ts":1779330457190},"seq":135},"durationMs":25,"eventLoop"
+I (1233988) openclaw: WS msg (170 bytes): {"type":"event","event":"heartbeat","payload":{"ts":1779330462575,"status":"ok-token","reason":"inte...
+I (1244000) app_tasks: Memory status - Free heap: 6932980 bytes (min: 6066244), Free PSRAM: 6891884 bytes (min: 6078420)
