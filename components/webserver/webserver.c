@@ -693,6 +693,28 @@ static bool is_safe_filename(const char *filename)
     return true;
 }
 
+/* URL-decode %XX sequences in-place. Returns the decoded string. */
+static char *url_decode(char *str)
+{
+    if (!str) return NULL;
+    char *dst = str;
+    char *src = str;
+    while (*src) {
+        if (src[0] == '%' && src[1] && src[2]) {
+            char hex[3] = {src[1], src[2], '\0'};
+            *dst++ = (char)strtol(hex, NULL, 16);
+            src += 3;
+        } else if (src[0] == '+') {
+            *dst++ = ' ';
+            src++;
+        } else {
+            *dst++ = *src++;
+        }
+    }
+    *dst = '\0';
+    return str;
+}
+
 /* ── POST /api/mp3/upload — receive MP3 file, stream to /sdcard/music/ ── */
 static esp_err_t mp3_upload_handler(httpd_req_t *req)
 {
@@ -708,7 +730,7 @@ static esp_err_t mp3_upload_handler(httpd_req_t *req)
     if (qmark) {
         char name_buf[64];
         if (httpd_query_key_value(qmark + 1, "name", name_buf, sizeof(name_buf)) == ESP_OK
-            && is_safe_filename(name_buf)) {
+            && is_safe_filename(url_decode(name_buf))) {
             strncpy(filename, name_buf, sizeof(filename) - 1);
             filename[sizeof(filename) - 1] = '\0';
         }
@@ -864,7 +886,7 @@ static esp_err_t gif_upload_handler(httpd_req_t *req)
     if (qmark) {
         char name_buf[64];
         if (httpd_query_key_value(qmark + 1, "name", name_buf, sizeof(name_buf)) == ESP_OK
-            && is_safe_filename(name_buf)) {
+            && is_safe_filename(url_decode(name_buf))) {
             strncpy(filename, name_buf, sizeof(filename) - 1);
             filename[sizeof(filename) - 1] = '\0';
         }
