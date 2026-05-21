@@ -645,7 +645,7 @@ static esp_err_t chat_history_handler(httpd_req_t *req)
     if (err != ESP_OK || strlen(date) != 10) {
         httpd_resp_set_type(req, "application/json");
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-        return httpd_resp_send(req, "{\"error\":\"Missing or invalid date parameter (YYYY-MM-DD)\"}", 57);
+        return httpd_resp_send(req, "{\"error\":\"Missing or invalid date parameter (YYYY-MM-DD)\"}", -1);
     }
 
     ESP_LOGI(TAG, "Chat history request for date: %s", date);
@@ -670,6 +670,19 @@ static esp_err_t chat_history_handler(httpd_req_t *req)
     esp_err_t ret = httpd_resp_send(req, str, strlen(str));
     free(str);
     return ret;
+}
+
+/* ── Filename validation (prevent path traversal) ───────────────────────── */
+static bool is_safe_filename(const char *filename)
+{
+    if (!filename || filename[0] == '\0') return false;
+    for (const char *p = filename; *p; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (c == 0 || c == '/' || c == '\\') return false;
+    }
+    /* Reject ".." anywhere in filename */
+    if (strstr(filename, "..")) return false;
+    return true;
 }
 
 /* ── POST /api/mp3/upload — receive MP3 file, save to /sdcard/music/ ─── */
@@ -772,6 +785,13 @@ static esp_err_t mp3_delete_handler(httpd_req_t *req)
     if (!file_item || !cJSON_IsString(file_item) || !file_item->valuestring[0]) {
         cJSON_Delete(j);
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'file' field");
+        return ESP_FAIL;
+    }
+
+    if (!is_safe_filename(file_item->valuestring)) {
+        ESP_LOGE(TAG, "Unsafe filename: %s", file_item->valuestring);
+        cJSON_Delete(j);
+        httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 
@@ -910,6 +930,13 @@ static esp_err_t gif_delete_handler(httpd_req_t *req)
     if (!file_item || !cJSON_IsString(file_item) || !file_item->valuestring[0]) {
         cJSON_Delete(j);
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing 'file' field");
+        return ESP_FAIL;
+    }
+
+    if (!is_safe_filename(file_item->valuestring)) {
+        ESP_LOGE(TAG, "Unsafe filename: %s", file_item->valuestring);
+        cJSON_Delete(j);
+        httpd_resp_send_500(req);
         return ESP_FAIL;
     }
 

@@ -45,13 +45,13 @@ ESP32-S3                          Cloud
 4. OpenClaw AI 处理 → 流式返回文本 (delta/final)
 5. ESP32 接收文本 → MIMO TTS API → 播放语音
 6. 对话文本追加写入 SD 卡聊天记录
-7. AI 回复中的 `[DEVICE:...]` 标签解析执行（MP3控制/设置/聊天记录查询）
+7. AI 回复中的 `[DEVICE:...]` 标签解析执行（MP3控制/音量、屏幕亮度设置/聊天记录查询总结/其它引脚功能的调用）
 
 ### 2.3 OpenClaw 双向命令
 
 ```
 ESP32 → OpenClaw:    用户语音文本
-ESP32 → OpenClaw:    设备状态 / 聊天记录响应
+ESP32 → OpenClaw:    服务器设备状态 / 聊天记录响应
 OpenClaw → ESP32:    AI 回复文本 (流式)
 OpenClaw → ESP32:    [DEVICE:mp3=play:xxx]  播放音乐
 OpenClaw → ESP32:    [DEVICE:mp3=pause|stop|next|prev]
@@ -63,8 +63,8 @@ OpenClaw → ESP32:    [DEVICE:chatlog=query:日期] 查询聊天记录
 ### 2.4 交互模式 (混合模式 D)
 
 - **唤醒词触发**: "你好小智" 唤醒
-- **物理按键触发**: BOOT 键 + IO 扩展按键
-- **触摸屏触发**: 点击屏幕按钮
+- **物理按键触发**: BOOT 键 
+- **触摸屏触发**: 点击屏幕按钮（可选）
 
 ---
 
@@ -181,19 +181,18 @@ components/
 
 ```
 ┌─────────────────────┐
-│ WiFi 状态  OpenClaw │  ← 状态栏 (20px)
+│ WiFi 时间 OpenClaw  │  ← 状态栏 (20px)
 ├─────────────────────┤
 │                     │
-│  [GIF 角色表情]      │  ← 中央区 (245px)
-│  表情随状态切换       │    boot/idle/listening/thinking/
+│  [GIF 角色状态]      │  ← 中央区 (245px)
+│  gif人物状态切换     │    boot/idle/listening/thinking/
 │                     │     speaking/playing/error
+│                     │  
+│                     │
 ├─────────────────────┤
-│  [聊天气泡]          │  ← 对话区
-│  用户右对齐/助手左对齐 │
+│  [IDLE] Standby     │  ← 状态英文 (25px)
 ├─────────────────────┤
-│  [IDLE] Standby     │  ← 状态芯片 (25px)
-├─────────────────────┤
-│ [▶ Play] [Details] │  ← 按钮栏 (30px)
+│       空闲          │  ← 状态中文 (30px)
 └─────────────────────┘
 ```
 
