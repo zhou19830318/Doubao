@@ -1,4 +1,4 @@
-menu "AIWatchDB Application Configuration"
+menu "AIWatch Doubao Application Configuration"
 
     choice AIDB_BOARD_SELECT
         prompt "Select target board"
