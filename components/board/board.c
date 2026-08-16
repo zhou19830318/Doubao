@@ -1497,7 +1497,27 @@ esp_err_t board_init(void)
     }
     s_lvgl_disp = disp;
     bsp_display_backlight_on();
-    ESP_LOGI(TAG, "BSP: display + LVGL + touch ready (%dx%d)", BOARD_LCD_H_RES, BOARD_LCD_V_RES);
+
+    /* ── Landscape rotation (Task 2: M1 rotation + touch verification) ──
+     * Native panel is 410x502 portrait; rotate 90° → logical 502x410.
+     * The BSP does not expose the esp_lcd panel handle nor the touch
+     * swap_xy/mirror flags (both hardcoded internal to the BSP), so hardware
+     * rotation (esp_lcd swap_xy/mirror, iron rule 18 preference) is not
+     * available — use the BSP's official rotation API (bsp_display_rotate →
+     * lv_disp_set_rotation, LVGL9 sw_rotate path).
+     * LVGL9 core auto-rotates touch coordinates (lv_indev.c →
+     * lv_display_rotate_point), so touch stays aligned with the rotated
+     * display without manual mapping (iron rule 18).
+     * If the physical screen appears upside-down, flip to ROTATION_270. */
+    bsp_display_rotate(disp, LV_DISPLAY_ROTATION_90);
+    ESP_LOGI(TAG, "Display rotated to landscape (logical %dx%d)",
+             lv_display_get_horizontal_resolution(disp),
+             lv_display_get_vertical_resolution(disp));
+
+    ESP_LOGI(TAG, "BSP: display + LVGL + touch ready (native %dx%d, landscape %dx%d)",
+             BOARD_LCD_H_RES, BOARD_LCD_V_RES,
+             lv_display_get_horizontal_resolution(disp),
+             lv_display_get_vertical_resolution(disp));
 
     /* Get I2C bus handle from BSP for audio codec, IMU, etc. */
     s_i2c0_bus = bsp_i2c_get_handle();

@@ -547,6 +547,24 @@ static void show_content_for_state(ui_state_t state)
  * UI Initialization
  * ══════════════════════════════════════════════════════════════════════════ */
 
+/* Task 2 (M1) touch-mapping debug: logs every tap on the main screen
+ * background in LVGL logical coordinates. LVGL9 core rotates raw panel
+ * coords via lv_display_rotate_point() using the display's rotation, so
+ * this doubles as rotation verification.
+ * Expected corner mapping on the rotated 502x410 landscape display
+ * (physical panel 410x502, LV_DISPLAY_ROTATION_90):
+ *   raw(x,y) → logical(502-y-1, x); corners: TL≈(0,0) TR≈(501,0)
+ *   BL≈(0,409) BR≈(501,409) — where the corner is as SEEN on screen.
+ * Temporary instrumentation — remove when Task 14 rebuilds the UI. */
+static void ui_touch_debug_cb(lv_event_t *e)
+{
+    lv_indev_t *indev = lv_indev_active();
+    if (!indev) return;
+    lv_point_t pt;
+    lv_indev_get_point(indev, &pt);
+    ESP_LOGI(TAG, "TOUCH debug: logical (%d,%d)", pt.x, pt.y);
+}
+
 esp_err_t ui_init(void)
 {
     ESP_LOGI(TAG, "Initializing UI (%dx%d, Dynamic Island style)...", SCREEN_W, SCREEN_H);
@@ -567,6 +585,11 @@ esp_err_t ui_init(void)
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, lv_color_hex(UI_COLOR_BG_MAIN), 0);
     lv_obj_set_style_bg_opa(s_screen, LV_OPA_COVER, 0);
+
+    /* Task 2 (M1): touch-mapping debug log on background taps (see
+     * ui_touch_debug_cb). Temporary — remove with Task 14 UI rebuild. */
+    lv_obj_add_flag(s_screen, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(s_screen, ui_touch_debug_cb, LV_EVENT_CLICKED, NULL);
 
     /* Load screen first so all child objects are created on correct screen */
     lv_screen_load(s_screen);

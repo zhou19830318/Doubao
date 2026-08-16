@@ -3,8 +3,11 @@
 # Target
 CONFIG_IDF_TARGET="esp32s3"
 
-# Flash (16MB default for Waveshare Audio; override to 32MB for AMOLED-2.06)
-CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+# Board: Waveshare ESP32-S3-Touch-AMOLED-2.06 (choice in main/Kconfig.projbuild)
+CONFIG_AIDB_BOARD_AMOLED_206=y
+
+# Flash (32MB — ESP32-S3-Touch-AMOLED-2.06, matches partitions.csv layout)
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 
