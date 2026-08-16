@@ -647,7 +647,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - Produces: 无新接口（行为完善）
 
 - [ ] **Step 1: 错误分类**：`DOUBAO_EVT_ERROR` 携带分类枚举（AUTH=401 类/限流/SERVER/网络）；AUTH → UI 错误胶囊"请检查 API Key" + 重连退避封顶 60s；限流 → 冷却 5s 后自动恢复 + 气泡提示"稍后重试"
-- [ ] **Step 1b: 内容安全（FR-21）**：`DOUBAO_EVT_AUDIO_STARTED` 的 tts_type=`audit_content_risky` → 跳过后续 AUDIO_DELTA 播报（audio_out 置丢弃模式直至 AUDIO_DONE）+ 气泡显示"（内容已安全过滤）"
+- [ ] **Step 1b: 内容安全（FR-21）**：`DOUBAO_EVT_AUDIO_STARTED` 的 tts_type=`audit_content_risky` → 跳过后续 AUDIO_DELTA 播报（**丢弃逻辑在 doubao_chat.c 层：置 s_discard_audio 标志，AUDIO_DELTA 不再调用 `dbaudio_out_push()`，AUDIO_DONE 时清除**）+ 气泡显示"（内容已安全过滤）"
 - [ ] **Step 2: 超时看门狗**（app_tasks.c）：THINKING 态 commit 后 15s 无 OUTPUT_* 事件 → 重连；SPEAKING 态 5s 无 AUDIO_DELTA → 重连；LISTENING 态不设下行超时（仅 WS ping/pong + 上行发送失败检测）
 - [ ] **Step 3: 音频异常恢复**：`board_audio_record/play` 连续 3 次返回错误 → `board_audio_deinit()` + 重初始化（board.h 若有 deinit，无则重启 codec open 流程）；仍失败 → UI 错误提示不崩溃
 - [ ] **Step 4: 断网/限流/鉴权失败三类场景实测**（关闭路由器 / 短时高频对话触发限流 / 故意填错 Key）——每类恢复路径符合 spec §7
