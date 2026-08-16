@@ -58,11 +58,34 @@ AIWatch_Doubao/  (从 AIWatch_Ver2.0 复制后改造)
 
 ```
 麦克风 ES7210 ──I2S RX 16k/16bit──> 采集任务 ──640样本(40ms)/帧──> Base64 ──> input_audio_buffer.append
-扬声器 ES8311 <──I2S TX 16k/16bit── 播放任务 <──重采样24k→16k── 播放环形缓冲(PSRAM) <── output_audio.delta(Base64)
+扬声器 ES8311 <──I2S TX 16k/16bit── 播放任务 <──3:2多相重采样24k→16k── 播放环形缓冲(PSRAM,64KB) <── output_audio.delta(Base64)
 ```
 
-- **I2S 总线统一 16kHz**（ES8311/ES7210 共享帧时钟，收发同采样率），匹配豆包上行要求；下行 24k PCM → 线性插值重采样到 16k（复用 Ver2.0 TTS 重采样代码）。
-- **首版 PCM 双向**（上行 ≈42KB/s、下行 base64 ≈64KB/s，WiFi 无压力）；Opus 编解码为后续优化项。
+### 3.1 采样率（已核实，不可省重采样）
+
+- 豆包 API 文档 session 配置示例明确：**上行 `rate:16000`、下行 `rate:24000`**——下行 24k 为协议固定值，不可请求 16k 输出。
+- 硬件为**单 I2S 总线**（`board_amoled_206.h`：`BOARD_I2S_NUM=1`，ES8311 TX 与 ES7210 RX 共享 MCLK/BCLK/WS 引脚），收发必须同采样率。
+- 决策：**总线保持 16kHz**（唤醒词模型与上行原生 16k，沿用 Ver2.0 已验证配置）；下行 24k→16k 用 **3:2 多相重采样**（上采样×2 半带滤波 + 抽取×3 低通，定点实现）替代纯线性插值；CPU 开销在 M2 实测评估，若超出预算则降级为带限线性插值。
+
+### 3.2 回声处理（分层策略）
+
+- **第一层（v1 必做）播放感知门控**：播报期间本地 VAD/打断阈值动态抬高（以本地播放能量为参考，打断仅在用户能量 > 播报能量 + 6dB 余量时触发）；播报能量由下行 PCM 播放前计算，与上行采集帧对齐比较。
+- **第二层（实测验证）服务端回声鲁棒性**：文档未提服务端 AEC；官方 Web demo 为扬声器外放场景，S2S 模型大概率具备一定回声容忍——M2/M3 用回路测试实测确认，并据实调整第一层阈值。
+- **第三层（后备，不承诺 v1）**：若门控仍误触发，引入 ESP-ADF 定点 NLMS AEC（16k，CPU 占用高，需单独评估）。
+
+### 3.3 本地打断检测
+
+播报中第一级打断触发为**本地能量检测**（上行 PCM，动态阈值+自适应噪声底，持续 >80ms）→ 立即本地停播/压低 + 发 `response.cancel`；服务端 `input_audio_transcription.started` 到达后确认状态。触摸双击打断走本地逻辑。阈值计算见 §3.2 第一层。
+
+### 3.4 缓冲与背压
+
+- **上行**：发送队列 12 帧（480ms）深；WS 发送在独立任务，采集任务不阻塞；溢出**丢最旧帧**（早期音频对 ASR 影响最小）并计数告警入 error_log。
+- **下行**：播放环形缓冲 64KB PSRAM；欠载补 50ms 渐变静音（防爆音）；过载**丢最旧帧**保证实时性；高水位监控进 mem_monitor。
+- **任务优先级**：播放 > 采集 > WS 网络 > UI。
+
+### 3.5 其余
+
+- 首版 PCM 双向（上行 ≈42KB/s、下行 base64 ≈64KB/s，WiFi 无压力）；Opus 编解码为后续优化项。
 - 采集/播放双任务 + esp_codec_dev 读写 mutex。
 - 唤醒词仲裁：待机时 WakeNet 独占 mic；对话期 `wake_word_pause()`；回待机 `resume()`。
 - 本地 VAD：移植 Ver2.0 自适应噪声底算法 → 静音 1.5s 或最长 15s（可配）→ `input_audio_buffer.commit`。
@@ -86,7 +109,7 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 
 ### 4.2 内部结构
 
-- `ws_client.c`：esp_websocket_client 封装。WS ping 1s→认证后 30s（照搬 ws-auth-ping-fix 教训）；断线指数退避 2→60s 重连。
+- `ws_client.c`：esp_websocket_client 封装。WS ping 1s→认证后 30s（照搬 ws-auth-ping-fix 教训）；断线指数退避 2→60s 重连，**退避等待中用户唤醒/单击 → 取消退避立即重连一次**（失败再入退避），对话中断线立即重试；重连期间 UI 显示"正在连接"。
 - `protocol.c`：事件编解码。上行 JSON 用静态缓冲构造；下行流式 cJSON 逐帧解析不攒包。
 - 两个消费者队列：`text_evt_q`、`audio_evt_q`（PSRAM 静态环形缓冲）。
 
@@ -95,11 +118,36 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 - 端点：`wss://openspeech.bytedance.com/api/v3/duplex/realtime/dialogue`，鉴权仅 `X-Api-Key` 请求头。
 - 握手：`session.create`（model=`1.2.6.1`、instructions=系统提示词、audio input pcm 16k / output pcm 24k、voice/speed/loudness 取自 settings）→ `session.created` 取 `session.id`。
 - 重连续接：重连后 `session.create` 带上次 `session.id` 尝试恢复上下文；失败则新建会话并 UI 提示"上下文已重置"。
-- 打断：服务端 `input_audio_transcription.started`（用户开口首字）→ 本地停播 + 发 `response.cancel`；触摸双击同样触发。
+- 打断：第一级为本地能量检测（§3.3），第二级为服务端 `input_audio_transcription.started` 确认；触摸双击/单击走本地逻辑 + `response.cancel`。
 - 退出意图：`response.output_audio.done` 的 `status_code=20000002` → 回待机。
 - 内容安全：`tts_type=audit_content_risky` → 不播报、气泡显示安全提示。
-- 清空对话：`session.close` + 重建会话；同时清本地气泡与 SD 记录。
-- 心跳：协议无官方心跳 → WS ping 保活 + 空闲超时重建。
+- 清空对话：先 `interrupt()` 停止本地音频与响应 → `session.close` → 重建会话 → 清本地气泡与 SD 记录（顺序保证无竞态）。
+- 心跳：协议无官方心跳 → WS ping 保活 + 上行发送成功监测连接健康（聆听态）。
+
+### 4.4 协议附录（事件序列与消息示例）
+
+**典型单轮对话事件序列**：
+
+```
+客户端: session.create        {session:{model:"1.2.6.1", instructions:"<系统提示词>",
+                                       audio:{input:{format:{type:"pcm",rate:16000}},
+                                              output:{format:{type:"pcm",rate:24000}, voice:"<音色>"}}}}
+服务端: session.created       {session:{id:"<session_id>"}}     ← 保存 id 用于重连续接
+客户端: input_audio_buffer.append ×N   {type:"input_audio_buffer.append", audio:"<Base64 PCM16k>"}
+客户端: input_audio_buffer.commit      {}                        ← VAD 判停
+服务端: conversation.item.input_audio_transcription.delta   {delta:"<用户文本片段>"}
+服务端: response.output_text.delta       {delta:"<回复文本片段>"}
+服务端: response.output_audio.started    {tts_type:"default|chat_tts_text|audit_content_risky|network"}
+服务端: response.output_audio.delta      {delta:"<Base64 PCM24k>"}  ×N
+服务端: response.output_audio.done       {status_code:"<0正常|20000002退出意图>"}
+服务端: response.done                    {usage:{...}}            ← 本轮结束
+```
+
+**打断序列**：客户端 `response.cancel` → 服务端 `response.canceled`（ack）。
+**清空会话**：客户端 `session.close` → 服务端 `session.closed` → 重新 `session.create`。
+**重连续接**：`session.create` 携带上次 `session.id` 作为 `session.id` 字段；服务端拒绝/超时则新建。
+
+**已知状态码/错误**：`20000002` 退出意图；`40000010` 空上下文删除；ASR 失败 `code:"transcription_error"/"audio_unintelligible"`。**完整错误码表在所给 PDF 之外的"接入必读"文档，待补充后细化 §7。**
 
 ## 5. UI 与触摸交互
 
@@ -110,6 +158,7 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 - 气泡：用户右对齐（深色底）、机器人左对齐（浅色底），lv_obj 动态创建进 scroll 容器，流式追加文本，自动滚到底部；思考中显示省略号动画气泡。
 - 状态胶囊：待机/聆听/思考/播报/重连中/错误 + WiFi 信号 + 音量图标。
 - 本轮历史可滚动回看；notes_manager SD 落盘，重启后最近一轮恢复显示。
+- **气泡数量上限 50 条**，超出删除最旧对象（防止动态创建/删除造成内存碎片；2 寸屏不做列表虚拟化）。
 
 ### 5.2 触摸手势
 
@@ -135,13 +184,15 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 
 ### 5.6 webserver 网页（复用改造）
 
-设置页加 API Key / 音色 voice / 语速 speed / 音量 loudness / 系统提示词输入项（settings NVS，secret 打码）；配网流程不变（AP captive portal）。
+设置页加 API Key / 音色 voice / 语速 speed / 音量 loudness / 系统提示词输入项（settings NVS，secret 打码 + 显示/隐藏切换，网页顶部提示"局域网 HTTP 页面，仅建议在可信网络中使用"）；配网流程不变（AP captive portal）。
 
-## 6. 对话数据流（含打断）
+## 6. 对话数据流与状态机边界
+
+### 6.1 一次对话数据流（含打断）
 
 ```
 待机(唤醒词监听+屏保)
-  │ 唤醒词 / 单击
+  │ 唤醒词 / 单击（退避等待中则取消退避立即重连）
   ▼
 唤醒：wake_word_pause() → 确保 WSS 已连接 → 进入聆听态
   ├─ 采集任务 40ms/帧 → doubao_send_audio
@@ -150,15 +201,51 @@ doubao_clear_session()            // 清空对话：session.close + 重建
   ▼
 模型处理：output_text.delta 流式 → 机器人气泡逐字刷新
   ▼
-播报：output_audio.delta → 24k→16k 重采样 → 环形缓冲 → 扬声器
-  ├─ 播报中用户开口：transcription.started → 停播 + response.cancel → 回聆听态
-  ├─ 双击：同上打断
+播报：output_audio.delta → 3:2 重采样 → 环形缓冲 → 扬声器
+  ├─ 播报中用户开口：本地能量检测(§3.3) → 停播/压低 + response.cancel → 回聆听态
+  │   （服务端 transcription.started 到达后确认）
   ├─ response.done → 本轮结束
-  │     ├─ 自动续听(开)：保持聆听，空闲 8s（idle_timeout 可配）→ 回待机
+  │     ├─ 自动续听(开)：保持聆听，本地 VAD 空闲 8s（idle_timeout 可配）→ 回待机
   │     └─ 退出意图(20000002)：回待机
   ▼
 待机：wake_word_resume() → 屏保倒计时
 ```
+
+### 6.2 状态图
+
+```
+                ┌─────────── 单击/唤醒词/按键 ───────────┐
+                ▼                                        │
+   ┌───────┐   唤醒    ┌──────────┐   commit    ┌──────────┐
+   │ 待机  │ ────────> │  聆听    │ ──────────> │  思考/   │
+   │(唤醒词│           │ (上行帧) │             │ 流式文本 │
+   │ +屏保)│ <──────── │          │             └────┬─────┘
+   └───┬───┘  空闲8s   └────┬─────┘                  │ 音频delta
+       │        ▲   本地VAD │        ┌───────────────┘
+       │        │ 打断/续听  ▼        ▼
+       │        │        ┌──────────┐
+       │        └────────│   播报    │──双击──┐
+       │   单击(打断进聆听)└──────────┘        ▼
+       │                              ┌──────────┐
+       │──长按──┐                     │ 停止播报  │
+       │        ▼                     │ (回待机)  │
+       │   ┌──────────┐  退出        └──────────┘
+       └───│ 轻设置页  │───> 待机（不恢复对话）
+           └──────────┘
+   任意状态──断线──> 重连中（退避/立即重试，UI提示）
+   任意状态──清空对话──> interrupt → session.close → 重建 → 待机
+```
+
+### 6.3 状态边界条件定义
+
+| 边界 | 定义 |
+|---|---|
+| 清空对话时正在播报/聆听 | 先 `interrupt()` 停本地音频与响应 → `session.close` → 重建会话 → 清 UI 气泡 + SD 记录，回到待机 |
+| 长按进设置页时正在对话 | 强制打断（停播 + 停上行 + response.cancel），退出设置页回**待机**（不自动恢复对话） |
+| 自动续听"空闲 8s" | 以**本地 VAD** 为准（无语音），且无进行中的服务端响应 |
+| 单击（播报中） | 打断并进入聆听 |
+| 双击 | 停止播报（response.cancel + 停本地播放）并回**待机**（不进入聆听） |
+| MP3 播放与对话冲突 | 沿用 Ver2.0 音频输出仲裁（MP3 播放时唤醒 → 停 MP3 进对话；对话中无 MP3 入口） |
 
 ## 7. 错误处理
 
@@ -169,11 +256,16 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 | 限流/冷却 | 冷却 5s 自动恢复，UI 提示"稍后重试" |
 | 音频设备异常 | codec 读写错误 → 重初始化音频子系统，不崩溃 |
 | 内存保护 | 状态超时看门狗（思考30s/播报60s 强制回收）+ 任务看门狗 + mem_monitor |
-| API 超时 | 对话进行中 10s（可配）未收到任何下行事件 → 判定超时重连 |
+| API 超时 | **按状态细分**：commit 后 15s 未收到任何 output 事件 → 超时重连；播报中 5s 无 audio delta → 超时重连。**聆听态不设下行超时**（用户静音时服务端本就无下行事件），连接健康以 WS ping/pong + 上行发送成功判定 |
 
 ## 8. 测试
 
 - 集成测试清单（照搬 PRD integration-test 方法）：启动序列日志验收（Board→I2C→codec→WiFi→WSS→Ready）→ 单轮对话 → 打断 → 连续多轮 → 清空对话 → 断网重连 → 唤醒词。
+- **全双工/回声专项**：
+  1. 播报中用户开口 → 本地快速停播（<100ms）、服务端未被自身播报声误导、用户语音识别准确；
+  2. 高音量播报中无人说话 → 本地 VAD/能量检测不误触发打断；
+  3. 长回复播报中连续多次打断 → 状态机稳定无卡死；
+  4. 2 小时全双工运行 + mem_monitor 内存曲线 + 各任务栈高水位监控（无泄漏、无碎片失控）。
 - PC 音频模拟（PRD audio-emulation 方法）做自动化语音回放测试。
 - 串口 CLI：`talk`（触发对话）、`doubao status`（会话/连接状态）、`say <文本>`（speech_text_buffer 直推）、`reboot`。
 - 稳定性：2 小时连续运行 + mem_monitor 内存曲线（无泄漏无崩溃）。
@@ -182,7 +274,7 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 
 | 阶段 | 内容 | 验收 |
 |---|---|---|
-| M1 | 骨架移植：复制裁剪编译烧录，board+UI+音频验证 | 屏幕点亮、播放测试音、mic 采到音 |
+| M1 | 骨架移植：复制裁剪编译烧录，board+UI+音频验证 | 屏幕点亮、播放测试音、mic 采到音；**旋转 90° 显示 + 触摸坐标映射验证；同时播放+录音回路测试（ES8311/ES7210 共享时钟下双工稳定）** |
 | M2 | doubao_voice 协议链路：WSS 连接、session 管理、文本流式收发 | `say` 推送文本，气泡流式显示 |
 | M3 | 完整语音链路：上行 PCM+VAD、播报、打断、唤醒词集成、全双工 | 完整语音对话 + 打断可用 |
 | M4 | UI 完善：气泡、设置页、屏保、中文字体、错误处理 | FR-09~14 全验收 |
@@ -197,7 +289,7 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 | FR-03 VAD | 静音 1.5s / 15s 上限可配（§3） |
 | FR-04/05 ASR+对话 | 豆包 WSS 端到端一体（§4） |
 | FR-06 TTS | output_audio.delta 播报（§3） |
-| FR-07 打断 | transcription.started + response.cancel（§4.3、§6） |
+| FR-07 打断 | 本地能量检测（一级）+ transcription.started（二级）+ response.cancel（§3.3、§4.3、§6） |
 | FR-08 上下文 | 服务端 20 轮托管 + 自动续听（§4.3、§6） |
 | FR-09~12 气泡/状态/流式/手势 | §5.1、§5.2 |
 | FR-13 设置页 | 轻设置页 + 网页（§5.3、§5.6） |
@@ -215,7 +307,10 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 
 ## 11. 风险与后续优化
 
-1. 豆包完整错误码表不在所给 PDF 内——v1 通用错误处理，遇到具体错误码再细化。
+1. 豆包完整错误码表不在所给 PDF 内——v1 通用错误处理，遇到具体错误码再细化（§4.4）。
 2. Opus 编解码（上行 speech_opus / 下行 ogg_opus）可省带宽，v2 优化项。
-3. 全双工期间 ES8311 播放 + ES7210 采集同时工作的稳定性需在 M3 实测验证（Ver2.0 未验证过该组合）。
-4. API Key 凭据安全：NVS 存储 + 网页输入（无明文硬编码），满足 FR-17 底线。
+3. 全双工期间 ES8311 播放 + ES7210 采集同时工作的稳定性**提前到 M1 回路测试验证**（Ver2.0 未验证过该组合）。
+4. 回声风险分层控制（§3.2）：播放感知门控（v1）→ 服务端鲁棒性实测 → ESP-ADF AEC（后备）。
+5. 3:2 多相重采样 CPU 开销未实测——M2 评估，超出预算降级带限线性插值。
+6. API Key 凭据安全：v1 = NVS 存储 + 网页输入（无明文硬编码）+ UI 打码/显示切换 + 网页"仅可信局域网"提示；NVS 加密/Flash 加密为 v2 加固项（威胁模型：桌面设备物理读取场景低，加密增加 bootloader 复杂度）。
+7. 网页为局域网 HTTP——v1 仅提示可信网络，自签名 HTTPS 暂不做（LAN 场景收益低）。
