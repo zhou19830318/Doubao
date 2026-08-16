@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 player UI module - Progress bar, track name, control buttons
@@ -44,6 +44,14 @@ void ui_mp3_ui_hide(void);
  * @param current_sec Current playback time in seconds
  */
 void ui_mp3_ui_update_progress(int progress, int current_sec);
+
+/**
+ * @brief Update MP3 playback state (progress + playing/paused transition)
+ * @param current_sec Current playback position in seconds
+ * @param total_sec Total track duration in seconds (0 if unknown)
+ * @param is_playing true if audio is actively playing
+ */
+void ui_mp3_ui_update_playback(int current_sec, int total_sec, bool is_playing);
 
 /**
  * @brief Check if MP3 UI is visible

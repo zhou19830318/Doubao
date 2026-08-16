@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * App state helpers — LED mapping, state transitions, shared globals
@@ -8,18 +8,16 @@
 #include "app_state.h"
 #include "board.h"
 #include "ui.h"
-#include "ui_state_gif.h"
 #include "ui_mp3_ui.h"
 #include "mp3_player.h"
-#include "openclaw_client.h"
+// TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "settings.h"
 #include "webserver.h"
-#include "tts_client.h"
 #include "notes_manager.h"
-#include "esp_lvgl_port.h"  /* For lvgl_port_lock/unlock */
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_system.h"
+#include "esp_lvgl_port.h"
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -30,8 +28,6 @@ static const char *TAG = "app_state";
 EventGroupHandle_t g_app_events = NULL;
 bool g_recording = false;
 int64_t g_response_shown_at = 0;
-uint8_t *g_pending_jpeg = NULL;
-size_t   g_pending_jpeg_size = 0;
 bool g_continue_listening = false;
 volatile bool g_tts_pending = false;
 
@@ -42,7 +38,7 @@ static bool s_mp3_cmd_pending = false;
 /* SD card MP3 file list cache — scanned at boot and refreshed on demand.
  * Included in chat system prefix so the AI knows available files.
  * Uses dynamic allocation to support unlimited MP3 files. */
-static char s_sd_mp3_list[2048] = {0};  /* Increased buffer for more files */
+static char s_sd_mp3_list[4096] = {0};  /* Dynamically-formatted list for AI prefix */
 static int  s_sd_mp3_count = 0;
 static char **s_sd_mp3_names = NULL;  /* Dynamically allocated array */
 static bool s_sd_scanned = false;
@@ -185,11 +181,12 @@ void app_process_mp3_cmd(void)
     /* Stop any ongoing TTS before MP3 operations that need audio hardware.
      * Both share the same I2S output and internal heap — running them
      * simultaneously causes heap exhaustion (Mem alloc fail). */
-    if (tts_is_playing()) {
-        ESP_LOGI(TAG, "Stopping TTS before MP3 command");
-        tts_stop();
-        g_tts_pending = false;
-    }
+    // TODO(Task 7): 由 doubao 链路替换 — tts_is_playing/tts_stop deleted in Task 1
+    // if (tts_is_playing()) {
+    //     ESP_LOGI(TAG, "Stopping TTS before MP3 command");
+    //     tts_stop();
+    //     g_tts_pending = false;
+    // }
 
     if (strncmp(val, "play:", 5) == 0) {
         esp_err_t ret = mp3_player_play(val + 5);
@@ -197,18 +194,35 @@ void app_process_mp3_cmd(void)
             ESP_LOGI(TAG, "MP3 play: %s", val + 5);
             /* Set UI state to PLAYING_MP3 so wake word detection is properly handled */
             app_set_state(UI_STATE_PLAYING_MP3);
+            /* Show MP3 UI overlay — duration may be 0 until pipeline opens the file */
+            int dur = (int)mp3_player_get_duration_sec();
+            ui_mp3_ui_show(val + 5, 0, 0, dur, true);
         } else if (ret == ESP_ERR_NOT_FOUND) {
             ESP_LOGW(TAG, "MP3 file not found: %s", val + 5);
         } else {
             ESP_LOGE(TAG, "MP3 play failed: %s (err=%d)", val + 5, ret);
         }
     } else if (strcmp(val, "stop") == 0) {
-        mp3_player_stop();
+        /* Only send stop if player is still active — when the completion
+         * callback queues "stop" the pipeline has ALREADY finished and
+         * calling stop() again would block waiting for the pipeline task. */
+        if (mp3_player_get_state() != MP3_STATE_IDLE) {
+            mp3_player_stop();
+        }
+        ui_mp3_ui_hide();
         app_set_state(UI_STATE_IDLE);
     } else if (strcmp(val, "pause") == 0) {
         mp3_player_pause();
+        /* Update UI to paused state */
+        ui_mp3_ui_update_playback(
+            (int)mp3_player_get_position_sec(),
+            (int)mp3_player_get_duration_sec(), false);
     } else if (strcmp(val, "resume") == 0) {
         mp3_player_resume();
+        /* Update UI to playing state */
+        ui_mp3_ui_update_playback(
+            (int)mp3_player_get_position_sec(),
+            (int)mp3_player_get_duration_sec(), true);
     } else if (strcmp(val, "show") == 0) {
         /* Enter song selection mode */
         if (s_sd_mp3_count > 0) {
@@ -227,6 +241,9 @@ void app_process_mp3_cmd(void)
                 ESP_LOGI(TAG, "MP3 play index %d: %s", idx + 1, s_sd_mp3_names[idx]);
                 /* Set UI state to PLAYING_MP3 so wake word detection is properly handled */
                 app_set_state(UI_STATE_PLAYING_MP3);
+                /* Show MP3 UI overlay — duration may be 0 until pipeline opens the file */
+                int dur = (int)mp3_player_get_duration_sec();
+                ui_mp3_ui_show(s_sd_mp3_names[idx], 0, 0, dur, true);
             } else {
                 ESP_LOGE(TAG, "MP3 play index %d failed: err=%d", idx + 1, ret);
             }
@@ -264,6 +281,7 @@ void app_process_mp3_cmd(void)
 /* ── LED helper ──────────────────────────────────────────────────────── */
 
 /* Map startup_pattern setting (0-4) to RGB mode enum */
+#if BOARD_HAS_RGB_RING
 static board_rgb_mode_t startup_mode(void)
 {
     uint8_t pat = settings_get()->startup_pattern;
@@ -275,9 +293,11 @@ static board_rgb_mode_t startup_mode(void)
     default: return RGB_MODE_RAINBOW_SPIN;
     }
 }
+#endif
 
 void app_led_for_state(ui_state_t st)
 {
+#if BOARD_HAS_RGB_RING
 #if BOARD_RGB_LED_COUNT > 1
     /* Multi-LED ring: rich animations */
     switch (st) {
@@ -367,32 +387,15 @@ void app_led_for_state(ui_state_t st)
         break;
     }
 #endif
+#else /* !BOARD_HAS_RGB_RING */
+    (void)st;  /* no RGB hardware */
+#endif
 }
 
 void app_set_state(ui_state_t st)
 {
     ui_set_state(st);
     app_led_for_state(st);
-    
-    /* Show GIF animation for the current state */
-#if CONFIG_LV_USE_GIF
-    /* CRITICAL: Defer GIF update to avoid race condition during boot.
-     * WiFi callbacks may trigger state changes before LVGL task queue
-     * is fully initialized. The GIF will be shown on next state change. */
-    static bool s_lvgl_ready = false;
-    if (!s_lvgl_ready) {
-        /* Try to lock LVGL - if it fails, LVGL is not ready yet */
-        if (lvgl_port_lock(0)) {
-            lvgl_port_unlock();
-            s_lvgl_ready = true;
-            ui_state_gif_show_for_state(st);
-        } else {
-            ESP_LOGD(TAG, "LVGL not ready, deferring GIF for state %d", st);
-        }
-    } else {
-        ui_state_gif_show_for_state(st);
-    }
-#endif
 }
 
 /* ── Device command parser ───────────────────────────────────────────── */
@@ -480,6 +483,7 @@ int parse_device_commands(char *buf)
             ESP_LOGI(TAG, "Brightness set to %d%%", v);
             count++;
         } else if (strcmp(key, "rgb") == 0) {
+#if BOARD_HAS_RGB_RING
             if (strcmp(val, "off") == 0) {
                 cfg->rgb_enabled = false;
                 board_rgb_set(0, 0, 0);
@@ -505,6 +509,7 @@ int parse_device_commands(char *buf)
                     board_rgb_set((uint8_t)r, (uint8_t)g, (uint8_t)b);
                 }
             }
+#endif
             ESP_LOGI(TAG, "RGB: %s", val);
             count++;
         } else if (strcmp(key, "sleep") == 0) {
@@ -539,29 +544,48 @@ int parse_device_commands(char *buf)
             /* Defer to main task to avoid stack overflow in websocket_task (4KB stack) */
             app_queue_mp3_cmd(val);
             count++;
+        } else if (strcmp(key, "remind") == 0) {
+            /* [DEVICE:remind=SECONDS:MESSAGE] - one-shot reminder via server
+             * cron. openclaw_cron_add_reminder computes the absolute UTC cron
+             * expression on-device; the job self-removes after firing. */
+            int secs = atoi(val);
+            const char *msg = strchr(val, ':');
+            if (msg) msg++;
+            if (secs > 0 && msg && *msg) {
+                // TODO(Task 8): 由 doubao 链路替换 — openclaw_cron_add_reminder deleted in Task 1
+                // esp_err_t ret = openclaw_cron_add_reminder(msg, (uint32_t)secs);
+                // ESP_LOGI(TAG, "Reminder: %ds '%s' → %s", secs, msg,
+                //          ret == ESP_OK ? "ok" : esp_err_to_name(ret));
+                count++;
+            } else {
+                ESP_LOGW(TAG, "Reminder cmd invalid: '%s'", val);
+            }
         } else if (strcmp(key, "chatlog") == 0 && strncmp(val, "query:", 6) == 0) {
             /* Handle chatlog query: read SD card chat history and send to OpenClaw */
             const char *date = val + 6;
             ESP_LOGI(TAG, "Chatlog query: %s", date);
             char *log_text = notes_manager_read_date(date);
-            if (openclaw_get_state() == OPENCLAW_STATE_CONNECTED) {
-                if (log_text && strlen(log_text) > 0) {
-                    char *prompt = heap_caps_malloc(4096, MALLOC_CAP_SPIRAM);
-                    if (prompt) {
-                        snprintf(prompt, 4096, "以下是从SD卡读取的 %s 聊天记录，请总结要点：\n\n%s", date, log_text);
-                        openclaw_chat_send(prompt, app_on_chat_response);
-                        free(prompt);
-                    }
-                    free(log_text);
-                } else {
-                    char msg[128];
-                    snprintf(msg, sizeof(msg), "没有找到 %s 的聊天记录", date);
-                    openclaw_chat_send(msg, app_on_chat_response);
-                }
-            } else {
-                if (log_text) free(log_text);
-                ESP_LOGW(TAG, "OpenClaw not connected, cannot process chatlog query");
-            }
+            // TODO(Task 8): 由 doubao 链路替换 — openclaw_chat_send deleted in Task 1; query re-enabled in Task 8
+            // if (openclaw_get_state() == OPENCLAW_STATE_CONNECTED) {
+            //     if (log_text && strlen(log_text) > 0) {
+            //         char *prompt = heap_caps_malloc(4096, MALLOC_CAP_SPIRAM);
+            //         if (prompt) {
+            //             snprintf(prompt, 4096, "以下是从SD卡读取的 %s 聊天记录，请总结要点：\n\n%s", date, log_text);
+            //             openclaw_chat_send(prompt, app_on_chat_response);
+            //             free(prompt);
+            //         }
+            //         free(log_text);
+            //     } else {
+            //         char msg[128];
+            //         snprintf(msg, sizeof(msg), "没有找到 %s 的聊天记录", date);
+            //         openclaw_chat_send(msg, app_on_chat_response);
+            //     }
+            // } else {
+            //     if (log_text) free(log_text);
+            //     ESP_LOGW(TAG, "OpenClaw not connected, cannot process chatlog query");
+            // }
+            if (log_text) free(log_text);
+            ESP_LOGW(TAG, "Chatlog query skipped (openclaw link stubbed in Task 1)");
             count++;
         } else {
             ESP_LOGW(TAG, "Unknown device cmd: %s", key);
@@ -581,12 +605,14 @@ int parse_device_commands(char *buf)
 void app_on_chat_response(const char *text, bool is_final)
 {
     if (is_final) {
-        ESP_LOGI(TAG, "Response (%lu ms): %.100s%s",
-                 (unsigned long)openclaw_get_thinking_time_ms(),
-                 text, strlen(text) > 100 ? "..." : "");
+        // TODO(Task 8): 由 doubao 链路替换 — openclaw_get_thinking_time_ms deleted in Task 1
+        // ESP_LOGI(TAG, "Response (%lu ms): %.100s%s",
+        //          (unsigned long)openclaw_get_thinking_time_ms(),
+        //          text, strlen(text) > 100 ? "..." : "");
+        ESP_LOGI(TAG, "Response: %.100s%s", text, strlen(text) > 100 ? "..." : "");
 
         /* Save assistant response to notes */
-        esp_err_t ret = notes_manager_save_message("assistant", text, openclaw_get_thinking_time_ms());
+        esp_err_t ret = notes_manager_save_message("assistant", text, 0);
         if (ret != ESP_OK) {
             ESP_LOGW(TAG, "Failed to save assistant message to notes: %s", esp_err_to_name(ret));
         }
@@ -1035,16 +1061,26 @@ if (todo_pos) {
             short_buf[sizeof(short_buf) - 1] = '\0';
         }
 
-        app_set_state(UI_STATE_RESPONSE);
-        g_response_shown_at = esp_timer_get_time();
-        ui_set_response(short_buf, long_text);
-
-        /* DON'T clear widget - keep it visible until next conversation starts */
-
         /* Auto-TTS: skip if response contained an MP3 command.
          * MP3 and TTS share I2S audio hardware — running both
          * simultaneously exhausts internal heap and causes crashes. */
         bool has_mp3_cmd = (strstr(text, "[DEVICE:mp3=") != NULL);
+
+        /* Set RESPONSE state only if NOT an MP3 command.
+         * MP3 commands trigger immediate state transition to PLAYING_MP3,
+         * and the intermediate RESPONSE GIF load wastes 120KB+ of PSRAM
+         * while internal DRAM is already tight from MP3 decoding. */
+        if (!has_mp3_cmd) {
+            lvgl_port_lock(0);
+            app_set_state(UI_STATE_RESPONSE);
+            ui_set_response(short_buf, long_text);
+            lvgl_port_unlock();
+        } else {
+            lvgl_port_lock(0);
+            ui_set_response(short_buf, long_text);
+            lvgl_port_unlock();
+        }
+        g_response_shown_at = esp_timer_get_time();
 
         /* Auto-TTS: always on screenless boards, otherwise respect setting */
 #if BOARD_HAS_DISPLAY

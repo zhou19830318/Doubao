@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Notes Manager implementation
@@ -118,7 +118,7 @@ esp_err_t notes_manager_save_message(const char *role, const char *content, int6
         /* New file: write a complete JSON array with one entry */
         f = fopen(filename, "w");
         if (!f) {
-            ESP_LOGE(TAG, "Failed to create file: %s", filename);
+            ESP_LOGE(TAG, "Failed to create file: %s (errno=%d: %s)", filename, errno, strerror(errno));
             free(json_str);
             return ESP_FAIL;
         }

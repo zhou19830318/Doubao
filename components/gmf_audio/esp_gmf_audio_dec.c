@@ -19,7 +19,7 @@
 #include "esp_gmf_audio_methods_def.h"
 #include "esp_gmf_audio_element.h"
 
-#define DEFAULT_DEC_OUTPUT_BUFFER_SIZE 1024
+#define DEFAULT_DEC_OUTPUT_BUFFER_SIZE 8192
 
 /**
  * @brief Audio simple decoder context in GMF

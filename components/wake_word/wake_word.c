@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Wake word detection using ESP-SR.
@@ -18,6 +18,7 @@
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include <math.h>
 
 /* ESP-SR is only available on ESP32-S3 */
@@ -40,7 +41,7 @@ const char *wake_word_get_phrase(void) { return "N/A"; }
 
 #include "model_path.h"
 
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
 #include "esp_mn_iface.h"
 #include "esp_mn_models.h"
 #include "esp_mn_speech_commands.h"
@@ -57,9 +58,10 @@ static EventGroupHandle_t  s_event_group  = NULL;
 static EventBits_t         s_event_bit    = 0;
 static volatile bool       s_running      = false;
 static volatile bool       s_paused       = false;
+static SemaphoreHandle_t   s_pause_ack    = NULL;  /* Task→caller handshake */
 static int                 s_chunk_size   = 0;
 
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
 static esp_mn_iface_t     *s_multinet_iface = NULL;
 static model_iface_data_t *s_multinet_data  = NULL;
 #else
@@ -71,7 +73,7 @@ static void wake_word_task(void *arg);
 
 esp_err_t wake_word_init(void)
 {
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
     if (s_multinet_data) {
 #else
     if (s_wakenet_data) {
@@ -86,7 +88,7 @@ esp_err_t wake_word_init(void)
         return ESP_FAIL;
     }
 
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
     /* --- MultiNet custom phrase detection (3+ word commands) --- */
     char *mn_name = esp_srmodel_filter(s_models, ESP_MN_PREFIX, ESP_MN_ENGLISH);
     if (!mn_name) {
@@ -113,13 +115,13 @@ esp_err_t wake_word_init(void)
         return ESP_FAIL;
     }
 
-    float threshold = CONFIG_HEYCLAWY_WAKE_THRESHOLD / 100.0f;
+    float threshold = CONFIG_AIDB_WAKE_THRESHOLD / 100.0f;
     s_multinet_iface->set_det_threshold(s_multinet_data, threshold);
     esp_mn_commands_clear();
-    esp_mn_commands_add(1, CONFIG_HEYCLAWY_WAKE_PHRASE);
+    esp_mn_commands_add(1, CONFIG_AIDB_WAKE_PHRASE);
     esp_mn_error_t *errors = esp_mn_commands_update();
     if (errors) {
-        ESP_LOGW(TAG, "MultiNet command errors for '%s':", CONFIG_HEYCLAWY_WAKE_PHRASE);
+        ESP_LOGW(TAG, "MultiNet command errors for '%s':", CONFIG_AIDB_WAKE_PHRASE);
         for (int i = 0; errors[i].command_id != -1; i++) {
             ESP_LOGW(TAG, "  error: id=%d", errors[i].command_id);
         }
@@ -129,7 +131,7 @@ esp_err_t wake_word_init(void)
     int freq = s_multinet_iface->get_samp_rate(s_multinet_data);
 
     ESP_LOGI(TAG, "MultiNet ready: phrase=\"%s\" threshold=%.0f%% freq=%dHz chunk=%d",
-             CONFIG_HEYCLAWY_WAKE_PHRASE, threshold * 100, freq, s_chunk_size);
+             CONFIG_AIDB_WAKE_PHRASE, threshold * 100, freq, s_chunk_size);
     s_multinet_iface->print_active_speech_commands(s_multinet_data);
 
 #else
@@ -174,7 +176,7 @@ esp_err_t wake_word_init(void)
 
 esp_err_t wake_word_start(EventGroupHandle_t event_group, EventBits_t event_bit)
 {
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
     if (!s_multinet_data) {
 #else
     if (!s_wakenet_data) {
@@ -192,6 +194,13 @@ esp_err_t wake_word_start(EventGroupHandle_t event_group, EventBits_t event_bit)
     s_running     = true;
     s_paused      = false;
 
+    /* Create pause-acknowledge semaphore for deterministic handshake.
+     * wake_word_pause() waits on this; the detection task gives it when
+     * it sees s_paused==true and is safely out of board_audio_record(). */
+    if (!s_pause_ack) {
+        s_pause_ack = xSemaphoreCreateBinary();
+    }
+
     /* Use PSRAM for task stack to save internal RAM */
     BaseType_t ret = xTaskCreatePinnedToCore(
         wake_word_task, "wake_word", 4096, NULL, 5, &s_task_handle, 1);
@@ -207,16 +216,28 @@ esp_err_t wake_word_start(EventGroupHandle_t event_group, EventBits_t event_bit)
 
 void wake_word_pause(void)
 {
+    if (!s_running) return;
+    if (s_paused) return;  /* Already paused — idempotent */
+
     s_paused = true;
-    /* Wait for task to exit board_audio_record() and enter its idle delay,
-     * so the I2S RX channel is no longer actively held before the caller
-     * reconfigures audio (e.g., MP3 playback switching to 48kHz stereo). */
-    vTaskDelay(pdMS_TO_TICKS(110));
+    /* Wait for the detection task to acknowledge the pause.
+     * The task gives s_pause_ack when it sees s_paused==true and has
+     * released the I2S RX channel (not in the middle of board_audio_record).
+     * This replaces the previous 110ms timing heuristic with a deterministic
+     * handshake, preventing I2S reconfig races. */
+    if (s_pause_ack) {
+        TickType_t acked = xSemaphoreTake(s_pause_ack, pdMS_TO_TICKS(500));
+        if (!acked) {
+            ESP_LOGW(TAG, "Pause ack timeout — task may still hold I2S RX");
+        }
+    }
     ESP_LOGD(TAG, "Paused");
 }
 
 void wake_word_resume(void)
 {
+    if (!s_running) return;
+    if (!s_paused) return;  /* Already running — idempotent */
     s_paused = false;
     ESP_LOGI(TAG, "Wake word resumed - detection task will continue");
 }
@@ -228,8 +249,12 @@ void wake_word_stop(void)
         vTaskDelay(pdMS_TO_TICKS(200));
         s_task_handle = NULL;
     }
+    if (s_pause_ack) {
+        vSemaphoreDelete(s_pause_ack);
+        s_pause_ack = NULL;
+    }
 
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
     if (s_multinet_data) {
         s_multinet_iface->destroy(s_multinet_data);
         s_multinet_data = NULL;
@@ -255,8 +280,8 @@ bool wake_word_is_running(void)
 
 const char *wake_word_get_phrase(void)
 {
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
-    return CONFIG_HEYCLAWY_WAKE_PHRASE;
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
+    return CONFIG_AIDB_WAKE_PHRASE;
 #else
     /* Return human-readable name based on selected WakeNet model */
 #if defined(CONFIG_SR_WN_WN9_JARVIS_TTS)
@@ -311,6 +336,13 @@ static void wake_word_task(void *arg)
 
     while (s_running) {
         if (s_paused) {
+            /* Acknowledge the pause: tell wake_word_pause() that we've
+             * released the I2S RX channel and won't call board_audio_record
+             * until resumed. This is a deterministic handshake replacing
+             * the old 110ms timing heuristic. */
+            if (s_pause_ack) {
+                xSemaphoreGive(s_pause_ack);
+            }
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
         }
@@ -323,25 +355,33 @@ static void wake_word_task(void *arg)
             continue;
         }
 
-        /* Diagnostic: check audio level every 900 chunks (~30 seconds) */
+        /* Diagnostic: early monitoring (first 5 chunks) + periodic (every ~30s) */
         static int diag_count = 0;
-        if (++diag_count >= 900) {
-            diag_count = 0;
+        static int early_diag = 0;
+        if (early_diag < 5 || ++diag_count >= 900) {
+            if (early_diag < 5) early_diag++;
+            if (diag_count >= 900) diag_count = 0;
             int64_t sum_sq = 0;
             for (int i = 0; i < s_chunk_size; i++) {
                 sum_sq += (int32_t)audio_buf[i] * audio_buf[i];
             }
             int rms = (int)sqrtf((float)(sum_sq / s_chunk_size));
-            ESP_LOGI(TAG, "Audio monitor: RMS=%d", rms);
+            ESP_LOGI(TAG, "Audio monitor [%s]: RMS=%d first=[%d,%d,%d,%d]",
+                     early_diag <= 5 ? "early" : "periodic",
+                     rms,
+                     s_chunk_size > 0 ? audio_buf[0] : 0,
+                     s_chunk_size > 1 ? audio_buf[1] : 0,
+                     s_chunk_size > 2 ? audio_buf[2] : 0,
+                     s_chunk_size > 3 ? audio_buf[3] : 0);
         }
 
-#ifdef CONFIG_HEYCLAWY_WAKE_WORD_MULTINET
+#ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
         /* --- MultiNet detection --- */
         esp_mn_state_t state = s_multinet_iface->detect(s_multinet_data, audio_buf);
         if (state == ESP_MN_STATE_DETECTED) {
             esp_mn_results_t *results = s_multinet_iface->get_results(s_multinet_data);
             ESP_LOGI(TAG, "*** Wake word detected: \"%s\" (id=%d, prob=%.2f) ***",
-                     CONFIG_HEYCLAWY_WAKE_PHRASE,
+                     CONFIG_AIDB_WAKE_PHRASE,
                      results->command_id[0], results->prob[0]);
 
             if (s_event_group) {

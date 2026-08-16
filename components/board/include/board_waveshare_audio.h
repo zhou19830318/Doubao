@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Waveshare ESP32-S3-AUDIO-Board pin definitions and hardware constants.
@@ -38,19 +38,28 @@
 #define BOARD_HAS_DISPLAY       1
 #define BOARD_HAS_TOUCH         1
 #define BOARD_HAS_KNOB          0
-#define BOARD_HAS_CAMERA        0
+#define BOARD_HAS_CAMERA        1
 #define BOARD_HAS_IO_EXPANDER   1
 #define BOARD_HAS_RGB_RING      1   // 7-LED WS2812 ring
 #define BOARD_HAS_USER_BUTTONS  1   // BOOT + 3 IO expander buttons
+#define BOARD_HAS_BOOT_BUTTON   1   // BOOT button on GPIO0
+#define BOARD_HAS_IMU           0   // No IMU on this board
 
 // ============================================================================
-// LCD Display (JD9853 via SPI)
+// SPI2 Bus (shared: LCD + optional camera SPI)
+// ============================================================================
+#define BOARD_SPI2_SCLK         GPIO_NUM_4
+#define BOARD_SPI2_MISO         GPIO_NUM_8
+#define BOARD_SPI2_MOSI         GPIO_NUM_9
+
+// ============================================================================
+// LCD Display (JD9853 via SPI2)
 // ============================================================================
 #define BOARD_LCD_SPI_HOST      SPI2_HOST
 #define BOARD_LCD_CS            GPIO_NUM_3
-#define BOARD_LCD_SCLK          GPIO_NUM_4
-#define BOARD_LCD_MOSI          GPIO_NUM_9
-#define BOARD_LCD_MISO          GPIO_NUM_8
+#define BOARD_LCD_SCLK          BOARD_SPI2_SCLK
+#define BOARD_LCD_MOSI          BOARD_SPI2_MOSI
+#define BOARD_LCD_MISO          BOARD_SPI2_MISO
 #define BOARD_LCD_DC            GPIO_NUM_7
 #define BOARD_LCD_BL            GPIO_NUM_5
 #define BOARD_LCD_RST           (-1)    // Reset via IO expander BOARD_IOEXP_LCD_RST
@@ -123,9 +132,41 @@
 #define BOARD_IOEXP_TOUCH_RST   1   // P0.1
 #define BOARD_IOEXP_TOUCH_INT   2   // P0.2
 
-// Camera enable/mux (optional, if camera attached)
-#define BOARD_IOEXP_CAM_EN      5   // P0.5
-#define BOARD_IOEXP_CAM_MUX     6   // P0.6
+// Camera enable/mux (via IO expander)
+// Official pinout: Extend 104 = CAM PWDN (P0.4), Extend 106 = Camera SEL (P0.6)
+#define BOARD_IOEXP_CAM_EN      4   // P0.4 - CAM PWDN (Extend 104)
+#define BOARD_IOEXP_CAM_MUX     6   // P0.6 - Camera SEL (Extend 106)
+
+// ============================================================================
+// OV2640 Camera (DVP interface)
+// ============================================================================
+// SIOD/SIOC share I2C0 bus (GPIO10/11)
+#define BOARD_CAM_SIOD          GPIO_NUM_11   // SCCB data = I2C0 SDA
+#define BOARD_CAM_SIOC          GPIO_NUM_10   // SCCB clock = I2C0 SCL
+// I01→HREF, I02→D0, I017→D1, I018→D2, I038→D3
+// TXD(43)→XCLK, RXD(44)→PCLK, I021→VSYNC
+// GPIO19/20 reserved for USB-SERIAL-JTAG console
+// I045→D4, I046→D5, I047→D6, I048→D7
+#define BOARD_CAM_XCLK          GPIO_NUM_43
+#define BOARD_CAM_XCLK_FREQ_HZ  10000000
+#define BOARD_CAM_PCLK          GPIO_NUM_44
+#define BOARD_CAM_VSYNC         GPIO_NUM_21
+#define BOARD_CAM_HREF          GPIO_NUM_1
+#define BOARD_CAM_D0            GPIO_NUM_2
+#define BOARD_CAM_D1            GPIO_NUM_17
+#define BOARD_CAM_D2            GPIO_NUM_18
+#define BOARD_CAM_D3            GPIO_NUM_39
+#define BOARD_CAM_D4            GPIO_NUM_45
+#define BOARD_CAM_D5            GPIO_NUM_46
+#define BOARD_CAM_D6            GPIO_NUM_47
+#define BOARD_CAM_D7            GPIO_NUM_48
+// PWDN on IO expander P0.5 (handled in camera.c via IO expander)
+#define BOARD_CAM_PWDN          GPIO_NUM_NC
+// Camera SEL on IO expander P0.6 (handled in camera.c via IO expander)
+#define BOARD_CAM_RESET         GPIO_NUM_NC
+
+// SD card CS (unused on Waveshare Audio which uses SDMMC; needed for build)
+#define BOARD_SD_CS             GPIO_NUM_39
 
 // SD card CS via IO expander
 #define BOARD_IOEXP_SD_CS       3   // P0.3

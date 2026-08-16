@@ -1,20 +1,19 @@
 dependencies:
   idf:
     version: ">=5.5.0"
+  # ─── BSP: proven display + touch + SD init for AMOLED-2.06 ───
+  waveshare/esp32_s3_touch_amoled_2_06:
+    version: "^1.0.0"
+    rules:
+      - if: "target in [esp32s3]"
+  # ─── LVGL 9.x (required by BSP) ───
   lvgl/lvgl:
-    version: "~8.3.0"
+    version: "^9.2.0"
   espressif/esp_lvgl_port:
-    version: "^1.4.0"
+    version: "^2.6.0"
+  # ─── Other drivers ───
   espressif/led_strip:
     version: "^2.5.0"
-  espressif/esp_lcd_spd2010:
-    version: "^2.0.0"
-    rules:
-      - if: "target in [esp32s3]"
-  espressif/esp_lcd_touch_spd2010:
-    version: "^2.0.0"
-    rules:
-      - if: "target in [esp32s3]"
   espressif/esp_codec_dev:
     version: "^1.5.0"
     rules:
@@ -25,5 +24,13 @@ dependencies:
       - if: "target in [esp32s3]"
   espressif/esp_io_expander_tca95xx_16bit:
     version: "^2.0.0"
+    rules:
+      - if: "target in [esp32s3]"
+  espressif/esp_lcd_touch:
+    version: "^1.1.0"
+    rules:
+      - if: "target in [esp32s3]"
+  waveshare/qmi8658:
+    version: "^1.0.0"
     rules:
       - if: "target in [esp32s3]"

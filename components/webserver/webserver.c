@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Web server — REST API + embedded SPA
@@ -8,7 +8,8 @@
 #include "webserver.h"
 #include "settings.h"
 #include "error_log.h"
-#include "openclaw_client.h"
+// TODO(Task 8): 由 doubao 链路替换 — openclaw_client.h deleted in Task 1
+//#include "openclaw_client.h"
 #include "wifi_manager.h"
 #include "board.h"
 #include "notes_manager.h"
@@ -17,6 +18,7 @@
 #include "esp_http_server.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_system.h"
 #include "esp_app_desc.h"
 #include "mdns.h"
@@ -84,51 +86,9 @@ static esp_err_t status_handler(httpd_req_t *req)
     cJSON_AddStringToObject(wifi, "ip", wifi_manager_get_ip());
     cJSON_AddNumberToObject(wifi, "rssi", wifi_manager_get_rssi());
 
-    /* OpenClaw */
-    cJSON *oc = cJSON_AddObjectToObject(j, "openclaw");
-    openclaw_state_t oc_state = openclaw_get_state();
-    cJSON_AddNumberToObject(oc, "state", oc_state);
-    const char *state_str = "unknown";
-    switch (oc_state) {
-        case OPENCLAW_STATE_DISCONNECTED: state_str = "disconnected"; break;
-        case OPENCLAW_STATE_CONNECTING:   state_str = "connecting"; break;
-        case OPENCLAW_STATE_AUTHENTICATING: state_str = "authenticating"; break;
-        case OPENCLAW_STATE_CONNECTED:    state_str = "connected"; break;
-        default: break;
-    }
-    cJSON_AddStringToObject(oc, "state_str", state_str);
-
-    const openclaw_info_t *info = openclaw_get_info();
-    if (info) {
-        cJSON_AddStringToObject(oc, "version", info->version);
-        cJSON_AddNumberToObject(oc, "uptime_min", info->uptime_min);
-        cJSON_AddStringToObject(oc, "agent", info->agent_id);
-        cJSON_AddNumberToObject(oc, "sessions", info->session_count);
-        cJSON_AddStringToObject(oc, "wa_status", info->wa_status);
-        cJSON_AddNumberToObject(oc, "last_activity_min", info->last_activity_min);
-        if (info->has_tasks) {
-            cJSON_AddNumberToObject(oc, "task_count", info->task_count);
-            cJSON_AddNumberToObject(oc, "tasks_running", info->tasks_running);
-            cJSON_AddNumberToObject(oc, "tasks_active", info->tasks_active);
-        }
-        /* Active runs (carousel) */
-        cJSON_AddBoolToObject(oc, "is_active", info->is_active);
-        cJSON_AddBoolToObject(oc, "is_external", info->is_external);
-        cJSON_AddStringToObject(oc, "active_detail", info->active_detail);
-        cJSON_AddNumberToObject(oc, "active_runs_count", info->active_runs_count);
-        if (info->active_runs_count > 0) {
-            cJSON *runs = cJSON_AddArrayToObject(oc, "active_runs");
-            for (int i = 0; i < OC_MAX_ACTIVE_RUNS; i++) {
-                if (!info->active_runs[i].active) continue;
-                cJSON *r = cJSON_CreateObject();
-                cJSON_AddStringToObject(r, "detail", info->active_runs[i].detail);
-                cJSON_AddStringToObject(r, "source", info->active_runs[i].source);
-                cJSON_AddNumberToObject(r, "started_ms", (double)info->active_runs[i].started_ms);
-                cJSON_AddItemToArray(runs, r);
-            }
-        }
-    }
-
+// TODO(Task 8): 由 doubao 链路替换 — openclaw status JSON deleted in Task 1
+//    /* OpenClaw */
+//    cJSON *oc = cJSON_AddObjectToObject(j, "openclaw");
     /* Error count */
     cJSON_AddNumberToObject(j, "error_count", error_log_count());
 
@@ -230,7 +190,9 @@ static esp_err_t settings_put_handler(httpd_req_t *req)
     board_audio_set_volume(cfg->volume);
     board_display_set_brightness(cfg->brightness);
     if (!cfg->rgb_enabled) {
+#if BOARD_HAS_RGB_RING
         board_rgb_animate(RGB_MODE_OFF, 0, 0, 0);
+#endif
     }
 
     httpd_resp_set_type(req, "application/json");
@@ -314,24 +276,24 @@ static esp_err_t openclaw_test_handler(httpd_req_t *req)
     return ret;
 }
 
-/* ── POST /api/stt/health — check STT (DashScope) configuration ─────── */
+/* ── POST /api/stt/health — check STT (MiMo-V2.5-ASR) configuration ─── */
 static esp_err_t stt_health_handler(httpd_req_t *req)
 {
     const settings_t *s = settings_get();
 
     cJSON *result = cJSON_CreateObject();
 
-    if (!s->dashscope_api_key[0]) {
+    if (!s->mimo_api_key[0]) {
         cJSON_AddBoolToObject(result, "ok", false);
-        cJSON_AddStringToObject(result, "error", "DashScope API key not configured");
-    } else if (!s->stt_endpoint[0]) {
+        cJSON_AddStringToObject(result, "error", "MiMo API key not configured");
+    } else if (!s->asr_model[0]) {
         cJSON_AddBoolToObject(result, "ok", false);
-        cJSON_AddStringToObject(result, "error", "STT endpoint not configured");
+        cJSON_AddStringToObject(result, "error", "ASR model not configured");
     } else {
         cJSON_AddBoolToObject(result, "ok", true);
-        cJSON_AddStringToObject(result, "model", s->stt_model);
-        cJSON_AddStringToObject(result, "endpoint", s->stt_endpoint);
-        cJSON_AddStringToObject(result, "message", "DashScope STT configuration present. Test by speaking to the device.");
+        cJSON_AddStringToObject(result, "model", s->asr_model);
+        cJSON_AddStringToObject(result, "endpoint", s->mimo_url);
+        cJSON_AddStringToObject(result, "message", "MiMo-V2.5-ASR configuration present.");
     }
 
     char *str = cJSON_PrintUnformatted(result);
@@ -348,25 +310,25 @@ static esp_err_t stt_health_handler(httpd_req_t *req)
 static esp_err_t tasks_handler(httpd_req_t *req)
 {
     cJSON *j = cJSON_CreateArray();
-    const openclaw_info_t *info = openclaw_get_info();
-    if (info && info->has_tasks) {
-        for (int i = 0; i < info->task_count; i++) {
-            const openclaw_task_t *t = &info->tasks[i];
-            cJSON *item = cJSON_CreateObject();
-            cJSON_AddStringToObject(item, "id", t->id);
-            cJSON_AddStringToObject(item, "name", t->name);
-            cJSON_AddBoolToObject(item, "enabled", t->enabled);
-            cJSON_AddBoolToObject(item, "running", t->running);
-            cJSON_AddStringToObject(item, "schedule_kind", t->schedule_kind);
-            cJSON_AddStringToObject(item, "schedule_expr", t->schedule_expr);
-            cJSON_AddStringToObject(item, "last_status", t->last_status);
-            cJSON_AddStringToObject(item, "last_error", t->last_error);
-            cJSON_AddNumberToObject(item, "last_duration_ms", t->last_duration_ms);
-            cJSON_AddNumberToObject(item, "consecutive_errors", t->consecutive_errors);
-            cJSON_AddItemToArray(j, item);
-        }
-    }
-
+// TODO(Task 8): 由 doubao 链路替换 — openclaw task data deleted in Task 1
+//    const openclaw_info_t *info = openclaw_get_info();
+//    if (info && info->has_tasks) {
+//        for (int i = 0; i < info->task_count; i++) {
+//            const openclaw_task_t *t = &info->tasks[i];
+//            cJSON *item = cJSON_CreateObject();
+//            cJSON_AddStringToObject(item, "id", t->id);
+//            cJSON_AddStringToObject(item, "name", t->name);
+//            cJSON_AddBoolToObject(item, "enabled", t->enabled);
+//            cJSON_AddBoolToObject(item, "running", t->running);
+//            cJSON_AddStringToObject(item, "schedule_kind", t->schedule_kind);
+//            cJSON_AddStringToObject(item, "schedule_expr", t->schedule_expr);
+//            cJSON_AddStringToObject(item, "last_status", t->last_status);
+//            cJSON_AddStringToObject(item, "last_error", t->last_error);
+//            cJSON_AddNumberToObject(item, "last_duration_ms", t->last_duration_ms);
+//            cJSON_AddNumberToObject(item, "consecutive_errors", t->consecutive_errors);
+//            cJSON_AddItemToArray(j, item);
+//        }
+//    }
     char *str = cJSON_PrintUnformatted(j);
     cJSON_Delete(j);
     httpd_resp_set_type(req, "application/json");
@@ -407,7 +369,8 @@ static esp_err_t tasks_toggle_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    esp_err_t err = openclaw_cron_toggle(id_item->valuestring, cJSON_IsTrue(en_item));
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_cron_toggle deleted in Task 1
+    const esp_err_t err = ESP_ERR_NOT_SUPPORTED;  /* openclaw 链路 stubbed */
     cJSON_Delete(j);
 
     httpd_resp_set_type(req, "application/json");
@@ -469,6 +432,7 @@ static esp_err_t led_demo_handler(httpd_req_t *req)
     const char *mode = cJSON_GetStringValue(cJSON_GetObjectItem(j, "mode"));
     if (!mode) { cJSON_Delete(j); httpd_resp_send(req, "{\"ok\":false}", 12); return ESP_OK; }
 
+#if BOARD_HAS_RGB_RING
     if (strcmp(mode, "rainbow_spin") == 0) board_rgb_animate(RGB_MODE_RAINBOW_SPIN, 0, 0, 0);
     else if (strcmp(mode, "aurora") == 0)   board_rgb_animate(RGB_MODE_AURORA, 0, 0, 0);
     else if (strcmp(mode, "starfield") == 0) board_rgb_animate(RGB_MODE_STARFIELD, 0, 0, 0);
@@ -478,7 +442,9 @@ static esp_err_t led_demo_handler(httpd_req_t *req)
     else if (strcmp(mode, "chase") == 0)    board_rgb_animate(RGB_MODE_CHASE, 0, 16, 40);
     else if (strcmp(mode, "sparkle") == 0)  board_rgb_animate(RGB_MODE_SPARKLE, 32, 8, 48);
     else if (strcmp(mode, "stop") == 0)     board_rgb_animate(RGB_MODE_SOLID, 0, 4, 0);  /* back to idle */
-    else { cJSON_Delete(j); httpd_resp_send(req, "{\"ok\":false,\"error\":\"Unknown mode\"}", 35); return ESP_OK; }
+    else
+#endif
+    { cJSON_Delete(j); httpd_resp_send(req, "{\"ok\":false,\"error\":\"Unknown mode\"}", 35); return ESP_OK; }
 
     cJSON_Delete(j);
     ESP_LOGI(TAG, "LED demo: %s", mode);
@@ -1103,7 +1069,6 @@ static esp_err_t gif_list_handler(httpd_req_t *req)
     free(str);
     return ret;
 }
-
 /* ── Server start/stop ───────────────────────────────────────────────── */
 
 static void mdns_init_helper(void)
@@ -1114,10 +1079,10 @@ static void mdns_init_helper(void)
         return;
     }
 
-    /* Hostname: aiwearable.local */
-    mdns_hostname_set("aiwearable");
+    /* Hostname: aiwatch.local */
+    mdns_hostname_set("aiwatch");
     /* Instance name */
-    mdns_instance_name_set("AIWearable AI Assistant");
+    mdns_instance_name_set("AIWatch AI Assistant");
 
     /* Register HTTP service */
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
@@ -1126,7 +1091,7 @@ static void mdns_init_helper(void)
     mdns_service_txt_item_set("_http", "_tcp", "version", esp_app_get_description()->version);
     mdns_service_txt_item_set("_http", "_tcp", "board", board_get_name());
 
-    ESP_LOGI(TAG, "mDNS initialized (aiwearable.local)");
+    ESP_LOGI(TAG, "mDNS initialized (aiwatch.local)");
 }
 
 esp_err_t webserver_start(void)
@@ -1140,8 +1105,8 @@ esp_err_t webserver_start(void)
     mdns_init_helper();
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.max_uri_handlers = 30;
-    config.stack_size = 8192;
+    config.max_uri_handlers = 32;
+    config.stack_size = 4096;  /* JSON API only — 4KB is sufficient */
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Serial CLI — ESP-IDF esp_console-based interactive command line.
@@ -10,11 +10,11 @@
  *
  * To use:
  *   idf.py monitor               # or picocom / minicom at 115200 baud
- *   AIWearable> help             # at the prompt (logs scroll alongside)
- *   AIWearable> quiet            # suppress ESP_LOG* noise
- *   AIWearable> logs             # re-enable ESP_LOG* output
- *   AIWearable> status           # show device state
- *   AIWearable> exit             # (not needed, just press Ctrl+D or reboot)
+ *   AIWatch> help             # at the prompt (logs scroll alongside)
+ *   AIWatch> quiet            # suppress ESP_LOG* noise
+ *   AIWatch> logs             # re-enable ESP_LOG* output
+ *   AIWatch> status           # show device state
+ *   AIWatch> exit             # (not needed, just press Ctrl+D or reboot)
  */
 
 #include "serial_cmd.h"
@@ -22,11 +22,10 @@
 #include "settings.h"
 
 #include "board.h"
-#include "openclaw_client.h"
+// TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "wifi_manager.h"
 #include "ui.h"
 #include "mp3_player.h"
-#include "tts_client.h"
 #include "notes_manager.h"
 #include "app_tasks.h"
 
@@ -55,21 +54,27 @@ static int custom_vprintf(const char *fmt, va_list args)
 
 static int cmd_status(int argc, char **argv)
 {
-    printf("UI=%d  OC=%d  WiFi=%s  Heap=%lu  Quiet=%s\n",
-           ui_get_state(), openclaw_get_state(),
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_get_state/openclaw_get_info deleted in Task 1
+    // printf("UI=%d  OC=%d  WiFi=%s  Heap=%lu  Quiet=%s\n",
+    //        ui_get_state(), openclaw_get_state(),
+    //        wifi_manager_get_ip(),
+    //        (unsigned long)esp_get_free_heap_size(),
+    //        s_quiet ? "ON" : "OFF");
+    printf("UI=%d  WiFi=%s  Heap=%lu  Quiet=%s\n",
+           ui_get_state(),
            wifi_manager_get_ip(),
            (unsigned long)esp_get_free_heap_size(),
            s_quiet ? "ON" : "OFF");
-    const openclaw_info_t *info = openclaw_get_info();
-    if (info && info->has_tasks) {
-        printf("Tasks: %s\n", info->task_summary);
-        for (int i = 0; i < info->task_count; i++) {
-            printf("  [%d] %s  id=%s  enabled=%d  running=%d  last=%s  err=%s\n",
-                   i, info->tasks[i].name, info->tasks[i].id,
-                   info->tasks[i].enabled, info->tasks[i].running,
-                   info->tasks[i].last_status, info->tasks[i].last_error);
-        }
-    }
+    // const openclaw_info_t *info = openclaw_get_info();
+    // if (info && info->has_tasks) {
+    //     printf("Tasks: %s\n", info->task_summary);
+    //     for (int i = 0; i < info->task_count; i++) {
+    //         printf("  [%d] %s  id=%s  enabled=%d  running=%d  last=%s  err=%s\n",
+    //                i, info->tasks[i].name, info->tasks[i].id,
+    //                info->tasks[i].enabled, info->tasks[i].running,
+    //                info->tasks[i].last_status, info->tasks[i].last_error);
+    //     }
+    // }
     return 0;
 }
 
@@ -86,7 +91,7 @@ static int cmd_help(int argc, char **argv)
        to show our custom list alongside the registered commands. */
     printf("\n");
     printf("╔══════════════════════════════════════════════╗\n");
-    printf("║            AIWearable Serial Commands            ║\n");
+    printf("║            AIWatch Serial Commands            ║\n");
     printf("╠══════════════════════════════════════════════╣\n");
     printf("║  CHAT:                                      ║\n");
     printf("║    talk / t        — Start voice chat       ║\n");
@@ -115,7 +120,6 @@ static int cmd_help(int argc, char **argv)
     printf("║  SYSTEM:                                    ║\n");
     printf("║    status / s      — Show device status     ║\n");
     printf("║    tasks           — Open tasks screen      ║\n");
-    printf("║    camera / cam    — Capture & send image   ║\n");
     printf("║    quiet / q       — Toggle log suppression ║\n");
     printf("║    cron-add-test   — Add test cron job      ║\n");
     printf("║    cron-remove <id> — Remove cron job       ║\n");
@@ -180,15 +184,9 @@ static int cmd_tasks(int argc, char **argv)
 static int cmd_abort(int argc, char **argv)
 {
     printf("Aborting chat...\n");
-    openclaw_chat_abort();
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_chat_abort deleted in Task 1
+    // openclaw_chat_abort();
     app_set_state(UI_STATE_IDLE);
-    return 0;
-}
-
-static int cmd_camera(int argc, char **argv)
-{
-    printf("Capturing camera...\n");
-    xEventGroupSetBits(g_app_events, CAMERA_BIT);
     return 0;
 }
 
@@ -278,10 +276,11 @@ static int cmd_say(int argc, char **argv)
         printf("Usage: say <message>\n");
         return 1;
     }
-    if (openclaw_get_state() != OPENCLAW_STATE_CONNECTED) {
-        printf("Error: OpenClaw not connected.\n");
-        return 1;
-    }
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_get_state/openclaw_chat_send deleted in Task 1
+    // if (openclaw_get_state() != OPENCLAW_STATE_CONNECTED) {
+    //     printf("Error: OpenClaw not connected.\n");
+    //     return 1;
+    // }
     app_set_state(UI_STATE_SENDING);
     printf("Sending: %s\n", argv[1]);
 
@@ -290,26 +289,19 @@ static int cmd_say(int argc, char **argv)
         printf("Warning: failed to save to notes (%s)\n", esp_err_to_name(ret));
     }
 
-    if (g_pending_jpeg && g_pending_jpeg_size > 0) {
-        printf("(with image %d bytes)\n", (int)g_pending_jpeg_size);
-        openclaw_chat_send_with_image(argv[1], g_pending_jpeg, g_pending_jpeg_size, app_on_chat_response);
-        free(g_pending_jpeg);
-        g_pending_jpeg = NULL;
-        g_pending_jpeg_size = 0;
-    } else {
-        openclaw_chat_send(argv[1], app_on_chat_response);
-    }
+    // openclaw_chat_send(argv[1], app_on_chat_response);
     return 0;
 }
 
 static int cmd_cron_add_test(int argc, char **argv)
 {
     printf("Creating test cron job...\n");
-    openclaw_cron_add("AIWearable Test",
-                      "10000",
-                      "Check the current time and say it.");
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    openclaw_request_tasks();
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_cron_add/openclaw_request_tasks deleted in Task 1
+    // openclaw_cron_add("AIWatch Test",
+    //                   "10000",
+    //                   "Check the current time and say it.");
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // openclaw_request_tasks();
     return 0;
 }
 
@@ -320,9 +312,10 @@ static int cmd_cron_remove(int argc, char **argv)
         return 1;
     }
     printf("Removing cron job: %s\n", argv[1]);
-    openclaw_cron_remove(argv[1]);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    openclaw_request_tasks();
+    // TODO(Task 8): 由 doubao 链路替换 — openclaw_cron_remove/openclaw_request_tasks deleted in Task 1
+    // openclaw_cron_remove(argv[1]);
+    // vTaskDelay(pdMS_TO_TICKS(1000));
+    // openclaw_request_tasks();
     return 0;
 }
 
@@ -339,8 +332,8 @@ void serial_cmd_task_start(void)
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
 
-    /* Set prompt — "AIWearable> " */
-    repl_config.prompt = "AIWearable> ";
+    /* Set prompt — "AIWatch> " */
+    repl_config.prompt = "AIWatch> ";
     repl_config.max_cmdline_length = 256;
     repl_config.task_stack_size = 4096;
     repl_config.task_priority = 3;
@@ -360,9 +353,9 @@ void serial_cmd_task_start(void)
 #error "No supported console backend is enabled (CONFIG_ESP_CONSOLE_UART_DEFAULT / USB_SERIAL_JTAG / USB_CDC)"
 #endif
 
-    /* Register all AIWearable commands (handles help, h, ? internally) */
+    /* Register all AIWatch commands (handles help, h, ? internally) */
     const esp_console_cmd_t cmds[] = {
-        { .command = "help",    .help = "Show AIWearable command reference",   .func = &cmd_help },
+        { .command = "help",    .help = "Show AIWatch command reference",   .func = &cmd_help },
         { .command = "h",       .help = NULL,                               .func = &cmd_help },
         { .command = "?",       .help = NULL,                               .func = &cmd_help },
         { .command = "status",  .help = "Show device status",              .func = &cmd_status },
@@ -385,8 +378,6 @@ void serial_cmd_task_start(void)
         { .command = "wifi",    .help = "Set WiFi: wifi <ssid> <pass>",    .func = &cmd_wifi },
         { .command = "web",     .help = "Toggle webserver",                .func = &cmd_web },
         { .command = "tasks",   .help = "Open tasks screen",               .func = &cmd_tasks },
-        { .command = "camera",  .help = "Capture & send camera image",     .func = &cmd_camera },
-        { .command = "cam",     .help = NULL,                               .func = &cmd_camera },
         { .command = "cron-add-test", .help = "Add a test cron job",       .func = &cmd_cron_add_test },
         { .command = "cron-remove",   .help = "Remove cron: cron-remove <id>", .func = &cmd_cron_remove },
         { .command = "mp3",     .help = "Open MP3 player UI",              .func = &cmd_mp3 },

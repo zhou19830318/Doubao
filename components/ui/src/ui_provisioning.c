@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -48,7 +48,7 @@ void ui_show_provisioning_qr(const char *url)
                       "Please follow these steps:\n\n"
                       "1. Open WiFi settings\n\n"
                       "2. Connect to:\n"
-                      "   AIWearable_Config\n\n"
+                      "   AIWatch_Config\n\n"
                       "3. Browser will auto-open\n\n"
                       "4. If not, visit:\n"
                       "   http://192.168.4.1");
@@ -59,7 +59,7 @@ void ui_show_provisioning_qr(const char *url)
     lv_obj_align(s_hint_label, LV_ALIGN_CENTER, 0, 10);
     
     // Load screen
-    lv_scr_load_anim(s_qr_screen, LV_SCR_LOAD_ANIM_FADE_ON, 300, 0, false);
+    lv_screen_load_anim(s_qr_screen, LV_SCREEN_LOAD_ANIM_FADE_ON, 300, 0, false);
     
     ESP_LOGI(TAG, "Provisioning instructions displayed");
 #else

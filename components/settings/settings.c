@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 
 static const char *TAG = "settings";
-#define NVS_NAMESPACE "heyclawy"
+#define NVS_NAMESPACE "aidb"
 
 static settings_t s_settings;
 
@@ -35,13 +35,13 @@ static void apply_bare_defaults(settings_t *s)
     s->startup_pattern     = 0;  /* rainbow */
     s->sleep_timeout_ms    = 60000;
     s->wake_word_in_sleep  = false;  /* save battery by default */
-    s->webserver_enabled   = false;
+    s->webserver_enabled   = true;
     s->activity_carousel   = true;
     s->auto_notify         = true;
     s->log_verbosity       = 2;  /* INFO */
-    strncpy(s->mimo_voice, "mimo_default", sizeof(s->mimo_voice) - 1);
-    strncpy(s->mimo_model, "mimo-v2-tts", sizeof(s->mimo_model) - 1);
-    strncpy(s->stt_model,  "fun-asr-realtime-2026-02-28", sizeof(s->stt_model) - 1);
+    strncpy(s->tts_voice, "mimo_default", sizeof(s->tts_voice) - 1);
+    strncpy(s->tts_model, "mimo-v2.5-tts", sizeof(s->tts_model) - 1);
+    strncpy(s->asr_model, "mimo-v2.5-asr", sizeof(s->asr_model) - 1);
 }
 
 /* ── NVS helpers ─────────────────────────────────────────────────────── */
@@ -73,13 +73,9 @@ static void load_from_nvs(settings_t *s)
     NVS_STR(h, "oc_devtok",   oc_device_token);
     NVS_STR(h, "mimo_apikey", mimo_api_key);
     NVS_STR(h, "mimo_url",    mimo_url);
-    NVS_STR(h, "mimo_model",  mimo_model);
-    NVS_STR(h, "mimo_voice",  mimo_voice);
-    NVS_STR(h, "ds_apikey",   dashscope_api_key);
-    NVS_STR(h, "stt_model",   stt_model);
-    NVS_STR(h, "stt_endpoint", stt_endpoint);
-    NVS_STR(h, "qv_apikey",   qveris_api_key);
-    NVS_STR(h, "qv_host",     qveris_host);
+    NVS_STR(h, "asr_model",   asr_model);
+    NVS_STR(h, "tts_model",   tts_model);
+    NVS_STR(h, "tts_voice",   tts_voice);
     NVS_U8(h,  "volume",      volume);
     NVS_U16(h, "sil_timeout", silence_timeout_ms);
     NVS_U16(h, "sil_thresh",  silence_threshold);
@@ -118,13 +114,9 @@ static esp_err_t save_to_nvs(const settings_t *s)
     nvs_set_str(h, "oc_devtok",   s->oc_device_token);
     nvs_set_str(h, "mimo_apikey", s->mimo_api_key);
     nvs_set_str(h, "mimo_url",    s->mimo_url);
-    nvs_set_str(h, "mimo_model",  s->mimo_model);
-    nvs_set_str(h, "mimo_voice",  s->mimo_voice);
-    nvs_set_str(h, "ds_apikey",   s->dashscope_api_key);
-    nvs_set_str(h, "stt_model",   s->stt_model);
-    nvs_set_str(h, "stt_endpoint", s->stt_endpoint);
-    nvs_set_str(h, "qv_apikey",   s->qveris_api_key);
-    nvs_set_str(h, "qv_host",     s->qveris_host);
+    nvs_set_str(h, "asr_model",   s->asr_model);
+    nvs_set_str(h, "tts_model",   s->tts_model);
+    nvs_set_str(h, "tts_voice",   s->tts_voice);
     nvs_set_u8(h,  "volume",      s->volume);
     nvs_set_u16(h, "sil_timeout", s->silence_timeout_ms);
     nvs_set_u16(h, "sil_thresh",  s->silence_threshold);
@@ -176,13 +168,9 @@ esp_err_t settings_init(const settings_t *defaults)
         COPY_IF_SET(oc_device_token);
         COPY_IF_SET(mimo_api_key);
         COPY_IF_SET(mimo_url);
-        COPY_IF_SET(mimo_model);
-        COPY_IF_SET(mimo_voice);
-        COPY_IF_SET(dashscope_api_key);
-        COPY_IF_SET(stt_model);
-        COPY_IF_SET(stt_endpoint);
-        COPY_IF_SET(qveris_api_key);
-        COPY_IF_SET(qveris_host);
+        COPY_IF_SET(asr_model);
+        COPY_IF_SET(tts_model);
+        COPY_IF_SET(tts_voice);
         if (defaults->volume) s_settings.volume = defaults->volume;
 #undef COPY_IF_SET
     }
@@ -238,16 +226,12 @@ char *settings_to_json(bool include_secrets)
     cJSON_AddStringToObject(j, "oc_token", include_secrets ? s->oc_token : "****");
     cJSON_AddStringToObject(j, "oc_device_key", include_secrets ? s->oc_device_key : "****");
 
-    /* TTS (MiMo) */
+    /* MiMo API */
     cJSON_AddStringToObject(j, "mimo_api_key", include_secrets ? s->mimo_api_key : "****");
     cJSON_AddStringToObject(j, "mimo_url",     s->mimo_url);
-    cJSON_AddStringToObject(j, "mimo_model",   s->mimo_model);
-    cJSON_AddStringToObject(j, "mimo_voice",   s->mimo_voice);
-
-    /* STT (DashScope) */
-    cJSON_AddStringToObject(j, "dashscope_api_key", include_secrets ? s->dashscope_api_key : "****");
-    cJSON_AddStringToObject(j, "stt_model",    s->stt_model);
-    cJSON_AddStringToObject(j, "stt_endpoint", s->stt_endpoint);
+    cJSON_AddStringToObject(j, "asr_model",    s->asr_model);
+    cJSON_AddStringToObject(j, "tts_model",    s->tts_model);
+    cJSON_AddStringToObject(j, "tts_voice",    s->tts_voice);
 
     /* Audio */
     cJSON_AddNumberToObject(j, "volume", s->volume);
@@ -326,11 +310,9 @@ esp_err_t settings_from_json(const char *json, size_t len)
     JSON_STR("oc_device_key",    oc_device_key);
     JSON_STR("mimo_api_key",      mimo_api_key);
     JSON_STR("mimo_url",          mimo_url);
-    JSON_STR("mimo_model",        mimo_model);
-    JSON_STR("mimo_voice",        mimo_voice);
-    JSON_STR("dashscope_api_key", dashscope_api_key);
-    JSON_STR("stt_model",         stt_model);
-    JSON_STR("stt_endpoint",      stt_endpoint);
+    JSON_STR("asr_model",         asr_model);
+    JSON_STR("tts_model",         tts_model);
+    JSON_STR("tts_voice",         tts_voice);
     JSON_U8("volume",            volume);
     JSON_U16("silence_timeout_ms", silence_timeout_ms);
     JSON_U16("silence_threshold", silence_threshold);

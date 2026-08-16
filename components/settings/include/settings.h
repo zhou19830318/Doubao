@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Settings — NVS-backed runtime configuration
@@ -34,16 +34,16 @@ typedef struct {
     char     oc_device_token[192];  /* Paired device token issued by hello-ok */
     bool     oc_use_tls;            /* Use wss:// instead of ws:// */
 
-    /* TTS (MiMo / Xiaomi) */
+    /* MiMo API (Xiaomi) — shared key for both ASR and TTS */
     char     mimo_api_key[128];
     char     mimo_url[128];
-    char     mimo_model[32];
-    char     mimo_voice[32];
 
-    /* STT (DashScope / 百炼) */
-    char     dashscope_api_key[128];
-    char     stt_model[64];
-    char     stt_endpoint[128];
+    /* ASR (MiMo-V2.5-ASR) */
+    char     asr_model[64];
+
+    /* TTS (MiMo-V2.5-TTS) */
+    char     tts_model[32];
+    char     tts_voice[32];
 
     /* Audio */
     uint8_t  volume;               /* 0-100 */
@@ -75,9 +75,6 @@ typedef struct {
     /* Logging */
     uint8_t  log_verbosity;        /* 0=ERROR, 1=WARN, 2=INFO, 3=DEBUG, 4=VERBOSE */
 
-    /* QVeris */
-    char     qveris_api_key[128];
-    char     qveris_host[128];
 } settings_t;
 
 /**

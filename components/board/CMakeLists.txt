@@ -21,24 +21,28 @@ set(BOARD_PRIV_REQUIRES
     esp_driver_uart
 )
 
-# ESP32-S3 boards need SPD2010 + IO expander
-if(IDF_TARGET STREQUAL "esp32s3")
-    list(APPEND BOARD_REQUIRES
-        esp_lcd_spd2010
-        esp_lcd_touch_spd2010
-    )
-    # The following components are expected to be in managed_components from VoiceClaw_Ver0.4
-    # esp_lcd_st7789
-    # esp_lcd_touch_axs5106l
-    # esp_lcd_touch
+# Board-specific source files
+set(BOARD_SRCS "board.c")
+
+# Waveshare Audio board: compile JD9853 LCD driver + AXS5106L touch driver
+if(CONFIG_AIDB_BOARD_WAVESHARE_AUDIO)
+    list(APPEND BOARD_SRCS "touch_axs5106l.c")
     list(APPEND BOARD_PRIV_REQUIRES
         esp_io_expander
         esp_io_expander_tca95xx_16bit
     )
 endif()
 
+# ESP32-S3 boards need IO expander + codec (for Waveshare Audio)
+if(IDF_TARGET STREQUAL "esp32s3")
+    # Common ESP32-S3 requirements
+    list(APPEND BOARD_REQUIRES
+        esp_codec_dev
+    )
+endif()
+
 idf_component_register(
-    SRCS "board.c" "esp_lcd_panel_jd9853.c" "touch_axs5106l.c"
+    SRCS ${BOARD_SRCS}
     INCLUDE_DIRS "include"
     REQUIRES ${BOARD_REQUIRES}
     PRIV_REQUIRES ${BOARD_PRIV_REQUIRES}

@@ -3,107 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AIWearable</title>
+<title>AIWatch</title>
 <style>
-:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--dim:#7d8590;--green:#3fb950;--red:#f85149;--orange:#d29922;--blue:#58a6ff;--purple:#bc8cff}
+/* ── Premium dark design tokens ─────────────────────────────────────────
+   Variables kept identical to the original so all inline styles & JS that
+   reference var(--green)/(--red)/(--orange)/(--blue)/(--purple) etc. keep
+   resolving. New accent/elevation tokens are additive only.
+   ──────────────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#0a0e14;--card:#13181f;--border:#262d38;--text:#e6edf3;--dim:#8b949e;
+  --green:#3fb950;--red:#f85149;--orange:#d29922;--blue:#58a6ff;--purple:#bc8cff;
+  /* additive */
+  --card-2:#171d26;--card-hi:#1c2330;--accent-glow:rgba(88,166,255,.18);
+  --ring:rgba(255,255,255,.06);--shadow:0 1px 0 rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.35);
+  --radius:14px;--radius-sm:10px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-.header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
-.header h1{font-size:18px;font-weight:600}
-.header h1 span{color:var(--green);font-weight:400;font-size:13px;margin-left:8px}
-.tabs{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
-.tab{padding:10px 20px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;font-size:14px;white-space:nowrap;transition:all .2s}
-.tab:hover{color:var(--text)}
-.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
-.content{max-width:800px;margin:0 auto;padding:16px}
-.panel{display:none}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(1100px 600px at 100% -10%,rgba(88,166,255,.07),transparent 60%),
+    radial-gradient(900px 500px at -10% 0%,rgba(188,140,255,.06),transparent 55%),
+    var(--bg);
+  background-attachment:fixed;color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;
+}
+/* ── Header (NON-sticky so tabs below never overlap the status text) ── */
+.header{
+  position:relative;background:linear-gradient(180deg,rgba(28,35,48,.85),rgba(19,24,31,.9));
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--border);
+  padding:14px 22px;display:flex;align-items:center;gap:12px;
+}
+.header h1{font-size:18px;font-weight:700;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;max-width:60%}
+.header h1 span{color:var(--green);font-weight:500;font-size:12px;margin-left:10px;opacity:.9}
+.header #hdr-status{font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 auto;text-align:right}
+.header .btn{flex:0 0 auto}
+/* ── Tabs (NON-sticky → fixed header height, no collisions) ── */
+.tabs{display:flex;gap:2px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;padding:0 8px;scrollbar-width:thin}
+.tabs::-webkit-scrollbar{height:5px}
+.tabs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tab{
+  padding:11px 16px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;
+  font-size:13.5px;font-weight:500;white-space:nowrap;transition:color .18s,background .18s,border-color .18s;border-radius:8px 8px 0 0;
+}
+.tab:hover{color:var(--text);background:rgba(255,255,255,.025)}
+.tab.active{color:var(--text);border-bottom-color:var(--blue);background:linear-gradient(180deg,transparent,rgba(88,166,255,.07))}
+/* ── Layout ── */
+.content{max-width:860px;margin:0 auto;padding:18px 16px 48px}
+.panel{display:none;animation:fade .25s ease}
 .panel.active{display:block}
-.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px}
-.card h3{font-size:15px;margin-bottom:12px;color:var(--text);display:flex;align-items:center;gap:8px}
-.card h3 .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-.card h3 .dot.green{background:var(--green)}.card h3 .dot.red{background:var(--red)}.card h3 .dot.orange{background:var(--orange)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
-.stat{text-align:center;padding:8px}
-.stat .val{font-size:22px;font-weight:600;color:var(--text)}
-.stat .lbl{font-size:11px;color:var(--dim);text-transform:uppercase;margin-top:2px}
-.form-group{margin-bottom:12px}
-.form-group label{display:block;font-size:13px;color:var(--dim);margin-bottom:4px}
-.form-group input,.form-group select{width:100%;padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;outline:none}
-.form-group input:focus{border-color:var(--blue)}
-.form-group input[type=range]{padding:4px 0}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{
+  background:linear-gradient(180deg,var(--card-hi),var(--card));border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.card h3{font-size:15px;font-weight:650;margin-bottom:14px;color:var(--text);display:flex;align-items:center;gap:9px}
+.card h3 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+.card h3 .dot.green{background:var(--green);box-shadow:0 0 8px rgba(63,185,80,.6)}
+.card h3 .dot.red{background:var(--red);box-shadow:0 0 8px rgba(248,81,73,.6)}
+.card h3 .dot.orange{background:var(--orange);box-shadow:0 0 8px rgba(210,153,34,.6)}
+/* ── Stat grid (values never overflow / collide now) ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.stat{text-align:center;padding:10px 6px;border-radius:var(--radius-sm);background:rgba(255,255,255,.025);border:1px solid var(--ring)}
+.stat .val{font-size:20px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.stat .lbl{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ── Forms ── */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:6px;letter-spacing:.2px}
+.form-group input,.form-group select{
+  width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--accent-glow)}
+.form-group input[type=range]{-webkit-appearance:none;appearance:none;padding:0;height:6px;border-radius:6px;background:var(--border);border:none}
+.form-group input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #0a0e14;box-shadow:0 0 8px rgba(88,166,255,.6)}
+.form-group input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--blue);cursor:pointer;border:2px solid #0a0e14}
+.form-group input[type=file]{padding:7px 10px;font-size:13px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:500px){.form-row{grid-template-columns:1fr}}
-.btn{padding:8px 16px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s}
-.btn-primary{background:var(--green);color:#000;border-color:var(--green)}
-.btn-primary:hover{opacity:.85}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-danger:hover{opacity:.85}
-.btn-secondary{background:var(--card);color:var(--text)}
-.btn-secondary:hover{background:var(--border)}
-.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.toast{position:fixed;bottom:20px;right:20px;padding:10px 20px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
-.toast.ok{background:var(--green);color:#000}
-.toast.err{background:var(--red);color:#fff}
-.errors-list{max-height:400px;overflow-y:auto}
-.err-item{padding:8px;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:8px}
+@media(max-width:500px){.form-row{grid-template-columns:1fr}.header h1{max-width:48%}}
+/* ── Buttons ── */
+.btn{
+  padding:8px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;
+  font-size:13px;font-weight:550;background:var(--card-2);color:var(--text);transition:transform .12s,box-shadow .15s,background .15s,border-color .15s;
+}
+.btn:hover{background:var(--card-hi);border-color:#39414d}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(180deg,#46c75e,#34a84a);color:#04140a;border-color:transparent;box-shadow:0 4px 14px rgba(63,185,80,.28)}
+.btn-primary:hover{background:linear-gradient(180deg,#52d368,#3bb454);box-shadow:0 6px 18px rgba(63,185,80,.38)}
+.btn-danger{background:linear-gradient(180deg,#fa5d54,#e4423a);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(248,81,73,.26)}
+.btn-danger:hover{background:linear-gradient(180deg,#fc6c63,#e84b43);box-shadow:0 6px 18px rgba(248,81,73,.36)}
+.btn-secondary{background:var(--card-2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--card-hi);border-color:#39414d}
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* ── Toast ── */
+.toast{position:fixed;bottom:22px;right:22px;padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:500;z-index:999;opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.toast.show{opacity:1;transform:none}
+.toast.ok{background:linear-gradient(180deg,#46c75e,#34a84a);color:#04140a}
+.toast.err{background:linear-gradient(180deg,#fa5d54,#e4423a);color:#fff}
+/* ── Error list ── */
+.errors-list{max-height:400px;overflow-y:auto;border-radius:var(--radius-sm)}
+.err-item{padding:9px 6px;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:8px;align-items:center}
 .err-item:last-child{border-bottom:none}
-.err-item .badge{padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase;flex-shrink:0}
+.err-item .badge{padding:2px 7px;border-radius:5px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
 .err-item .badge.error{background:var(--red);color:#fff}
 .err-item .badge.warning{background:var(--orange);color:#000}
 .err-item .badge.info{background:var(--blue);color:#000}
 .err-item .badge.critical{background:var(--purple);color:#fff}
-.err-time{color:var(--dim);font-size:11px;flex-shrink:0}
-.wizard{border:2px solid var(--blue);border-radius:8px;padding:16px;margin-top:12px}
-.wizard h4{color:var(--blue);margin-bottom:8px}
-.wizard .step{margin-bottom:8px;color:var(--dim);font-size:13px}
+.err-time{color:var(--dim);font-size:11px;flex-shrink:0;white-space:nowrap}
+/* ── Wizard ── */
+.wizard{border:1px solid var(--blue);border-radius:var(--radius);padding:16px;margin-top:14px;background:linear-gradient(180deg,rgba(88,166,255,.06),transparent)}
+.wizard h4{color:var(--blue);margin-bottom:10px;font-size:14px}
+.wizard .step{margin-bottom:9px;color:var(--dim);font-size:13px;line-height:1.5}
 .wizard .step.done{color:var(--green)}
 .wizard .step.fail{color:var(--red)}
 .wizard .step.active{color:var(--text);font-weight:600}
-.toggle{position:relative;width:44px;height:24px;display:inline-block}
+/* ── Toggle ── */
+.toggle{position:relative;width:44px;height:24px;display:inline-block;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s}
-.toggle .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
-.toggle input:checked+.slider{background:var(--green)}
+.toggle .slider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:background .25s}
+.toggle .slider:before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.toggle input:checked+.slider{background:linear-gradient(180deg,#46c75e,#34a84a)}
 .toggle input:checked+.slider:before{transform:translateX(20px)}
-.range-val{display:inline-block;width:40px;text-align:right;color:var(--blue);font-weight:600}
-/* LED visualization */
+.range-val{display:inline-block;width:40px;text-align:right;color:var(--blue);font-weight:700}
+/* ── LED visualization ── */
 .led-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
-.led-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:border-color .3s}
-.led-card:hover{border-color:var(--blue)}
-.led-card .state-name{font-size:13px;font-weight:600;text-transform:uppercase;margin-bottom:12px;letter-spacing:1px}
+.led-card{background:radial-gradient(120% 100% at 50% 0%,var(--card-hi),var(--bg));border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;transition:border-color .3s,transform .2s,box-shadow .3s}
+.led-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.led-card .state-name{font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:12px;letter-spacing:1px;color:var(--text)}
 .led-ring{position:relative;width:120px;height:120px;margin:0 auto 12px}
 .led-ring .led{position:absolute;width:14px;height:14px;border-radius:50%;filter:blur(3px);transition:background .1s}
 .led-ring .led.glow{box-shadow:0 0 8px 3px currentColor}
 .led-single{width:24px;height:24px;border-radius:50%;margin:0 auto 12px;filter:blur(4px)}
-.led-mode{font-size:11px;color:var(--dim);text-transform:uppercase}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-/* Notes / Chat History */
-.notes-date-item{padding:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .2s;display:flex;justify-content:space-between;align-items:center}
-.notes-date-item:hover{background:var(--bg)}
-.notes-date-item:last-child{border-bottom:none}
-.notes-date-info{flex:1}
-.notes-date-name{font-weight:600;font-size:15px;margin-bottom:4px}
+#cam-preview{transition:opacity .2s;border-radius:6px}
+#cam-preview.loading{opacity:0.5}
+.led-mode{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+/* ── Notes / Chat History ── */
+.notes-date-item{padding:13px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:background .2s,border-color .2s;display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(255,255,255,.015)}
+.notes-date-item:hover{background:rgba(255,255,255,.04);border-color:#39414d}
+.notes-date-item:last-child{border-bottom:1px solid var(--border)}
+.notes-date-info{flex:1;min-width:0}
+.notes-date-name{font-weight:650;font-size:15px;margin-bottom:4px}
 .notes-date-meta{font-size:12px;color:var(--dim)}
-.notes-date-actions{display:flex;gap:8px}
+.notes-date-actions{display:flex;gap:8px;flex-shrink:0}
 .notes-date-actions button{padding:4px 10px;font-size:12px}
-.chat-message{padding:12px;margin-bottom:8px;border-radius:8px;line-height:1.6}
-.chat-message.user{background:#1a3a5c;border-left:3px solid var(--blue)}
-.chat-message.assistant{background:#1a2e1a;border-left:3px solid var(--green)}
-.chat-message .msg-header{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px}
-.chat-message .msg-role{font-weight:600;text-transform:uppercase}
-.chat-message .msg-time{color:var(--dim)}
-.chat-message .msg-content{white-space:pre-wrap;word-wrap:break-word}
-.chat-message .msg-thinking{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic}
+.chat-message{padding:13px 15px;margin-bottom:10px;border-radius:12px;line-height:1.65}
+.chat-message.user{background:linear-gradient(180deg,rgba(26,58,92,.6),rgba(20,44,70,.55));border-left:3px solid var(--blue)}
+.chat-message.assistant{background:linear-gradient(180deg,rgba(26,46,26,.55),rgba(20,38,20,.5));border-left:3px solid var(--green)}
+.chat-message .msg-header{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;font-size:12px}
+.chat-message .msg-role{font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.chat-message .msg-time{color:var(--dim);white-space:nowrap}
+.chat-message .msg-content{white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+.chat-message .msg-thinking{font-size:11px;color:var(--dim);margin-top:7px;font-style:italic}
+/* ── Scrollbar polish ── */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#39414d}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🦞 AIWearable <span id="hdr-ver"></span></h1>
+  <h1>🦞 AIWatch <span id="hdr-ver"></span></h1>
   <span id="hdr-status" style="font-size:13px;color:var(--dim)"></span>
 </div>
 
@@ -276,7 +339,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <details style="margin-bottom:8px">
       <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">1. <span data-en="Device Pairing (Required)" data-cn="设备配对 (必填)">Device Pairing (Required)</span></summary>
       <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIWearable authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIWearable 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIWearable authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
+        <p data-en="AIWatch authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIWatch 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIWatch authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
         <p style="margin-top:6px"><b data-en="To pair:" data-cn="配对步骤:">To pair:</b></p>
         <ol style="padding-left:18px;margin-top:4px">
           <li data-en="Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)" data-cn="记录上方显示的 <b>Device Key</b> (或启动时的串口日志: <code>Device identity: &lt;hex&gt;</code>)">Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)</li>
@@ -287,28 +350,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
     </details>
     <details style="margin-bottom:8px">
-      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">2. <span data-en="STT — DashScope (Required for voice)" data-cn="STT — 百炼 (语音必选)">STT — DashScope (Required for voice)</span></summary>
+      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">2. <span data-en="ASR — MiMo-V2.5 (Required for voice)" data-cn="ASR — MiMo-V2.5 (语音必选)">ASR — MiMo-V2.5 (Required for voice)</span></summary>
       <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIWearable uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text." data-cn="AIWearable 使用 <b>百炼 (DashScope)</b> 实时流式 ASR 进行语音转文字。">AIWearable uses <b>DashScope (百炼)</b> real-time streaming ASR via WebSocket for speech-to-text.</p>
+        <p data-en="AIWatch uses <b>MiMo-V2.5-ASR</b> via HTTP POST for speech-to-text. Audio is sent as base64 WAV." data-cn="AIWatch 使用 <b>MiMo-V2.5-ASR</b> (HTTP POST) 进行语音转文字，音频以 base64 WAV 格式发送。">AIWatch uses <b>MiMo-V2.5-ASR</b> via HTTP POST for speech-to-text. Audio is sent as base64 WAV.</p>
         <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
         <ol style="padding-left:18px;margin-top:4px">
-          <li data-en="Get an API key from <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>DashScope Console</a>" data-cn="从 <a href='https://dashscope.console.aliyun.com/' target='_blank' style='color:var(--blue)'>百炼控制台</a> 获取 API 密钥">Get an API key from <a href="https://dashscope.console.aliyun.com/" target="_blank" style="color:var(--blue)">DashScope Console</a></li>
-          <li data-en="Enter the API key in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥">Enter the API key in the <b>Services</b> tab</li>
-          <li data-en="Default endpoint: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code>" data-cn="默认端点: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code>">Default endpoint: <code>wss://dashscope.aliyuncs.com/api-ws/v1/inference/</code></li>
-          <li data-en="Default model: <code>fun-asr-realtime-2026-02-28</code>" data-cn="默认模型: <code>fun-asr-realtime-2026-02-28</code>">Default model: <code>fun-asr-realtime-2026-02-28</code></li>
+          <li data-en="Get an API key from <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a> (same key works for both ASR &amp; TTS)" data-cn="从 <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥 (同一密钥可用于 ASR 和 TTS)">Get an API key from <a href="https://platform.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a> (same key works for both ASR &amp; TTS)</li>
+          <li data-en="Enter the API key and URL in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL">Enter the API key and URL in the <b>Services</b> tab</li>
+          <li data-en="Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>" data-cn="默认 URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>">Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code></li>
+          <li data-en="Default model: <code>mimo-v2.5-asr</code> (auto language detection)" data-cn="默认模型: <code>mimo-v2.5-asr</code> (自动语种检测)">Default model: <code>mimo-v2.5-asr</code> (auto language detection)</li>
         </ol>
       </div>
     </details>
     <details style="margin-bottom:8px">
-      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">3. <span data-en="TTS — MiMo (Optional — for voice responses)" data-cn="TTS — MiMo (可选 — 用于语音回复)">TTS — MiMo (Optional — for voice responses)</span></summary>
+      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">3. <span data-en="TTS — MiMo-V2.5 (Optional — for voice responses)" data-cn="TTS — MiMo-V2.5 (可选 — 用于语音回复)">TTS — MiMo-V2.5 (Optional — for voice responses)</span></summary>
       <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="For audio playback of responses, <b>MiMo (Xiaomi)</b> TTS is used via streaming SSE." data-cn="对于响应的音频播放，使用 <b>MiMo (小米)</b> TTS 流式输出。">For audio playback of responses, <b>MiMo (Xiaomi)</b> TTS is used via streaming SSE.</p>
+        <p data-en="For audio playback of responses, <b>MiMo-V2.5-TTS</b> is used via streaming SSE (PCM16 format)." data-cn="对于响应的音频播放，使用 <b>MiMo-V2.5-TTS</b> 流式 SSE 输出 (PCM16 格式)。">For audio playback of responses, <b>MiMo-V2.5-TTS</b> is used via streaming SSE (PCM16 format).</p>
         <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
         <ol style="padding-left:18px;margin-top:4px">
-          <li data-en="Get an API key from <a href='https://mimo.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a>" data-cn="从 <a href='https://mimo.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥">Get an API key from <a href="https://mimo.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a></li>
-          <li data-en="Enter the API key and URL in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL">Enter the API key and URL in the <b>Services</b> tab</li>
+          <li data-en="Get an API key from <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a>" data-cn="从 <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥">Get an API key from <a href="https://platform.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a></li>
+          <li data-en="Enter the API key and URL in the <b>Services</b> tab (key shared with ASR)" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL (与 ASR 共用同一密钥)">Enter the API key and URL in the <b>Services</b> tab (key shared with ASR)</li>
           <li data-en="Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>" data-cn="默认 URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>">Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code></li>
-          <li data-en="Default model: <code>mimo-v2-tts</code>, voice: <code>mimo_default</code>" data-cn="默认模型: <code>mimo-v2-tts</code>, 音色: <code>mimo_default</code>">Default model: <code>mimo-v2-tts</code>, voice: <code>mimo_default</code></li>
+          <li data-en="Default model: <code>mimo-v2.5-tts</code>, voice options: mimo_default, 冰糖, 茉莉, 苏打, 白桦" data-cn="默认模型: <code>mimo-v2.5-tts</code>, 音色: mimo_default, 冰糖, 茉莉, 苏打, 白桦">Default model: <code>mimo-v2.5-tts</code>, voice options: mimo_default, 冰糖, 茉莉, 苏打, 白桦</li>
         </ol>
       </div>
     </details>
@@ -339,23 +402,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <!-- SERVICES -->
 <div class="panel" id="services">
   <div class="card">
-    <h3>🗣️ <span data-en="TTS (MiMo / Xiaomi)" data-cn="TTS 语音合成 (小米 MiMo)">TTS (MiMo / Xiaomi)</span></h3>
+    <h3>🗣️ <span data-en="TTS — MiMo-V2.5" data-cn="TTS — MiMo-V2.5">TTS — MiMo-V2.5</span></h3>
     <div class="form-group"><label data-en="API URL" data-cn="API 地址">API URL</label><input type="text" id="s-mimo_url" placeholder="https://api.xiaomimimo.com/v1/chat/completions" data-en-ph="https://api.xiaomimimo.com/v1/chat/completions" data-cn-ph="https://api.xiaomimimo.com/v1/chat/completions"></div>
     <div class="form-row">
-      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-mimo_model" placeholder="mimo-v2-tts" data-en-ph="mimo-v2-tts" data-cn-ph="mimo-v2-tts"></div>
-      <div class="form-group"><label data-en="Voice" data-cn="音色">Voice</label><input type="text" id="s-mimo_voice" placeholder="mimo_default" data-en-ph="mimo_default" data-cn-ph="mimo_default"></div>
+      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-tts_model" placeholder="mimo-v2.5-tts" data-en-ph="mimo-v2.5-tts" data-cn-ph="mimo-v2.5-tts"></div>
+      <div class="form-group"><label data-en="Voice" data-cn="音色">Voice</label><input type="text" id="s-tts_voice" placeholder="mimo_default" data-en-ph="mimo_default" data-cn-ph="mimo_default"></div>
     </div>
     <div class="form-group"><label data-en="API Key" data-cn="API 密钥">API Key</label><input type="password" id="s-mimo_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
   </div>
   <div class="card">
-    <h3>🎤 <span data-en="STT (DashScope / 百炼)" data-cn="STT 语音识别 (阿里百炼)">STT (DashScope / 百炼)</span></h3>
-    <div class="form-group"><label data-en="WebSocket Endpoint" data-cn="WebSocket 端点">WebSocket Endpoint</label><input type="text" id="s-stt_endpoint" placeholder="wss://dashscope.aliyuncs.com/api-ws/v1/inference/" data-en-ph="wss://dashscope.aliyuncs.com/api-ws/v1/inference/" data-cn-ph="wss://dashscope.aliyuncs.com/api-ws/v1/inference/"></div>
+    <h3>🎤 <span data-en="ASR — MiMo-V2.5" data-cn="ASR — MiMo-V2.5">ASR — MiMo-V2.5</span></h3>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:8px" data-en="Uses the same API key and URL as TTS. Audio is sent as base64 WAV via HTTP POST." data-cn="使用与 TTS 相同的 API 密钥和 URL。音频以 base64 WAV 格式通过 HTTP POST 发送。">Uses the same API key and URL as TTS. Audio is sent as base64 WAV via HTTP POST.</p>
     <div class="form-row">
-      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-stt_model" placeholder="fun-asr-realtime-2026-02-28" data-en-ph="fun-asr-realtime-2026-02-28" data-cn-ph="fun-asr-realtime-2026-02-28"></div>
-      <div class="form-group"><label data-en="API Key" data-cn="API 密钥">API Key</label><input type="password" id="s-dashscope_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
+      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-asr_model" placeholder="mimo-v2.5-asr" data-en-ph="mimo-v2.5-asr" data-cn-ph="mimo-v2.5-asr"></div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="testSTT()" data-en="🔍 Check STT Config" data-cn="🔍 检查 STT 配置">🔍 Check STT Config</button>
+      <button class="btn btn-secondary" onclick="testSTT()" data-en="🔍 Check ASR Config" data-cn="🔍 检查 ASR 配置">🔍 Check ASR Config</button>
     </div>
     <div id="stt-test-result" style="margin-top:8px;font-size:13px"></div>
   </div>
@@ -514,6 +576,7 @@ document.querySelectorAll('.tab').forEach(t => {
         renderLedPanel(d.device.rgb_led_count > 1);
       }).catch(()=>renderLedPanel(true));
     }
+    // Camera removed — no auto-start needed
   });
 });
 
@@ -627,7 +690,7 @@ async function loadSettings() {
     settings = await r.json();
     // Populate fields
     const fields = ['wifi_ssid','wifi_password','oc_host','oc_port','oc_token','oc_device_key',
-      'mimo_api_key','mimo_url','mimo_model','mimo_voice','dashscope_api_key','stt_model','stt_endpoint',
+      'mimo_api_key','mimo_url','asr_model','tts_model','tts_voice',
       'volume','silence_timeout_ms','silence_threshold','max_record_seconds','no_speech_timeout_ms',
       'brightness','log_verbosity'];
     fields.forEach(f => {
@@ -654,7 +717,7 @@ async function loadSettings() {
 async function saveSettings() {
   const data = {};
   const fields = ['wifi_ssid','wifi_password','oc_host','oc_token','oc_device_key',
-    'mimo_api_key','mimo_url','mimo_model','mimo_voice','dashscope_api_key','stt_model','stt_endpoint'];
+    'mimo_api_key','mimo_url','asr_model','tts_model','tts_voice'];
   fields.forEach(f => {
     const el = $('s-'+f);
     if (el && el.value) data[f] = el.value;
@@ -787,7 +850,7 @@ function startWizard() {
     ss1: '1. On your OpenClaw server, edit gateway config:',
     ss1_code: '"bind": "lan"',
     ss2: '2. Restart the OpenClaw gateway',
-    ss3: '3. Check AIWearable logs for approval command:',
+    ss3: '3. Check AIWatch logs for approval command:',
     ss3_note: 'Look for: "Approve with: openclaw devices approve <device-id>"',
     ss4: '4. Copy and run the approval command on your server'
   };
@@ -804,7 +867,7 @@ function startWizard() {
     ss1: '1. 在 OpenClaw 服务器上编辑网关配置：',
     ss1_code: '"bind": "lan"',
     ss2: '2. 重启 OpenClaw 网关',
-    ss3: '3. 查看 AIWearable 日志中的批准命令：',
+    ss3: '3. 查看 AIWatch 日志中的批准命令：',
     ss3_note: '查找：“Approve with: openclaw devices approve <device-id>”',
     ss4: '4. 复制并在服务器上运行批准命令'
   };
@@ -829,17 +892,17 @@ function startWizard() {
 }
 
 async function testSTT() {
-  $('stt-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '检查中...' : 'Checking DashScope STT config...'}</span>`;
+  $('stt-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '检查中...' : 'Checking ASR config...'}</span>`;
   try {
     const r = await fetch('/api/stt/health', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({})});
     const d = await r.json();
     if (d.ok) {
-        $('stt-test-result').innerHTML = '<span style="color:var(--green)">✅ ' + 
-            (lang === 'cn' ? '百炼 STT 配置正确 (模型: ' : 'DashScope STT configured (model: ') + 
+        $('stt-test-result').innerHTML = '<span style="color:var(--green)">✅ ' +
+            (lang === 'cn' ? 'MiMo-V2.5-ASR 配置正确 (模型: ' : 'MiMo-V2.5-ASR configured (model: ') +
             (d.model||'unknown') + ')</span>';
     } else {
-        $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + 
+        $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' +
             (lang === 'cn' ? '配置缺失或错误' : (d.error||'Configuration missing')) + '</span>';
     }
   } catch(e) {
@@ -921,16 +984,18 @@ async function toggleTask(id, enabled) {
 
 // LED Pattern Visualization
 const LED_STATES = [
-  {name:{en:'Connecting',cn:'正在连接'}, mode:'rainbow_spin', color:[20,0,0], ringMode:{en:'Rainbow Spin',cn:'彩虹旋转'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[16,16,0]},
+  {name:{en:'Connecting',cn:'正在连接'}, mode:'rainbow_spin', color:[20,0,0], ringMode:{en:'Rainbow Spin',cn:'彩虹旋转'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[16,16,0]},
   {name:{en:'Idle',cn:'空闲'}, mode:'solid', color:[0,4,0], ringMode:{en:'Solid',cn:'常亮'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,4,0]},
-  {name:{en:'Listening',cn:'正在聆听'}, mode:'pulse_wave', color:[8,40,16], ringMode:{en:'Pulse Wave',cn:'脉冲波'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[32,0,0]},
+  {name:{en:'Listening',cn:'正在聆听'}, mode:'pulse_wave', color:[40,0,0], ringMode:{en:'Pulse Wave',cn:'脉冲波'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[32,0,0]},
   {name:{en:'Sending',cn:'正在发送'}, mode:'chase', color:[0,16,40], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,0,32]},
   {name:{en:'Thinking',cn:'思考中'}, mode:'chase', color:[40,24,0], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[40,24,0]},
   {name:{en:'Streaming',cn:'流式输出'}, mode:'sparkle', color:[32,8,48], ringMode:{en:'Sparkle',cn:'闪烁'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[24,0,40]},
   {name:{en:'Response',cn:'响应中'}, mode:'solid', color:[0,8,0], ringMode:{en:'Solid',cn:'常亮'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[0,6,0]},
   {name:{en:'TTS Loading',cn:'语音加载'}, mode:'chase', color:[0,24,24], ringMode:{en:'Chase',cn:'跑马灯'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[0,24,24]},
-  {name:{en:'TTS Playing',cn:'语音播放'}, mode:'breathe', color:[0,32,16], ringMode:{en:'Breathe',cn:'呼吸'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[0,32,16]},
-  {name:{en:'Error',cn:'错误'}, mode:'blink', color:[32,0,0], ringMode:{en:'Blink',cn:'闪烁'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[32,0,0]}
+  {name:{en:'TTS Playing',cn:'语音播放'}, mode:'breathe', color:[40,0,32], ringMode:{en:'Breathe',cn:'呼吸'}, singleMode:{en:'Breathe',cn:'呼吸'}, singleColor:[40,0,32]},
+  {name:{en:'Error',cn:'错误'}, mode:'blink', color:[32,0,0], ringMode:{en:'Blink',cn:'闪烁'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[32,0,0]},
+  {name:{en:'Notifying',cn:'通知提醒'}, mode:'breathe', color:[40,32,0], ringMode:{en:'Breathe',cn:'呼吸'}, singleMode:{en:'Blink',cn:'闪烁'}, singleColor:[32,16,0]},
+  {name:{en:'Playing MP3',cn:'MP3播放'}, mode:'solid', color:[16,16,0], ringMode:{en:'Solid',cn:'常亮'}, singleMode:{en:'Solid',cn:'常亮'}, singleColor:[16,16,0]}
 ];
 const LED_COUNT = 7;
 let ledAnimFrames = [];
@@ -986,37 +1051,40 @@ function animateLeds(isRing) {
       const el = $(`led-${si}-${i}`);
       if (!el) continue;
       let r=cr,g=cg,b=cb;
-      const scale = 4;
+      const scale = 6;
       if (mode === 'solid') {
         r*=scale; g*=scale; b*=scale;
       } else if (mode === 'breathe') {
-        const t = (Math.sin(now/600 + si) + 1) / 2;
-        const bright = t * t;
+        const t = (Math.sin(now/800 + si*0.5) + 1) / 2;
+        const bright = t * t * t;  // cubic for snappier pulse
         r=Math.round(cr*scale*bright); g=Math.round(cg*scale*bright); b=Math.round(cb*scale*bright);
       } else if (mode === 'blink') {
         const on = Math.sin(now/500 + si) > 0;
         r=on?cr*scale:0; g=on?cg*scale:0; b=on?cb*scale:0;
       } else if (mode === 'rainbow_spin') {
-        const hue = ((now/15 + i * 360/n) % 360);
-        [r,g,b] = hsvToRgb(hue, 1, 0.35);
+        const hue = ((now/12 + i * 360/n) % 360);
+        [r,g,b] = hsvToRgb(hue, 1, 0.45);
       } else if (mode === 'chase') {
-        const head = Math.floor(now/120) % n;
-        const dist = (head - i + n) % n;
-        const fade = dist===0?1:dist===1?0.4:dist===2?0.12:0;
+        // Smoother chase with exponential tail for visible spinning ring
+        const head = (now / 140) % n;
+        const dist = Math.min((head - i + n) % n, (i - head + n) % n);
+        const fade = Math.exp(-dist * 0.7);  // exponential falloff
         r=Math.round(cr*scale*fade); g=Math.round(cg*scale*fade); b=Math.round(cb*scale*fade);
       } else if (mode === 'pulse_wave') {
         const pos = i / n;
-        const wave = (1 + Math.sin(pos * Math.PI * 2 - now/250)) / 2;
+        const wave = (1 + Math.sin(pos * Math.PI * 2 - now/300)) / 2;
         const w = wave * wave;
         r=Math.round(cr*scale*w); g=Math.round(cg*scale*w); b=Math.round(cb*scale*w);
       } else if (mode === 'sparkle') {
-        const spark = Math.random() < 0.15;
+        // Pseudo-random sparkle based on position + time
+        const seed = (si*7 + i*13 + Math.floor(now/80)*3) % 100;
+        const spark = seed < 18;
         if (spark) { r=cr*scale; g=cg*scale; b=cb*scale; }
-        else { r=Math.round(cr*scale*0.12); g=Math.round(cg*scale*0.12); b=Math.round(cb*scale*0.12); }
+        else { r=Math.round(cr*scale*0.18); g=Math.round(cg*scale*0.18); b=Math.round(cb*scale*0.18); }
       }
       r=Math.min(255,r); g=Math.min(255,g); b=Math.min(255,b);
       el.style.background = `rgb(${r},${g},${b})`;
-      el.style.boxShadow = `0 0 ${Math.max(r,g,b)>30?12:4}px ${Math.max(r,g,b)>30?5:2}px rgb(${r},${g},${b})`;
+      el.style.boxShadow = `0 0 ${Math.max(r,g,b)>30?14:4}px ${Math.max(r,g,b)>30?6:2}px rgb(${r},${g},${b})`;
     }
   });
   ledAnimId = requestAnimationFrame(() => animateLeds(isRing));
@@ -1226,7 +1294,7 @@ async function loadFilesList() {
         const sizeKb = (f.size / 1024).toFixed(1);
         const name = escapeHtml(f.name);
         html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border)">'
-          + '<span style="font-size:13px">🎵 ' + name + ' <span style="color:var(--dim);font-size:11px">(' + sizeKb + ' KB)</span></span>'
+          + '<span style="font-size:13px">🎵 ' + name + ' <span style="color:var(--im);font-size:11px">(' + sizeKb + ' KB)</span></span>'
           + '<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteMp3(\'' + name + '\')">'
           + (lang === 'cn' ? "删除" : "Delete") + '</button></div>';
       });
@@ -1335,6 +1403,7 @@ async function deleteGif(filename) {
     }
   } catch(e) { toast("Error: " + e.message, false); }
 }
+
 // Init
 loadStatus();
 loadSettings();

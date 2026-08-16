@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Status bar module implementation - WiFi, clock, OC indicator
  */
 
 #include "ui_status_bar.h"
+#include "board.h"
 #include "esp_log.h"
 #include <stdio.h>
 
@@ -44,7 +45,7 @@ esp_err_t ui_status_bar_init(lv_obj_t *parent)
 
     /* Create status bar container */
     s_status_bar = lv_obj_create(parent);
-    lv_obj_set_size(s_status_bar, 172, 20);
+    lv_obj_set_size(s_status_bar, BOARD_LCD_H_RES, 20);
     lv_obj_align(s_status_bar, LV_ALIGN_TOP_MID, 0, 0);
     
     /* Status bar styling */

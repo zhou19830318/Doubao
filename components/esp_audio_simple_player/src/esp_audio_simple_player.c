@@ -190,12 +190,12 @@ static int __setup_pipeline(esp_audio_simple_player_t *player, const char *uri, 
             return ESP_GMF_ERR_FAIL;
         }
         if (in_str == NULL) {
-            esp_gmf_port_handle_t in_port = NEW_ESP_GMF_PORT_IN_BYTE(asp_func_acquire_read, asp_func_release_read, NULL, &player->cfg.in, 1024, ESP_GMF_MAX_DELAY);
+            esp_gmf_port_handle_t in_port = NEW_ESP_GMF_PORT_IN_BYTE(asp_func_acquire_read, asp_func_release_read, NULL, &player->cfg.in, 4096, ESP_GMF_MAX_DELAY);
             ESP_GMF_CHECK(TAG, in_port, goto __setup_pipe_err, "Failed to create in port");
             ret = esp_gmf_pipeline_reg_el_port(player->pipe, OBJ_GET_TAG(player->pipe->head_el), ESP_GMF_IO_DIR_READER, in_port);
             ESP_GMF_RET_ON_ERROR(TAG, ret, goto __setup_pipe_err, "Failed to register in port for head element, ret:%x", ret);
         }
-        esp_gmf_port_handle_t out_port = NEW_ESP_GMF_PORT_OUT_BYTE(asp_func_acquire_write, asp_func_release_write, NULL, &player->cfg.out, 2048, ESP_GMF_MAX_DELAY);
+        esp_gmf_port_handle_t out_port = NEW_ESP_GMF_PORT_OUT_BYTE(asp_func_acquire_write, asp_func_release_write, NULL, &player->cfg.out, 8192, ESP_GMF_MAX_DELAY);
         ESP_GMF_CHECK(TAG, out_port, goto __setup_pipe_err, "Failed to create out port");
         ret = esp_gmf_pipeline_reg_el_port(player->pipe, OBJ_GET_TAG(player->pipe->last_el), ESP_GMF_IO_DIR_WRITER, out_port);
         ESP_GMF_RET_ON_ERROR(TAG, ret, goto __setup_pipe_err, "Failed to register out port for tail element, ret:%x", ret);

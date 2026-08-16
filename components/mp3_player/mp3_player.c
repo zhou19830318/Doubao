@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 Player implementation — wraps esp_audio_simple_player for SD card MP3 playback
@@ -12,6 +12,8 @@
 #include "esp_check.h"
 #include "esp_wifi.h"
 #include "esp_heap_caps.h"
+#include "esp_pm.h"
+#include "esp_timer.h"
 #include <dirent.h>
 #include <string.h>
 #include <errno.h>
@@ -29,35 +31,66 @@ static mp3_completion_cb_t s_completion_cb = NULL;
 static uint32_t s_duration_sec = 0;
 static bool s_async_error = false;
 
+/* Playback position tracking via esp_timer (no position API in esp_audio_simple_player).
+ * s_play_start_us  : timestamp when playback (re)started (RUNNING event)
+ * s_accumulated_sec: total seconds played before the current RUNNING segment (preserved across pause/resume)
+ * s_track_start_us : absolute timestamp when mp3_player_play() was called (for external countdown)
+ */
+static int64_t s_play_start_us  = 0;
+static uint32_t s_accumulated_sec = 0;
+static int64_t s_track_start_us = 0;
+
 /* Saved audio config for restoring after MP3 playback */
 static int s_saved_volume = 60;
 static uint32_t s_saved_sample_rate = 16000;
+
+/* PM lock: prevent CPU from dropping to 80MHz during MP3 decoding.
+ * At 80MHz, 48kHz stereo MP3 decode cannot keep up → buffer underrun.
+ * Locking to 160MHz gives ~2x CPU budget for smooth playback. */
+static esp_pm_lock_handle_t s_pm_lock = NULL;
+
+/* MP3 channel count for downmix; set by MUSIC_INFO event */
+static uint8_t s_mp3_channels = 2;
 
 /* ── Audio output callback from esp_audio_simple_player ─── */
 static int out_data_callback(uint8_t *data, int data_size, void *ctx)
 {
     (void)ctx;
     size_t samples = data_size / sizeof(int16_t);
+
+    /* Downmix stereo→mono in place when MP3 is stereo.
+     * I2S stays in MONO slot mode to avoid DMA realloc failures.
+     * (L+R)/2 for each stereo pair, halves sample count. */
+    if (s_mp3_channels == 2) {
+        int16_t *pcm = (int16_t *)data;
+        size_t pairs = samples / 2;
+        for (size_t i = 0; i < pairs; i++) {
+            int32_t sum = (int32_t)pcm[i * 2] + (int32_t)pcm[i * 2 + 1];
+            pcm[i] = (int16_t)(sum / 2);
+        }
+        samples = pairs;
+    }
+
     size_t written = 0;
     esp_err_t ret = board_audio_play((const int16_t *)data, samples, &written);
-    
+
     /* Log if write failed or incomplete (indicates buffer underrun or reconfig conflict) */
     if (ret != ESP_OK || written != samples) {
         static uint32_t underrun_count = 0;
         static uint32_t last_log_tick = 0;
         uint32_t current_tick = xTaskGetTickCount();
-        
+
         underrun_count++;
-        
+
         /* Log first occurrence and every 50th, but not more than once per second */
         if (underrun_count <= 3 || (underrun_count % 50 == 1 && (current_tick - last_log_tick) > 100)) {
             last_log_tick = current_tick;
-            ESP_LOGW(TAG, "Audio write issue #%lu: ret=%d, requested=%d, written=%d (%.1f%% loss)", 
+            ESP_LOGW(TAG, "Audio write issue #%lu: ret=%d, requested=%d, written=%d (%.1f%% loss)",
                      (unsigned long)underrun_count, ret, (int)samples, (int)written,
                      (samples > 0) ? (100.0f * (samples - written) / samples) : 0.0f);
         }
     }
-    
+
     return (ret == ESP_OK) ? 0 : -1;
 }
 
@@ -69,22 +102,25 @@ static int event_callback(esp_asp_event_pkt_t *event, void *ctx)
     if (event->type == ESP_ASP_EVENT_TYPE_MUSIC_INFO) {
         esp_asp_music_info_t info = {0};
         memcpy(&info, event->payload, event->payload_size);
-        ESP_LOGI(TAG, "Music info: rate=%d, ch=%d, bits=%d, bitrate=%d",
-                 info.sample_rate, info.channels, info.bits, info.bitrate);
 
-        /* Check if reconfiguration is needed */
+        /* Store channel count for SW downmix in output callback */
+        s_mp3_channels = (uint8_t)info.channels;
+
+        /* Do NOT reconfigure I2S based on the original file's sample rate.
+         * The GMF resampler (CONFIG_AUDIO_SIMPLE_PLAYER_RESAMPLE_DEST_RATE=48000)
+         * converts ALL input rates to 48kHz before the output callback. We
+         * pre-configured I2S to 48kHz in mp3_player_play(), so reconfiguring
+         * here to the original rate (e.g. 44.1kHz) would:
+         *   1. Cause a pipeline/output rate mismatch (48kHz data → 44.1kHz I2S)
+         *   2. The codec close/reopen cycle injects audio gaps → pops/clicks.
+         * Only reconfigure if hardware was never set up (shouldn't happen
+         * since mp3_player_play() pre-configures, but kept as safety net). */
         if (!s_hw_configured) {
-            ESP_LOGW(TAG, "Hardware not configured yet, reconfiguring...");
-            board_audio_reconfig(info.sample_rate, info.channels);
-        } else if (info.sample_rate != 48000 || info.channels != 2) {
-            ESP_LOGW(TAG, "Sample rate mismatch: expected 48kHz/2ch, got %dHz/%dch, reconfiguring...",
-                     info.sample_rate, info.channels);
-            board_audio_reconfig(info.sample_rate, info.channels);
-        } else {
-            ESP_LOGI(TAG, "I2S already configured for %d Hz, %d ch (no reconfig needed)",
-                     info.sample_rate, info.channels);
+            board_audio_reconfig(48000, 2);
+            s_hw_configured = true;
         }
-        s_hw_configured = true;
+        ESP_LOGI(TAG, "Music info: rate=%d ch=%d bits=%d bitrate=%d (I2S stays 48kHz, resampler handles cvt)",
+                 info.sample_rate, info.channels, info.bits, info.bitrate);
 
         /* Estimate duration from file size and bitrate (if available) */
         if (info.bitrate > 0 && strlen(s_current_file) > 0) {
@@ -104,22 +140,40 @@ static int event_callback(esp_asp_event_pkt_t *event, void *ctx)
         case ESP_ASP_STATE_RUNNING:
             s_state = MP3_STATE_PLAYING;
             s_playing = true;
+            /* Start (or resume) the position timer for the current RUNNING segment */
+            s_play_start_us = esp_timer_get_time();
             break;
         case ESP_ASP_STATE_PAUSED:
             s_state = MP3_STATE_PAUSED;
+            /* Accumulate time played in the segment that just ended, then freeze */
+            if (s_play_start_us > 0) {
+                s_accumulated_sec += (uint32_t)((esp_timer_get_time() - s_play_start_us) / 1000000);
+                s_play_start_us = 0;
+            }
             break;
         case ESP_ASP_STATE_STOPPED:
             s_state = MP3_STATE_STOPPED;
             s_playing = false;
+            s_play_start_us = 0;
+            s_accumulated_sec = 0;
             break;
         case ESP_ASP_STATE_FINISHED:
             s_state = MP3_STATE_IDLE;
             s_playing = false;
+            /* Reset position tracking */
+            s_play_start_us = 0;
+            s_accumulated_sec = 0;
+            /* Release CPU frequency lock */
+            if (s_pm_lock) esp_pm_lock_release(s_pm_lock);
             /* Restore WiFi power saving mode */
             esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
+            /* Mute BEFORE reconfig to prevent leftover DMA data at 48kHz
+             * from being output as garbled audio at 16kHz ("tail echo"). */
+            board_audio_mute(true);
             /* Restore audio for TTS/wake word */
             board_audio_reconfig(s_saved_sample_rate, 1);
             s_hw_configured = false;
+            board_audio_mute(false);
             board_audio_set_volume(s_saved_volume);
             
             /* CRITICAL: Add delay to ensure I2S hardware is fully stable
@@ -145,6 +199,11 @@ static int event_callback(esp_asp_event_pkt_t *event, void *ctx)
             ESP_LOGE(TAG, "Player error - stopping");
             s_state = MP3_STATE_IDLE;
             s_playing = false;
+            /* Reset position tracking */
+            s_play_start_us = 0;
+            s_accumulated_sec = 0;
+            /* Release CPU frequency lock */
+            if (s_pm_lock) esp_pm_lock_release(s_pm_lock);
             /* Restore WiFi power saving mode */
             esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
             if (s_hw_configured) {
@@ -179,9 +238,11 @@ esp_err_t mp3_player_init(void)
         .in.user_ctx = NULL,
         .out.cb = out_data_callback,
         .out.user_ctx = NULL,
-        .task_prio = 10,  /* Balanced priority: high enough for smooth playback but not too aggressive */
+        .task_prio = 16,  /* High priority for glitch-free 48kHz stereo MP3 decoding */
         .task_stack = 8192,  /* Larger stack for MP3 decoding */
-        .task_core = 0,  /* Run on core 0 */
+        .task_core = 1,  /* Run on core 1 — keeps CPU-intensive MP3 decode off
+                            core 0 where WiFi (prio 23) + LVGL (prio 4) run.
+                            Sharing core 0 starves LVGL → frozen UI animation. */
         .task_stack_in_ext = true,  /* Use PSRAM for stack to save internal RAM */
     };
 
@@ -193,7 +254,11 @@ esp_err_t mp3_player_init(void)
     board_audio_get_volume(&s_saved_volume);
     s_saved_sample_rate = 16000;
 
-    ESP_LOGI(TAG, "MP3 player initialized (prio=12, stack=8KB)");
+    /* Create PM lock to keep CPU at max freq during MP3 playback.
+     * Without this, CPU can drop to 80MHz and cause buffer underruns. */
+    esp_pm_lock_create(ESP_PM_CPU_FREQ_MAX, 0, "mp3_player", &s_pm_lock);
+
+    ESP_LOGI(TAG, "MP3 player initialized (prio=16, stack=8KB, core=1)");
     return ESP_OK;
 }
 
@@ -231,6 +296,11 @@ esp_err_t mp3_player_play(const char *filename)
     strncpy(s_current_file, filename, sizeof(s_current_file) - 1);
     s_current_file[sizeof(s_current_file) - 1] = '\0';
     s_duration_sec = 0;
+    /* Reset position tracking for the new track. s_play_start_us is set when the
+     * RUNNING event arrives; s_track_start_us marks when play() was invoked. */
+    s_accumulated_sec = 0;
+    s_play_start_us = 0;
+    s_track_start_us = esp_timer_get_time();
     /* NOTE: s_hw_configured stays true — it was already set above after the
      * initial board_audio_reconfig(48000, 2). Resetting it to false here would
      * cause the MUSIC_INFO event callback to attempt a second reconfig while
@@ -242,8 +312,9 @@ esp_err_t mp3_player_play(const char *filename)
     /* Log memory status before MP3 playback */
     uint32_t free_internal = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
     uint32_t free_psram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGI(TAG, "Memory before MP3: internal=%lu bytes, PSRAM=%lu bytes",
-             (unsigned long)free_internal, (unsigned long)free_psram);
+    uint32_t largest_internal = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+    ESP_LOGI(TAG, "MEMDBG: Before MP3 — internal=%lu largest=%lu PSRAM=%lu",
+             (unsigned long)free_internal, (unsigned long)largest_internal, (unsigned long)free_psram);
 
     /* Check for critically low memory */
     if (free_internal < 100000) {  /* Less than 100KB internal RAM */
@@ -254,6 +325,10 @@ esp_err_t mp3_player_play(const char *filename)
     /* Disable WiFi power saving during MP3 playback to reduce interference */
     esp_wifi_set_ps(WIFI_PS_NONE);
 
+    /* Lock CPU to max frequency during MP3 playback.
+     * At 80MHz the decoder can't keep up with 48kHz stereo → buffer underrun. */
+    if (s_pm_lock) esp_pm_lock_acquire(s_pm_lock);
+
     /* I2S already configured above, no need to reconfigure here */
 
     /* Mute while starting to avoid pops */
@@ -261,14 +336,22 @@ esp_err_t mp3_player_play(const char *filename)
 
     esp_err_t ret = esp_audio_simple_player_run(s_handle, url, NULL);
     if (ret != 0) {
-        ESP_LOGE(TAG, "Player run failed: %d", ret);
+        ESP_LOGE(TAG, "Player run failed: %d — internal heap: %lu largest: %lu",
+                 ret,
+                 (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+                 (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
         board_audio_mute(false);
+        if (s_pm_lock) esp_pm_lock_release(s_pm_lock);
         wake_word_resume();
         esp_wifi_set_ps(WIFI_PS_MIN_MODEM);  /* Restore WiFi PS on error */
         s_state = MP3_STATE_IDLE;
         s_current_file[0] = '\0';
         return ESP_FAIL;
     }
+
+    ESP_LOGI(TAG, "MEMDBG: After pipeline run — internal=%lu largest=%lu",
+             (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
 
     /* Wait for I2S and codec to fully stabilize before unmuting.
      * This prevents initial glitch/noise from being heard. */
@@ -298,6 +381,9 @@ esp_err_t mp3_player_stop(void)
     esp_audio_simple_player_stop(s_handle);
     s_playing = false;
 
+    /* Release CPU frequency lock */
+    if (s_pm_lock) esp_pm_lock_release(s_pm_lock);
+
     /* Restore WiFi power saving mode */
     esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
 
@@ -312,6 +398,10 @@ esp_err_t mp3_player_stop(void)
 
     s_state = MP3_STATE_IDLE;
     s_current_file[0] = '\0';
+    /* Reset position tracking */
+    s_play_start_us = 0;
+    s_accumulated_sec = 0;
+    s_track_start_us = 0;
     if (s_state_cb) s_state_cb(s_state, "");
 
     return ESP_OK;
@@ -366,19 +456,32 @@ const char *mp3_player_get_current_file(void)
 
 uint32_t mp3_player_get_position_sec(void)
 {
-    if (!s_handle || !s_playing) return 0;
+    if (!s_handle) return 0;
 
     esp_asp_state_t st = ESP_ASP_STATE_NONE;
     esp_audio_simple_player_get_state(s_handle, &st);
-    if (st != ESP_ASP_STATE_RUNNING && st != ESP_ASP_STATE_PAUSED) return 0;
+    if (st != ESP_ASP_STATE_RUNNING && st != ESP_ASP_STATE_PAUSED) {
+        return s_accumulated_sec;
+    }
 
-    /* Position tracking not available in this version */
-    return 0;
+    /* When RUNNING, add the elapsed time of the current segment to the
+     * accumulated time. When PAUSED, s_play_start_us is 0 so only the
+     * accumulated time is returned. */
+    if (st == ESP_ASP_STATE_RUNNING && s_play_start_us > 0) {
+        return s_accumulated_sec +
+               (uint32_t)((esp_timer_get_time() - s_play_start_us) / 1000000);
+    }
+    return s_accumulated_sec;
 }
 
 uint32_t mp3_player_get_duration_sec(void)
 {
     return s_duration_sec;
+}
+
+int64_t mp3_player_get_start_time_us(void)
+{
+    return s_track_start_us;
 }
 
 uint16_t mp3_player_scan_sd(const char *directory, char file_names[][MP3_FILE_NAME_MAX], uint16_t max_files)

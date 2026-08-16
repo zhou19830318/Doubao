@@ -26,7 +26,7 @@ extern "C" {
  * 背景色 (Background Colors)
  * ════════════════════════════════════════════════════════════════════════ */
 
-#define UI_COLOR_BG_MAIN       0xFFFFFF  /* 主背景 - 白色 */
+#define UI_COLOR_BG_MAIN       0x000000  /* 主背景 - 黑色 */
 #define UI_COLOR_BG_SECONDARY  0xF2F2F7  /* 次要背景 - 灰白 */
 #define UI_COLOR_BG_TERTIARY   0xE5E5EA  /* 第三背景 - 灰色 */
 #define UI_COLOR_BUBBLE        0xF2F2F7  /* 聊天气泡背景 */
@@ -35,7 +35,7 @@ extern "C" {
  * 文字颜色 (Text Colors)
  * ════════════════════════════════════════════════════════════════════════ */
 
-#define UI_COLOR_TEXT_PRIMARY   0x000000  /* 主要文字 - 黑色 */
+#define UI_COLOR_TEXT_PRIMARY   0xFFFFFF  /* 主要文字 - 白色 */
 #define UI_COLOR_TEXT_SECONDARY 0x666666  /* 次要文字 - 灰色 */
 #define UI_COLOR_TEXT_TERTIARY  0x999999  /* 辅助文字 - 浅灰 */
 #define UI_COLOR_TEXT_INVERSE   0xFFFFFF  /* 反白文字 */

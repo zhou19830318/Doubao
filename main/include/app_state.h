@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWearable Contributors
+ * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
  * SPDX-License-Identifier: MIT
  *
  * Shared application state — event groups, helpers, state transitions
@@ -26,10 +26,11 @@ extern "C" {
 #define CANCEL_BIT          BIT6
 #define TOUCH_BIT           BIT7
 #define TASKS_SCREEN_BIT    BIT8
-#define CAMERA_BIT          BIT9
+/* BIT9  — removed (was CAMERA_BIT, not available on AMOLED-2.06) */
 #define WAKE_WORD_BIT       BIT10
 #define MP3_PLAYER_BIT      BIT11
 #define MP3_CMD_BIT         BIT12
+/* BIT13 — removed (was SNAPSHOT_BIT, not available on AMOLED-2.06) */
 
 /** Global event group — created in app_main */
 extern EventGroupHandle_t g_app_events;
@@ -39,10 +40,6 @@ extern bool g_recording;
 
 /** Response shown timestamp (for auto-return to IDLE) */
 extern int64_t g_response_shown_at;
-
-/** Pending camera image for next voice chat (PSRAM-allocated, caller frees) */
-extern uint8_t *g_pending_jpeg;
-extern size_t   g_pending_jpeg_size;
 
 /** Auto-listen flag: set true when OpenClaw expects a follow-up reply */
 extern bool g_continue_listening;

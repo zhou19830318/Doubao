@@ -1,10 +1,10 @@
-# AIWearable - Common SDK configuration defaults
+# AIWatch - Common SDK configuration defaults
 
 # Target
 CONFIG_IDF_TARGET="esp32s3"
 
-# Flash
-CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+# Flash (16MB default for Waveshare Audio; override to 32MB for AMOLED-2.06)
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 
@@ -19,7 +19,16 @@ CONFIG_SPIRAM_SPEED_80M=y
 CONFIG_SPIRAM_BOOT_INIT=y
 CONFIG_SPIRAM_IGNORE_NOTFOUND=n
 CONFIG_SPIRAM_USE_MALLOC=y
-CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=4096
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=256
+# Move flash .text and .rodata to PSRAM — frees internal DRAM for SPI DMA
+# buffers (fixes "Failed to allocate priv TX buffer" on QSPI LCD + I2S + SD)
+CONFIG_SPIRAM_FETCH_INSTRUCTIONS=y
+CONFIG_SPIRAM_RODATA=y
+# Allocate WiFi + LWIP buffers in PSRAM — frees ~15-25KB internal DMA-capable
+# DRAM needed by QSPI AMOLED SPI priv buffers (setup_dma_priv_buffer).
+CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
+# 64-byte data cache line improves PSRAM access performance
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
 
 # FreeRTOS
 CONFIG_FREERTOS_HZ=1000
@@ -30,7 +39,7 @@ CONFIG_FREERTOS_TIMER_TASK_STACK_DEPTH=4096
 CONFIG_PM_ENABLE=y
 
 # Heap
-CONFIG_HEAP_ABORT_WHEN_ALLOCATION_FAILS=y
+# CONFIG_HEAP_ABORT_WHEN_ALLOCATION_FAILS is not set
 
 # Log level
 CONFIG_LOG_DEFAULT_LEVEL_INFO=y
@@ -55,11 +64,7 @@ CONFIG_LV_FONT_MONTSERRAT_48=y
 # LWIP socket pool (default 10 is too low for WS + HTTP + mDNS + STT)
 CONFIG_LWIP_MAX_SOCKETS=16
 
-# LVGL GIF support for state animations
-CONFIG_LV_USE_GIF=y
-CONFIG_LV_MEM_CUSTOM=y
-
-# LVGL Filesystem support for reading GIF from SD card
+# LVGL Filesystem support for reading files from SD card
 CONFIG_LV_USE_FS_STDIO=y
 CONFIG_LV_FS_STDIO_LETTER=83
 CONFIG_LV_FS_STDIO_PATH="/sdcard/"
@@ -69,18 +74,36 @@ CONFIG_LV_FS_STDIO_CACHE_SIZE=512
 CONFIG_LV_USE_BIDI=y
 
 # WiFi
-CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=10
-CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=32
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+CONFIG_ESP_WIFI_TX_BUFFER_TYPE=0
+# RX_BA_WIN must be <= 2x STATIC_RX_BUFFER_NUM (wifi_init.c #error check).
+# IDF default 16 violates this with STATIC=6 — pin to skeleton's working 6.
+CONFIG_ESP_WIFI_RX_BA_WIN=6
 
 # Main task stack (LVGL + MP3 + WebSocket processing need headroom)
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
 
 # System event task stack (prevent overflow during WiFi events)
-CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=4096
+CONFIG_ESP_SYSTEM_EVENT_TASK_STACK_SIZE=10240
 
 # Console on USB-SERIAL-JTAG (native USB on ESP32-S3, used by Waveshare Audio board)
 # Input via USB-C, output to USB-C — idf.py monitor reads/writes this port natively
 CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG=y
+
+# FATFS — Long filename support with Chinese codepage (GBK/936) + UTF-8 API.
+# CRITICAL: Without these, SD card Chinese filenames show as 8.3 short names
+# (e.g. "▒▒-~1.MP3") with non-UTF-8 OEM bytes, causing WebSocket close 1007
+# when MP3 file list is sent to OpenClaw via JSON.
+# This matches the AIWatchDB project configuration (verified working).
+# CONFIG_FATFS_LFN_NONE is not set
+CONFIG_FATFS_LFN_STACK=y
+# CONFIG_FATFS_CODEPAGE_437 is not set
+CONFIG_FATFS_CODEPAGE_936=y
+CONFIG_FATFS_CODEPAGE=936
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_API_ENCODING_UTF_8=y
 
 # WebSocket / HTTP
 CONFIG_ESP_HTTP_CLIENT_ENABLE_HTTPS=y
@@ -94,9 +117,29 @@ CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y
 CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN=16384
 CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=4096
 
+# Disable AES hardware acceleration — the ESP32-S3 AES accelerator requires
+# DMA-capable internal DRAM. With only 53KB total DRAM (shared between I2S DMA,
+# FreeRTOS tasks, LWIP, and TLS), AES DMA allocations fail after ~2 recording
+# cycles, causing "esp-aes: Failed to allocate memory" followed by a TLSF
+# double-free crash (tlsf.c:630). Software AES uses PSRAM via EXTERNAL_MEM_ALLOC
+# and is fast enough for 16KB/s audio streaming (<1% CPU overhead).
+CONFIG_MBEDTLS_HARDWARE_AES=n
+
 # ESP-SR: WakeNet wake word detection
 # Default model: "你好小智"
 CONFIG_SR_WN_WN9_NIHAOXIAOZHI_TTS=y
 # Disable MultiNet (not needed for wake word, saves ~3.8MB flash)
 CONFIG_SR_MN_CN_NONE=y
 CONFIG_SR_MN_EN_NONE=y
+
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=65536
+
+# BSP Display (AMOLED-2.06) — LVGL draw buffer height.
+# CRITICAL: The Waveshare BSP's bsp_display_lcd_init() is a no-arg function that
+# IGNORES the bsp_display_cfg_t passed from board.c. It uses this Kconfig value
+# directly: buffer_size = 410 * BUF_HEIGHT * 2 bytes.
+# Default 100 → 82KB → SPI DMA priv buffer too large → screen corruption.
+# With FATFS codepage 936 (LFN + UTF-8), internal DRAM max block drops to ~12KB.
+# Setting to 5 → 4.1KB per flush, fits within fragmented DMA memory.
+# Setting to 10 → 8.2KB per flush, fits within 16KB DMA block.
+CONFIG_BSP_DISPLAY_LVGL_BUF_HEIGHT=5

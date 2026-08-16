@@ -30,6 +30,13 @@ void asp_pool_register_io(esp_asp_handle_t handle)
 #include "esp_gmf_io_file.h"
     file_io_cfg_t fs_cfg = FILE_IO_CFG_DEFAULT();
     fs_cfg.dir = ESP_GMF_IO_DIR_READER;
+    fs_cfg.cache_size = 4096;   /* Enable 4KB read-ahead cache to reduce SD card FATFS round-trips.
+                                   Without cache, each fread() goes directly to SD card, adding
+                                   ~2-5ms latency per read. With cache, stdio buffers 4KB ahead,
+                                   cutting SD reads by ~4x and preventing DMA underrun during
+                                   the decoder's next chunk fetch.
+                                   cache_caps defaults to 0 → MALLOC_CAP_DMA (internal DRAM),
+                                   avoiding PSRAM contention with display QSPI DMA. */
     esp_gmf_io_handle_t fs = NULL;
     esp_gmf_io_file_init(&fs_cfg, &fs);
     esp_gmf_pool_register_io(player->pool, fs, NULL);
