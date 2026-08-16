@@ -22,7 +22,7 @@ set(BOARD_PRIV_REQUIRES
 )
 
 # Board-specific source files
-set(BOARD_SRCS "board.c")
+set(BOARD_SRCS "board_loopback_test.c" "board.c")
 
 # Waveshare Audio board: compile JD9853 LCD driver + AXS5106L touch driver
 if(CONFIG_AIDB_BOARD_WAVESHARE_AUDIO)

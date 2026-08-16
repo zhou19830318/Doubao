@@ -22,6 +22,7 @@
 #include "settings.h"
 
 #include "board.h"
+#include "board_loopback_test.h"   // 临时测试模块，Task 12 Step 5 删除
 // TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "wifi_manager.h"
 #include "ui.h"
@@ -107,6 +108,8 @@ static int cmd_help(int argc, char **argv)
     printf("║    mp3stop         — Stop playback          ║\n");
     printf("║    mp3pause        — Pause playback         ║\n");
     printf("║    mp3resume       — Resume paused playback ║\n");
+    printf("║    audio loop      — Full-duplex loopback   ║\n");
+    printf("║    audio rec       — Record 100ms, mic RMS  ║\n");
     printf("╠══════════════════════════════════════════════╣\n");
     printf("║  DISPLAY:                                   ║\n");
     printf("║    wake / w        — Wake up display        ║\n");
@@ -270,6 +273,51 @@ static int cmd_mp3resume(int argc, char **argv)
     return 0;
 }
 
+/* ── Temporary M1 full-duplex audio test (Task 12 Step 5 删除) ──────────── */
+
+static int cmd_audio(int argc, char **argv)
+{
+    const char *sub = (argc >= 2) ? argv[1] : "help";
+
+    if (strcmp(sub, "loop") == 0) {
+        const char *act = (argc >= 3) ? argv[2] : NULL;
+        if (act && strcmp(act, "start") == 0) {
+            esp_err_t ret = board_loopback_start();
+            printf("Audio loopback %s (440Hz sine + mic record)\n",
+                   ret == ESP_OK ? "STARTED" : "FAILED to start");
+            return ret == ESP_OK ? 0 : 1;
+        }
+        if (act && strcmp(act, "stop") == 0) {
+            board_loopback_stop();
+            printf("Audio loopback stopped.\n");
+            return 0;
+        }
+        if (!act) {   /* no sub-action → toggle */
+            if (board_loopback_is_running()) {
+                board_loopback_stop();
+                printf("Audio loopback stopped.\n");
+            } else {
+                esp_err_t ret = board_loopback_start();
+                printf("Audio loopback %s (440Hz sine + mic record)\n",
+                       ret == ESP_OK ? "STARTED" : "FAILED to start");
+                return ret == ESP_OK ? 0 : 1;
+            }
+            return 0;
+        }
+        printf("Usage: audio loop [start|stop]\n");
+        return 1;
+    }
+
+    if (strcmp(sub, "rec") == 0) {
+        esp_err_t ret = board_loopback_record_rms();
+        if (ret != ESP_OK) printf("audio rec failed: %s\n", esp_err_to_name(ret));
+        return ret == ESP_OK ? 0 : 1;
+    }
+
+    printf("Usage: audio loop [start|stop]  |  audio rec\n");
+    return 1;
+}
+
 static int cmd_say(int argc, char **argv)
 {
     if (argc < 2) {
@@ -386,6 +434,7 @@ void serial_cmd_task_start(void)
         { .command = "mp3stop", .help = "Stop MP3 playback",               .func = &cmd_mp3stop },
         { .command = "mp3pause", .help = "Pause MP3 playback",             .func = &cmd_mp3pause },
         { .command = "mp3resume", .help = "Resume MP3 playback",           .func = &cmd_mp3resume },
+        { .command = "audio", .help = "Audio test (M1 temp): audio loop [start|stop], audio rec", .func = &cmd_audio },
     };
 
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
