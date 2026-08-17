@@ -184,6 +184,9 @@ body{
 
 <!-- DASHBOARD -->
 <div class="content">
+<div class="card" style="padding:10px 14px;border-color:rgba(210,153,34,.45);background:rgba(210,153,34,.07)">
+  <span style="font-size:12.5px;color:var(--orange)" data-en="⚠️ This page is served over plain HTTP on your LAN. Only use it on a trusted network." data-cn="⚠️ 本页面通过局域网 HTTP 明文传输，仅建议在可信网络中使用。">⚠️ This page is served over plain HTTP on your LAN. Only use it on a trusted network.</span>
+</div>
 <div class="panel active" id="dashboard">
   <div class="card">
     <h3><span class="dot" id="dash-oc-dot"></span> OpenClaw</h3>
@@ -401,6 +404,20 @@ body{
 
 <!-- SERVICES -->
 <div class="panel" id="services">
+  <div class="card">
+    <h3>🗣️ <span data-en="Doubao Voice (AI 语音对话)" data-cn="豆包语音 (AI 语音对话)">Doubao Voice (AI 语音对话)</span></h3>
+    <div class="form-group">
+      <label data-en="Doubao API Key (X-Api-Key)" data-cn="豆包 API Key (X-Api-Key)">Doubao API Key (X-Api-Key)</label>
+      <div style="display:flex;gap:8px">
+        <input type="password" id="s-doubao_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****" autocomplete="off" style="flex:1">
+        <button class="btn btn-secondary" id="d-ak-toggle" onclick="toggleDoubaoKey()" style="flex:0 0 auto" data-en="👁 Show" data-cn="👁 显示">👁 Show</button>
+      </div>
+      <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Leave blank to keep the current key. After saving, the device reconnects automatically." data-cn="留空则保持当前 Key 不变。保存后立即生效，设备会自动重连。">Leave blank to keep the current key. After saving, the device reconnects automatically.</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveDoubaoKey()" data-en="💾 Save Doubao API Key" data-cn="💾 保存豆包 API Key">💾 Save Doubao API Key</button>
+    </div>
+  </div>
   <div class="card">
     <h3>🗣️ <span data-en="TTS — MiMo-V2.5" data-cn="TTS — MiMo-V2.5">TTS — MiMo-V2.5</span></h3>
     <div class="form-group"><label data-en="API URL" data-cn="API 地址">API URL</label><input type="text" id="s-mimo_url" placeholder="https://api.xiaomimimo.com/v1/chat/completions" data-en-ph="https://api.xiaomimimo.com/v1/chat/completions" data-cn-ph="https://api.xiaomimimo.com/v1/chat/completions"></div>
@@ -779,6 +796,47 @@ async function resetSettings() {
     toast(lang === 'cn' ? '设置已重置，重启后生效' : 'Settings reset. Reboot to apply.', true);
     loadSettings();
   } catch(e) { toast('Error: ' + e.message, false); }
+}
+
+// Doubao API key (dedicated /api/doubao endpoints — 打码不回显明文)
+async function loadDoubaoKey() {
+  try {
+    const r = await fetch('/api/doubao');
+    const d = await r.json();
+    const el = $('s-doubao_api_key');
+    if (!el) return;
+    if (d.api_key === '****') { el.placeholder = '****'; el.value = ''; }
+    else el.value = d.api_key || '';
+  } catch(e) { console.error(e); }
+}
+
+async function saveDoubaoKey() {
+  const el = $('s-doubao_api_key');
+  if (!el) return;
+  const val = el.value.trim();
+  if (!val) {
+    toast(lang === 'cn' ? 'Key 为空，未做修改（留空 = 保持当前 Key）' : 'Key is empty, nothing changed (blank = keep current key)', false);
+    return;
+  }
+  try {
+    const r = await fetch('/api/doubao', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({api_key: val})});
+    const d = await r.json();
+    if (d.ok) {
+      toast(lang === 'cn' ? '豆包 API Key 已保存，设备正在重连...' : 'Doubao API Key saved — device reconnecting...', true);
+      el.value = ''; el.placeholder = '****';
+    } else {
+      toast(lang === 'cn' ? '保存失败' : 'Save failed', false);
+    }
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+
+function toggleDoubaoKey() {
+  const el = $('s-doubao_api_key');
+  const btn = $('d-ak-toggle');
+  if (!el || !btn) return;
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈 Hide' : '👁 Show';
 }
 
 async function rebootDevice() {
@@ -1407,6 +1465,7 @@ async function deleteGif(filename) {
 // Init
 loadStatus();
 loadSettings();
+loadDoubaoKey();
 setInterval(loadStatus, 5000);
 </script>
 </body>

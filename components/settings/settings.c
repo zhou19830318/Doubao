@@ -73,6 +73,7 @@ static void load_from_nvs(settings_t *s)
     NVS_STR(h, "oc_devtok",   oc_device_token);
     NVS_STR(h, "mimo_apikey", mimo_api_key);
     NVS_STR(h, "mimo_url",    mimo_url);
+    NVS_STR(h, "api_key",     api_key);
     NVS_STR(h, "asr_model",   asr_model);
     NVS_STR(h, "tts_model",   tts_model);
     NVS_STR(h, "tts_voice",   tts_voice);
@@ -114,6 +115,7 @@ static esp_err_t save_to_nvs(const settings_t *s)
     nvs_set_str(h, "oc_devtok",   s->oc_device_token);
     nvs_set_str(h, "mimo_apikey", s->mimo_api_key);
     nvs_set_str(h, "mimo_url",    s->mimo_url);
+    nvs_set_str(h, "api_key",     s->api_key);
     nvs_set_str(h, "asr_model",   s->asr_model);
     nvs_set_str(h, "tts_model",   s->tts_model);
     nvs_set_str(h, "tts_voice",   s->tts_voice);
@@ -233,6 +235,9 @@ char *settings_to_json(bool include_secrets)
     cJSON_AddStringToObject(j, "tts_model",    s->tts_model);
     cJSON_AddStringToObject(j, "tts_voice",    s->tts_voice);
 
+    /* Doubao */
+    cJSON_AddStringToObject(j, "api_key",      include_secrets ? s->api_key : "****");
+
     /* Audio */
     cJSON_AddNumberToObject(j, "volume", s->volume);
     cJSON_AddNumberToObject(j, "silence_timeout_ms", s->silence_timeout_ms);
@@ -310,6 +315,7 @@ esp_err_t settings_from_json(const char *json, size_t len)
     JSON_STR("oc_device_key",    oc_device_key);
     JSON_STR("mimo_api_key",      mimo_api_key);
     JSON_STR("mimo_url",          mimo_url);
+    JSON_STR("api_key",           api_key);
     JSON_STR("asr_model",         asr_model);
     JSON_STR("tts_model",         tts_model);
     JSON_STR("tts_voice",         tts_voice);

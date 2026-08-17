@@ -45,6 +45,7 @@
 #include "webserver.h"
 #include "wake_word.h"
 #include "app_state_machine.h"
+#include "doubao_voice.h"
 
 static const char *TAG = "aiwatch";
 
@@ -325,6 +326,73 @@ static void speak_announcement(const char *text)
 #endif
 }
 
+/* ─── Doubao voice wiring (Task 6b: api_key web 配置) ─────────────────── */
+
+/* dev 便利值：secrets.h 是 gitignored 磁盘文件，fresh checkout 可能缺失，
+ * 必须用编译守卫；缺失时回落空串（连接时会报 AUTH 错误）。 */
+#if __has_include("secrets.h")
+#include "secrets.h"
+#ifdef SECRETS_DOUBAO_API_KEY
+#define AIDB_DEV_API_KEY SECRETS_DOUBAO_API_KEY
+#else
+#define AIDB_DEV_API_KEY ""
+#endif
+#else
+#define AIDB_DEV_API_KEY ""
+#endif
+
+/* Task 7/8 会替换为完整的事件处理（状态机/UI/音频）；此处仅日志占位 */
+static void on_doubao_event(doubao_event_type_t type, const void *data, size_t len)
+{
+    switch (type) {
+    case DOUBAO_EVT_SESSION_CREATED:
+        ESP_LOGI(TAG, "Doubao session created: id=%s",
+                 doubao_get_session_id() ? doubao_get_session_id() : "(none)");
+        break;
+    case DOUBAO_EVT_ERROR:
+        ESP_LOGE(TAG, "Doubao error: %s", data ? (const char *)data : "(null)");
+        break;
+    case DOUBAO_EVT_DISCONNECTED:
+        ESP_LOGW(TAG, "Doubao disconnected");
+        break;
+    default:
+        break;
+    }
+}
+
+/* cfg 指向 settings 静态字符串即可（doubao_init 内部深拷贝，无需 malloc） */
+static void doubao_init_from_settings(void)
+{
+    const settings_t *cfg = settings_get();
+    const char *key = cfg->api_key[0] ? cfg->api_key : AIDB_DEV_API_KEY;
+    if (!key[0]) {
+        ESP_LOGW(TAG, "Doubao API key 未配置（settings 为空且无 secrets.h dev 值）— 连接将报 AUTH 错误");
+    }
+
+    doubao_cfg_t dc = {
+        .api_key = key,
+        .voice = "zh_female_vv_jupiter_bigtts",
+        .instructions = "你是一个桌面上放置的语音助手，用简洁的中文回答。",
+        .speed = 0,
+        .loudness = 0,
+    };
+    esp_err_t ret = doubao_init(&dc, on_doubao_event);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "doubao_init failed: %s", esp_err_to_name(ret));
+    }
+}
+
+/* webserver POST /api/doubao 保存成功后调用（httpd 任务上下文）。
+ * 必须重新 doubao_init：api_key 被 doubao_voice/ws_client 深拷贝，
+ * 仅 disconnect+connect 不会让新 Key 生效。 */
+static void on_doubao_api_key_changed(void)
+{
+    ESP_LOGI(TAG, "Doubao API key changed via web — reconnecting");
+    doubao_disconnect();
+    doubao_init_from_settings();
+    doubao_connect();
+}
+
 /* ─── Main ───────────────────────────────────────────────────────────── */
 void app_main(void)
 {
@@ -365,8 +433,9 @@ void app_main(void)
     strncpy(defaults.wifi_ssid,     SECRETS_WIFI_SSID,     sizeof(defaults.wifi_ssid) - 1);
     strncpy(defaults.wifi_password, SECRETS_WIFI_PASSWORD,  sizeof(defaults.wifi_password) - 1);
     /* openclaw/mimo secrets removed with their components (Task 1);
-     * doubao settings defaults (api_key/voice/instructions) are wired at
-     * Task 7 (key via SECRETS_DOUBAO_API_KEY / Task 6b web config). */
+     * doubao api_key 已由 Task 6b 接线（settings 优先，空回落
+     * SECRETS_DOUBAO_API_KEY）；voice/instructions 占位值在下方
+     * doubao_init_from_settings()，Task 7 完善。 */
     defaults.volume = APP_SPEAKER_VOLUME;
     settings_init(&defaults);
 
@@ -588,7 +657,12 @@ void app_main(void)
 
         /* Start background tasks */
         app_tasks_start();
-        
+
+        /* Doubao voice: api_key 走 settings（web 配置），为空回落 dev 值。
+         * Task 6b 接线；自动连接策略与完整事件回调在 Task 7/8。 */
+        doubao_init_from_settings();
+        webserver_set_doubao_changed_cb(on_doubao_api_key_changed);
+
         /* Init wake word detection (non-critical — continue if fails) */
         ret = wake_word_init();
         if (ret == ESP_OK) {

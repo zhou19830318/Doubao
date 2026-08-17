@@ -38,6 +38,9 @@ typedef struct {
     char     mimo_api_key[128];
     char     mimo_url[128];
 
+    /* Doubao (Volcengine) realtime voice — X-Api-Key header */
+    char     api_key[64];           /* empty → main 回落 secrets.h dev 值 */
+
     /* ASR (MiMo-V2.5-ASR) */
     char     asr_model[64];
 

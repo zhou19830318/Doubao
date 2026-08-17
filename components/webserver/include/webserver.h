@@ -23,6 +23,14 @@ esp_err_t webserver_stop(void);
 /** Check if web server is running */
 bool webserver_is_running(void);
 
+/**
+ * Register callback invoked after the Doubao API key is updated via
+ * POST /api/doubao and persisted to NVS. Called from the web server task.
+ * Setter injection (模式同 ui_set_event_group)：main 注册 = doubao 断开重连，
+ * webserver 不依赖 doubao_voice 组件。
+ */
+void webserver_set_doubao_changed_cb(void (*cb)(void));
+
 #ifdef __cplusplus
 }
 #endif

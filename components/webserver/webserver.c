@@ -38,6 +38,14 @@
 static const char *TAG = "webserver";
 static httpd_handle_t s_server = NULL;
 
+/* Doubao API key 变更回调（main 注入；NULL = 无重连动作） */
+static void (*s_doubao_changed_cb)(void) = NULL;
+
+void webserver_set_doubao_changed_cb(void (*cb)(void))
+{
+    s_doubao_changed_cb = cb;
+}
+
 /* Forward-declare the embedded HTML */
 extern const char index_html_start[] asm("_binary_index_html_start");
 extern const char index_html_end[]   asm("_binary_index_html_end");
@@ -1069,6 +1077,100 @@ static esp_err_t gif_list_handler(httpd_req_t *req)
     free(str);
     return ret;
 }
+/* ── GET /api/doubao — Doubao API key (masked) ───────────────────────── */
+static esp_err_t doubao_get_handler(httpd_req_t *req)
+{
+    const settings_t *s = settings_get();
+
+    cJSON *j = cJSON_CreateObject();
+    if (!j) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    /* 打码规则：settings 有值 → "****"；无值（含仅 dev 回落）→ "" */
+    cJSON_AddStringToObject(j, "api_key", s->api_key[0] ? "****" : "");
+
+    char *str = cJSON_PrintUnformatted(j);
+    cJSON_Delete(j);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
+/* ── POST /api/doubao — update Doubao API key ────────────────────────── */
+static esp_err_t doubao_put_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 512) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len + 1);
+    if (!buf) {
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) {
+            free(buf);
+            httpd_resp_send_500(req);
+            return ESP_FAIL;
+        }
+        received += ret;
+    }
+    buf[total_len] = '\0';
+
+    cJSON *j = cJSON_ParseWithLength(buf, total_len);
+    free(buf);
+    if (!j) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
+        return ESP_FAIL;
+    }
+
+    /* 空 / "****"（打码值）不覆盖，保持原值 */
+    bool changed = false;
+    cJSON *key_item = cJSON_GetObjectItem(j, "api_key");
+    if (key_item && cJSON_IsString(key_item) && key_item->valuestring[0] &&
+        strcmp(key_item->valuestring, "****") != 0) {
+        settings_t *s = settings_get_mutable();
+        if (strcmp(s->api_key, key_item->valuestring) != 0) {
+            strncpy(s->api_key, key_item->valuestring, sizeof(s->api_key) - 1);
+            s->api_key[sizeof(s->api_key) - 1] = '\0';
+            changed = true;
+        }
+    }
+    cJSON_Delete(j);
+
+    if (!changed) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req, "{\"ok\":true,\"changed\":false}", 26);
+    }
+
+    esp_err_t err = settings_save();
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to save settings: %s", esp_err_to_name(err));
+        httpd_resp_send_500(req);
+        return ESP_FAIL;
+    }
+
+    /* 保存成功后触发 doubao 重连（main 注入的回调；httpd 任务上下文） */
+    if (s_doubao_changed_cb) {
+        ESP_LOGI(TAG, "Doubao API key updated via web — triggering reconnect");
+        s_doubao_changed_cb();
+    }
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    return httpd_resp_send(req, "{\"ok\":true,\"changed\":true}", 25);
+}
+
 /* ── Server start/stop ───────────────────────────────────────────────── */
 
 static void mdns_init_helper(void)
@@ -1122,6 +1224,8 @@ esp_err_t webserver_start(void)
         { .uri = "/api/status",      .method = HTTP_GET,     .handler = status_handler },
         { .uri = "/api/settings",    .method = HTTP_GET,     .handler = settings_get_handler },
         { .uri = "/api/settings",    .method = HTTP_PUT,     .handler = settings_put_handler },
+        { .uri = "/api/doubao",      .method = HTTP_GET,     .handler = doubao_get_handler },
+        { .uri = "/api/doubao",      .method = HTTP_POST,    .handler = doubao_put_handler },
         { .uri = "/api/settings/reset", .method = HTTP_POST, .handler = settings_reset_handler },
         { .uri = "/api/errors",      .method = HTTP_GET,     .handler = errors_handler },
         { .uri = "/api/tasks",       .method = HTTP_GET,     .handler = tasks_handler },
