@@ -315,7 +315,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - Modify: `components/ui/include/ui.h` + `ui_main.c`（最小气泡容器：`ui_add_user_bubble(const char*)`、`ui_add_bot_bubble(void)`、`ui_bot_bubble_append(const char*)` 三函数 + 状态胶囊文本更新 `ui_set_state()` 沿用）
 
 **Interfaces:**
-- Consumes: Task 4-6 全部接口；`settings` 组件（新增字段见 Task 17，本任务先用 `secrets.h` 占位值）
+- Consumes: Task 4-6 全部接口；`settings` 组件（api_key 字段 Task 6b 已接，为空时回落 `secrets.h` 占位值）
 - Produces: `doubao_chat.h`：
 
 ```c
@@ -337,6 +337,31 @@ Expected: 屏幕出现用户气泡（推送文本）+ 机器人气泡流式增�
 
 ```bash
 git commit -am "feat: text E2E via say command with streaming bot bubble
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
+
+### Task 6b: API Key 网页配置（用户要求提前，原属 Task 17）
+
+**Files:**
+- Modify: `components/settings/include/settings.h` + `settings.c`：新增 `char api_key[64]`（secret 字段：JSON 导出打码 `"****"`，导入时值为 `"****"` 或空则跳过不覆盖）
+- Modify: `components/webserver/webserver.c`：新增 `GET /api/doubao`（返回 `{"api_key":"****"}`，仅在已有值时返回打码值，无值返回 `""`）与 `POST /api/doubao`（body `{"api_key":"<新Key>"}`，空/打码值不覆盖；写入后保存 settings 并触发 doubao 重连）
+- Modify: `components/webserver/index.html`：设置页加"豆包 API Key"输入框（password 类型 + 显示/隐藏切换按钮）+ 顶部提示"局域网 HTTP 页面，仅建议在可信网络中使用"
+- Modify: `main/app_main.c`：`doubao_init` 的 cfg.api_key 改从 `settings.api_key` 读取（**settings 有值优先；为空回落 `SECRETS_DOUBAO_API_KEY`（secrets.h，dev 便利）；两者皆空则 doubao 连接时报 AUTH 错误**）；注册 settings 变更回调（api_key 变更 → `doubao_disconnect()` + `doubao_connect()`）
+
+**Interfaces:**
+- Consumes: Task 4 `doubao_cfg_t`；Task 6 `doubao_connect/disconnect`；settings 既有 init/defaults 模式
+- Produces: `GET/POST /api/doubao` REST 接口；settings.api_key 字段
+
+- [ ] **Step 1: settings 字段**（沿用 Ver2.0 `settings_init(defaults)` 模式；secret 打码规则照抄现有打码字段实现）
+- [ ] **Step 2: webserver 接口**（URI handler 照搬现有 /api/settings 模式）
+- [ ] **Step 3: SPA 输入框**（照搬现有设置页 JS 结构）
+- [ ] **Step 4: main 接线**（settings 优先 + secrets.h 回落 + 变更重连）
+- [ ] **Step 5: build 通过 + commit**
+- [ ] **Step 6: 烧录与验收清单**（用户执行）：浏览器访问 `http://<IP>` → 填 API Key 保存 → 串口 `doubao connect` → 日志 `session.created`；重启后 Key 仍在（NVS 持久化）；`/api/doubao` GET 返回打码值
+
+```bash
+git commit -am "feat: web config for Doubao API key (settings + /api/doubao + SPA)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
@@ -599,10 +624,9 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ### Task 17: settings 字段扩展 + webserver 豆包配置页
 
 **Files:**
-- Modify: `components/settings/include/settings.h` + `settings.c`：新增字段
+- Modify: `components/settings/include/settings.h` + `settings.c`：新增字段（api_key 已由 Task 6b 完成，此处只做其余）
 
 ```c
-char api_key[64];        // secret 字段：JSON 导出打码 "****"，导入跳过空值
 char voice[48];          // 默认 "zh_female_vv_jupiter_bigtts"
 int8_t speed;            // 默认 0
 int8_t loudness;         // 默认 0
@@ -611,8 +635,8 @@ bool auto_continue;      // 默认 true
 uint8_t idle_timeout_s;  // 默认 8
 ```
 
-- Modify: `components/webserver/webserver.c`（新增 `GET/POST /api/doubao`：JSON 读写上述字段；POST 时 api_key 为空不覆盖）
-- Modify: `components/webserver/index.html`（"豆包配置"页签：API Key（password input + 显示/隐藏切换）、音色、语速/音量滑条、系统提示词 textarea、自动续听开关；顶部提示"局域网 HTTP 页面，仅建议在可信网络中使用"）
+- Modify: `components/webserver/webserver.c`（扩展 `/api/doubao` 为上述字段全量读写；api_key 字段保持 Task 6b 行为）
+- Modify: `components/webserver/index.html`（"豆包配置"页签在 Task 6b 基础上扩展：音色下拉/输入、语速/音量滑条、系统提示词 textarea、自动续听开关）
 - Modify: `main/app_main.c`（`doubao_init` 的 cfg 改从 settings 读取；settings 变更后重连 doubao——注册 settings 变更回调）
 
 **Interfaces:**
@@ -694,8 +718,8 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## 依赖关系
 
 ```
-1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19
-                                          （15/16/17 可与 13/14 并行；17 依赖 4）
+1 → 2 → 3 → 4 → 5 → 6 → 6b → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19
+                                          （15/16/17 可与 13/14 并行；17 依赖 4 与 6b）
 ```
 
 - Task 1-3（M1）：硬件在手的执行者必须先跑通；无硬件时 1 必须做，2/3 标记待硬件验证
