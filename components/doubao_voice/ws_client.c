@@ -123,16 +123,11 @@ static char *s_session_buf;         /* PSRAM build buffer for session.create */
 
 /* ── TX queue ─────────────────────────────────────────────────────────── */
 
-esp_err_t dbws_send_frame(const char *frame, size_t len)
+/* Raw TX enqueue — no s_connected gate. Used by the CONNECTED handler to
+ * queue session.create BEFORE s_connected becomes visible (F2: nothing may
+ * overtake the first frame) and by dbws_send_frame() after the gate. */
+static esp_err_t dbws_tx_enqueue(const char *frame, size_t len)
 {
-    if (frame == NULL || s_tx_q == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    if (!s_connected) {
-        /* No valid session right now — the frame could never be sent and
-         * must not shadow the session.create of the next connection. */
-        return ESP_ERR_INVALID_STATE;
-    }
     if (len == 0) {
         len = strlen(frame);
     }
@@ -149,6 +144,19 @@ esp_err_t dbws_send_frame(const char *frame, size_t len)
         return ESP_ERR_TIMEOUT;
     }
     return ESP_OK;
+}
+
+esp_err_t dbws_send_frame(const char *frame, size_t len)
+{
+    if (frame == NULL || s_tx_q == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!s_connected) {
+        /* No valid session right now — the frame could never be sent and
+         * must not shadow the session.create of the next connection. */
+        return ESP_ERR_INVALID_STATE;
+    }
+    return dbws_tx_enqueue(frame, len);
 }
 
 /* Send all queued frames (dbws task context). A stalled socket or a
@@ -184,7 +192,6 @@ static void ws_event_handler(void *arg, esp_event_base_t base, int32_t event_id,
 
     switch (event_id) {
     case WEBSOCKET_EVENT_CONNECTED: {
-        s_connected = true;
         /* session.create — with the previous session.id if one exists so
          * the server restores the dialogue context (design doc §4.4). */
         doubao_cfg_t cfg = { .api_key = s_api_key, .voice = s_voice,
@@ -199,7 +206,11 @@ static void ws_event_handler(void *arg, esp_event_base_t base, int32_t event_id,
             if (sid != NULL) {
                 ESP_LOGI(TAG, "reconnect with session.id=%.40s", sid);
             }
-            if (dbws_send_frame(s_session_buf, strlen(s_session_buf)) != ESP_OK) {
+            /* F2: enqueue via the internal bypass BEFORE s_connected is
+             * set — a concurrent dbws_send_frame() that passes the gate
+             * only after this enqueue completes can never overtake the
+             * first frame. */
+            if (dbws_tx_enqueue(s_session_buf, strlen(s_session_buf)) != ESP_OK) {
                 ESP_LOGW(TAG, "session.create queueing failed");
             }
         }
@@ -208,8 +219,10 @@ static void ws_event_handler(void *arg, esp_event_base_t base, int32_t event_id,
         if (ws != NULL) {
             esp_websocket_client_set_ping_interval_sec(ws, 30);
         }
-        /* Last: wakes the dbws task, which drains the queue (session.create
-         * is already queued → always the first frame sent). */
+        /* Open the gate LAST: from here on user frames may queue, and the
+         * dbws task wakes to drain — session.create is already queued, so
+         * it is always the first frame sent on this connection. */
+        s_connected = true;
         xEventGroupSetBits(s_evt, DBWS_BIT_CONN);
         break;
     }
@@ -328,8 +341,11 @@ static void dbws_backoff_delay(void)
         return;
     }
     if (!(bits & DBWS_BIT_STOP)) {
-        s_backoff_s = (s_backoff_s >= DBWS_BACKOFF_MAX_S) ? DBWS_BACKOFF_MAX_S
-                                                          : s_backoff_s * 2;
+        /* clamp at doubling time — 32→64 must land on 60, not overshoot */
+        s_backoff_s *= 2;
+        if (s_backoff_s > DBWS_BACKOFF_MAX_S) {
+            s_backoff_s = DBWS_BACKOFF_MAX_S;
+        }
     }
 }
 
@@ -427,7 +443,25 @@ esp_err_t dbws_start(const doubao_cfg_t *cfg, doubao_event_cb_t cb)
         return ESP_ERR_INVALID_ARG;
     }
     if (s_task != NULL) {
-        return ESP_OK;   /* idempotent */
+        if (!s_stop) {
+            return ESP_OK;   /* already running — idempotent */
+        }
+        /* F1: a previous dbws_stop() returned before the task fully
+         * exited — it may still be joining the ws client task (up to
+         * network_timeout_ms if a connect attempt is in flight, since
+         * destroy→stop waits portMAX_DELAY for STOPPED_BIT). s_stop is
+         * set, so the task is exiting on its own; join it here (bounded)
+         * so the restart below begins from clean state. Otherwise the
+         * request_reconnect() bit set right after this call would be
+         * swallowed by the dying task's `s_stop` break → silent no-op. */
+        ESP_LOGW(TAG, "previous task still shutting down — joining...");
+        for (int i = 0; i < 150 && s_task != NULL; i++) {
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+        if (s_task != NULL) {
+            ESP_LOGE(TAG, "previous task failed to exit in 15s");
+            return ESP_ERR_TIMEOUT;
+        }
     }
     if (s_evt == NULL) {
         s_evt = xEventGroupCreateStatic(&s_evt_ctrl);
@@ -454,6 +488,15 @@ esp_err_t dbws_start(const doubao_cfg_t *cfg, doubao_event_cb_t cb)
         s_session_buf = heap_caps_malloc(DBWS_TX_SLOT_CAP, MALLOC_CAP_SPIRAM);
         if (s_tx_items == NULL || s_session_buf == NULL) {
             ESP_LOGE(TAG, "no PSRAM for TX queue / session buffer");
+            /* partial failure must not leak the surviving allocation */
+            if (s_tx_items != NULL) {
+                heap_caps_free(s_tx_items);
+                s_tx_items = NULL;
+            }
+            if (s_session_buf != NULL) {
+                heap_caps_free(s_session_buf);
+                s_session_buf = NULL;
+            }
             return ESP_ERR_NO_MEM;
         }
         s_tx_q = xQueueCreateStatic(DBWS_TX_SLOTS, sizeof(dbws_tx_item_t),
