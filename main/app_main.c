@@ -28,7 +28,30 @@
 #include "app_tasks.h"
 #include "settings.h"
 #include "error_log.h"
+/* dev 便利值：secrets.h 是 gitignored 磁盘文件，fresh checkout 可能缺失，
+ * 必须用编译守卫；缺失时回落空串。 */
+#if __has_include("secrets.h")
 #include "secrets.h"
+#ifdef SECRETS_WIFI_SSID
+#define AIDB_DEV_WIFI_SSID SECRETS_WIFI_SSID
+#else
+#define AIDB_DEV_WIFI_SSID ""
+#endif
+#ifdef SECRETS_WIFI_PASSWORD
+#define AIDB_DEV_WIFI_PASSWORD SECRETS_WIFI_PASSWORD
+#else
+#define AIDB_DEV_WIFI_PASSWORD ""
+#endif
+#ifdef SECRETS_DOUBAO_API_KEY
+#define AIDB_DEV_API_KEY SECRETS_DOUBAO_API_KEY
+#else
+#define AIDB_DEV_API_KEY ""
+#endif
+#else
+#define AIDB_DEV_WIFI_SSID ""
+#define AIDB_DEV_WIFI_PASSWORD ""
+#define AIDB_DEV_API_KEY ""
+#endif
 #include "ui_provisioning.h"
 
 #ifdef CONFIG_PM_ENABLE
@@ -328,19 +351,6 @@ static void speak_announcement(const char *text)
 
 /* ─── Doubao voice wiring (Task 6b: api_key web 配置) ─────────────────── */
 
-/* dev 便利值：secrets.h 是 gitignored 磁盘文件，fresh checkout 可能缺失，
- * 必须用编译守卫；缺失时回落空串（连接时会报 AUTH 错误）。 */
-#if __has_include("secrets.h")
-#include "secrets.h"
-#ifdef SECRETS_DOUBAO_API_KEY
-#define AIDB_DEV_API_KEY SECRETS_DOUBAO_API_KEY
-#else
-#define AIDB_DEV_API_KEY ""
-#endif
-#else
-#define AIDB_DEV_API_KEY ""
-#endif
-
 /* Task 7/8 会替换为完整的事件处理（状态机/UI/音频）；此处仅日志占位 */
 static void on_doubao_event(doubao_event_type_t type, const void *data, size_t len)
 {
@@ -430,8 +440,8 @@ void app_main(void)
 
     /* Init settings from NVS (must be first) */
     settings_t defaults = {0};
-    strncpy(defaults.wifi_ssid,     SECRETS_WIFI_SSID,     sizeof(defaults.wifi_ssid) - 1);
-    strncpy(defaults.wifi_password, SECRETS_WIFI_PASSWORD,  sizeof(defaults.wifi_password) - 1);
+    strncpy(defaults.wifi_ssid,     AIDB_DEV_WIFI_SSID,     sizeof(defaults.wifi_ssid) - 1);
+    strncpy(defaults.wifi_password, AIDB_DEV_WIFI_PASSWORD,  sizeof(defaults.wifi_password) - 1);
     /* openclaw/mimo secrets removed with their components (Task 1);
      * doubao api_key 已由 Task 6b 接线（settings 优先，空回落
      * SECRETS_DOUBAO_API_KEY）；voice/instructions 占位值在下方

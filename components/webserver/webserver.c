@@ -1148,9 +1148,10 @@ static esp_err_t doubao_put_handler(httpd_req_t *req)
     cJSON_Delete(j);
 
     if (!changed) {
+        static const char resp[] = "{\"ok\":true,\"changed\":false}";
         httpd_resp_set_type(req, "application/json");
         httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-        return httpd_resp_send(req, "{\"ok\":true,\"changed\":false}", 26);
+        return httpd_resp_send(req, resp, strlen(resp));
     }
 
     esp_err_t err = settings_save();
@@ -1168,7 +1169,8 @@ static esp_err_t doubao_put_handler(httpd_req_t *req)
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    return httpd_resp_send(req, "{\"ok\":true,\"changed\":true}", 25);
+    static const char resp[] = "{\"ok\":true,\"changed\":true}";
+    return httpd_resp_send(req, resp, strlen(resp));
 }
 
 /* ── Server start/stop ───────────────────────────────────────────────── */

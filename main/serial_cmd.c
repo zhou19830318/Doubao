@@ -25,7 +25,18 @@
 #include "board_loopback_test.h"   // 临时测试模块，Task 12 Step 5 删除
 #include "proto_test.h"            // 临时测试模块，Task 5 的 proto test 命令
 #include "doubao_voice.h"          // Task 6 测试命令: doubao connect/disconnect/status
-#include "secrets.h"               // 本地密钥（git 忽略）— 仅 CLI 测试注入；Task 7 正式接线
+/* 本地密钥（git 忽略）— 仅 CLI 测试注入；Task 7 正式接线。
+ * fresh checkout 可能没有 secrets.h，必须编译守卫（同 app_main.c）。 */
+#if __has_include("secrets.h")
+#include "secrets.h"
+#ifdef SECRETS_DOUBAO_API_KEY
+#define AIDB_DEV_API_KEY SECRETS_DOUBAO_API_KEY
+#else
+#define AIDB_DEV_API_KEY ""
+#endif
+#else
+#define AIDB_DEV_API_KEY ""
+#endif
 // TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "wifi_manager.h"
 #include "ui.h"
@@ -367,7 +378,7 @@ static int cmd_doubao(int argc, char **argv)
 
     if (strcmp(sub, "connect") == 0) {
         doubao_cfg_t cfg = {
-            .api_key = SECRETS_DOUBAO_API_KEY,
+            .api_key = AIDB_DEV_API_KEY,
             .voice = "zh_female_vv_jupiter_bigtts",
             .instructions = "你是一个桌面上放置的语音助手，用简洁的中文回答。",
             .speed = 0,
