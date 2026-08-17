@@ -111,6 +111,14 @@ CONFIG_FATFS_API_ENCODING_UTF_8=y
 # WebSocket / HTTP
 CONFIG_ESP_HTTP_CLIENT_ENABLE_HTTPS=y
 CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
+# WS transport handshake header buffer. Doubao server (Tengine/Ali CDN)
+# sends >1.4KB response headers (x-tt-trace-host/x-tt-trace-id/access-
+# control-allow-* etc.; 101 upgrade is larger still) — the default 1024
+# overflows and kills the WSS handshake (transport_ws.c: "Header size
+# exceeded buffer size or delimiter not found"). This is the handshake
+# header buffer, independent of esp_websocket_client buffer_size=4096
+# (data-frame reassembly) — that one stays as is.
+CONFIG_WS_BUFFER_SIZE=4096
 
 # mbedtls Optimization (required for DashScope WSS and MiMo HTTPS)
 CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC=y
