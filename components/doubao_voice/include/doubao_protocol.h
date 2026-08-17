@@ -65,6 +65,11 @@ esp_err_t proto_build_close(char *buf, size_t cap);
  * TTS speech buffer (say command / intervention reply). */
 esp_err_t proto_build_text_push(char *buf, size_t cap, const char *text);
 
+/* speech_text_buffer.replacement.commit — end packet of the replacement
+ * text stream; sent right after replacement.append to trigger the server
+ * (protocol PDF "干预模型回复": append = stream, commit = 结束包). */
+esp_err_t proto_build_text_commit(char *buf, size_t cap);
+
 /* ── Downstream stream parser ─────────────────────────────────────────── */
 
 /* One WS text fragment (payload; NOT NUL-terminated, len is authoritative). */

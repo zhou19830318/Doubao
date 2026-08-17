@@ -120,6 +120,17 @@ static lv_obj_t *s_wave_bars[WAVE_BARS];
  * (TTS_PLAYING). States are mutually exclusive, so no overlap is possible. */
 static lv_obj_t *s_scroll_label = NULL;
 
+/* ── Chat bubbles (Task 7 minimal text chat) ──────────────────────────── */
+/* 滚动容器 + lv_label（LONG_WRAP）；左（机器人/灰）/右（用户/蓝）对齐。
+ * 上限 50 条，超出删最旧（铁律 19 防碎片化）。流式优化在 Task 13。 */
+static lv_obj_t  *s_bubble_container = NULL;
+static lv_obj_t  *s_bot_bubble_label = NULL;   /* 当前机器人气泡的 label */
+static char       s_bot_text[4096];            /* 累积回复文本（整段重设） */
+static bool       s_last_bubble_is_user = false; /* 最近气泡是否为用户气泡（transcript 更新用） */
+static uint32_t   s_bubble_count = 0;
+#define BUBBLE_MAX_COUNT 50
+#define BUBBLE_PCT_W     70                     /* 气泡宽 = 容器内容宽 70% */
+
 /* ══════════════════════════════════════════════════════════════════════════
  * State labels and Chinese descriptions
  * ══════════════════════════════════════════════════════════════════════════ */
@@ -419,6 +430,22 @@ static void create_state_widgets(void)
     /* ── s_listening_label: 不再单独创建 ─────────────────────────────── */
     /* 旧 s_listening_label 已删除，LISTENING 状态的提示文字统一用
      * s_detail_label (show_subtitle("说点什么吧")) 显示，避免与波形重叠。 */
+
+    /* ── 对话气泡容器 s_bubble_container（Task 7 最小实现） ─────────── */
+    /* Dynamic Island 下方 y≈96 到底部；flex 列；默认隐藏。
+     * 进入聊天状态或 IDLE 有历史时显示（show_content_for_state）。 */
+    s_bubble_container = lv_obj_create(s_screen);
+    lv_obj_set_pos(s_bubble_container, 4, 96);
+    lv_obj_set_size(s_bubble_container, SCREEN_W - 8, SCREEN_H - 96 - 4);
+    lv_obj_set_style_bg_opa(s_bubble_container, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(s_bubble_container, 0, 0);
+    lv_obj_set_style_pad_all(s_bubble_container, 4, 0);
+    lv_obj_set_flex_flow(s_bubble_container, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(s_bubble_container, LV_FLEX_ALIGN_START,
+                          LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_set_scroll_dir(s_bubble_container, LV_DIR_VER);
+    lv_obj_set_scrollbar_mode(s_bubble_container, LV_SCROLLBAR_MODE_AUTO);
+    lv_obj_add_flag(s_bubble_container, LV_OBJ_FLAG_HIDDEN);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -433,6 +460,7 @@ static void hide_all_content(void)
     if (s_idle_date)       lv_obj_add_flag(s_idle_date, LV_OBJ_FLAG_HIDDEN);
     if (s_wave_container)  lv_obj_add_flag(s_wave_container, LV_OBJ_FLAG_HIDDEN);
     if (s_scroll_label)    lv_obj_add_flag(s_scroll_label, LV_OBJ_FLAG_HIDDEN);
+    if (s_bubble_container) lv_obj_add_flag(s_bubble_container, LV_OBJ_FLAG_HIDDEN);
 
     stop_wave_animation();
 }
@@ -454,6 +482,17 @@ static void show_subtitle(const char *text)
     lv_obj_remove_flag(s_detail_label, LV_OBJ_FLAG_HIDDEN);
 }
 
+/* 对话气泡区可见性：聊天状态或 IDLE 有对话历史时显示（替代该状态的
+ * 中央文本/时钟）。返回是否已显示。 */
+static bool show_bubble_area(void)
+{
+    if (s_bubble_container && s_bubble_count > 0) {
+        lv_obj_remove_flag(s_bubble_container, LV_OBJ_FLAG_HIDDEN);
+        return true;
+    }
+    return false;
+}
+
 static void show_content_for_state(ui_state_t state)
 {
     /* Every state shows at most 3 controls: title + subtitle + scroll text.
@@ -473,7 +512,8 @@ static void show_content_for_state(ui_state_t state)
         break;
 
     case UI_STATE_IDLE:
-        /* Big clock + date in title/subtitle zones */
+        /* 有对话历史 → 显示气泡（保留聊天现场）；否则大时钟 + 日期 */
+        if (show_bubble_area()) break;
         if (s_idle_time)  lv_obj_remove_flag(s_idle_time, LV_OBJ_FLAG_HIDDEN);
         if (s_idle_date)  lv_obj_remove_flag(s_idle_date, LV_OBJ_FLAG_HIDDEN);
         update_idle_clock();
@@ -488,22 +528,27 @@ static void show_content_for_state(ui_state_t state)
         break;
 
     case UI_STATE_SENDING:
+        /* 对话中显示气泡（Task 7）；无气泡时回退原 "Sending..." 文本 */
+        if (show_bubble_area()) break;
         show_title("Sending...", &lv_font_montserrat_20);
         show_subtitle("语音识别中");
         /* STT text shown via ui_set_stt_text() — state-guarded */
         break;
 
     case UI_STATE_THINKING:
+        if (show_bubble_area()) break;
         show_title("Thinking...", &lv_font_montserrat_20);
         show_subtitle("AI思考中");
         break;
 
     case UI_STATE_STREAMING:
+        if (show_bubble_area()) break;
         show_title("Receiving...", &lv_font_montserrat_20);
         show_subtitle("接收回复中");
         break;
 
     case UI_STATE_RESPONSE:
+        if (show_bubble_area()) break;
         show_title("AI Response", &lv_font_montserrat_20);
         /* LLM response shown via ui_set_response() — state-guarded */
         break;
@@ -934,6 +979,105 @@ void ui_set_tts_text(const char *text)
 
     /* Blue TTS caption marquee */
     set_scroll_text(text, lv_color_hex(0x0A84FF));
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * Chat bubbles (Task 7 minimal implementation)
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/* 新建一条气泡：is_user=true 右侧蓝底，false 左侧灰底；文本 WRAP。
+ * 超过 BUBBLE_MAX_COUNT 删最旧（铁律 19 防碎片化）。 */
+static void bubble_new(bool is_user, const char *text)
+{
+    if (!s_bubble_container) return;
+
+    if (s_bubble_count >= BUBBLE_MAX_COUNT) {
+        lv_obj_t *oldest = lv_obj_get_child(s_bubble_container, 0);
+        if (oldest) lv_obj_del(oldest);
+    } else {
+        s_bubble_count++;
+    }
+
+    lv_obj_t *bubble = lv_obj_create(s_bubble_container);
+    lv_obj_set_width(bubble, lv_pct(BUBBLE_PCT_W));
+    lv_obj_set_style_radius(bubble, 10, 0);
+    lv_obj_set_style_border_width(bubble, 0, 0);
+    lv_obj_set_style_pad_all(bubble, 8, 0);
+    lv_obj_set_style_bg_color(bubble,
+                              is_user ? lv_color_hex(0x0A84FF) : lv_color_hex(0xE5E5EA), 0);
+    lv_obj_set_style_bg_opa(bubble, LV_OPA_COVER, 0);
+    lv_obj_remove_flag(bubble, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_margin_top(bubble, 6, 0);
+
+    /* 左右对齐（LVGL9 flex 无子项对齐，用 margin 顶位）：
+     * 用户气泡 margin_left = 容器内容宽 - 气泡宽 */
+    int32_t content_w = (SCREEN_W - 8) - 2 * 4;
+    int32_t bubble_w  = content_w * BUBBLE_PCT_W / 100;
+    lv_obj_set_style_margin_left(bubble, is_user ? (content_w - bubble_w) : 0, 0);
+
+    lv_obj_t *label = lv_label_create(bubble);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(label, bubble_w - 16);
+    lv_obj_set_style_text_color(label,
+                                is_user ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x1C1C1E), 0);
+    lv_label_set_text(label, text ? text : "");
+
+    s_last_bubble_is_user = is_user;
+    /* LVGL 9 无 lv_obj_scroll_to_bottom（8.x 亦无）；新气泡进视野 =
+     * lv_obj_scroll_to_view（底部列表时即滚到底）。 */
+    lv_obj_scroll_to_view(bubble, LV_ANIM_OFF);
+}
+
+void ui_add_user_bubble(const char *text)
+{
+    if (!s_bubble_container || !text) return;
+
+    /* transcript 流式更新：最近一条仍是用户气泡 → 整体替换其文本
+     * （TRANSCRIPT_DONE 也是整体替换）；否则新建用户气泡，
+     * 并作废当前机器人气泡（下一轮回复进新气泡）。 */
+    if (s_last_bubble_is_user && s_bubble_count > 0) {
+        lv_obj_t *last = lv_obj_get_child(s_bubble_container, s_bubble_count - 1);
+        lv_obj_t *label = last ? lv_obj_get_child(last, 0) : NULL;
+        if (label) {
+            lv_label_set_text(label, text);
+            lv_obj_scroll_to_view(last, LV_ANIM_OFF);
+            return;
+        }
+    }
+    bubble_new(true, text);
+    s_bot_bubble_label = NULL;
+    s_bot_text[0] = '\0';
+}
+
+void ui_add_bot_bubble(void)
+{
+    if (!s_bubble_container) return;
+
+    bubble_new(false, "");
+    s_bot_bubble_label = lv_obj_get_child(
+        s_bubble_container, lv_obj_get_child_count(s_bubble_container) - 1);
+    s_bot_bubble_label = s_bot_bubble_label ? lv_obj_get_child(s_bot_bubble_label, 0) : NULL;
+    s_bot_text[0] = '\0';
+}
+
+void ui_bot_bubble_append(const char *delta)
+{
+    if (!s_bubble_container || !delta) return;
+
+    if (!s_bot_bubble_label) {
+        ui_add_bot_bubble();
+    }
+    if (!s_bot_bubble_label) return;
+
+    /* Task 7: 整段重设（lv_label_set_text）；流式优化（append 渲染）Task 13 */
+    size_t cur  = strlen(s_bot_text);
+    size_t room = sizeof(s_bot_text) - cur - 1;
+    if (room > 0) {
+        strncat(s_bot_text, delta, room);
+        s_bot_text[sizeof(s_bot_text) - 1] = '\0';
+    }
+    lv_label_set_text(s_bot_bubble_label, s_bot_text);
+    lv_obj_scroll_to_view(s_bot_bubble_label, LV_ANIM_OFF);
 }
 
 void ui_sanitize_text(char *dst, const char *src, size_t dst_size)

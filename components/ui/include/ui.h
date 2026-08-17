@@ -98,6 +98,23 @@ void ui_set_stt_text(const char *text);
 // TTS spoken text display (blue, lower zone)
 void ui_set_tts_text(const char *text);
 
+// ══════════════════════════════════════════════════════════════════════════
+// Chat bubbles (Task 7: minimal text chat)
+// ══════════════════════════════════════════════════════════════════════════
+
+// User bubble (right-aligned, blue). While the most recent bubble is still a
+// user bubble (active utterance), the text is REPLACED — used for streamed
+// transcript updates; TRANSCRIPT_DONE 时整体替换。
+void ui_add_user_bubble(const char *text);
+
+// Bot bubble (left-aligned, gray, empty). Becomes the ui_bot_bubble_append
+// target for the current reply.
+void ui_add_bot_bubble(void);
+
+// Append a streamed reply chunk to the current bot bubble (auto-creates one
+// if needed). Task 7 uses full-text reset; streaming optimization in Task 13.
+void ui_bot_bubble_append(const char *delta);
+
 // Strip non-ASCII characters from text for display
 void ui_sanitize_text(char *dst, const char *src, size_t dst_size);
 

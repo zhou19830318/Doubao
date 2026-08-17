@@ -19,6 +19,7 @@
 #include <string.h>
 
 #include "doubao_ws_client.h"
+#include "doubao_protocol.h"
 
 static const char *TAG = "doubao_voice";
 
@@ -135,9 +136,31 @@ esp_err_t doubao_clear_session(void)
 
 esp_err_t doubao_push_text(const char *text)
 {
-    (void)text;
-    ESP_LOGW(TAG, "not implemented yet (Task 8)");
-    return ESP_ERR_NOT_SUPPORTED;
+    /* Task 7 (M2): text E2E — say <文本> 直推。协议（PRD PDF"干预模型回复"）：
+     * speech_text_buffer.replacement.append（流式文本）→
+     * speech_text_buffer.replacement.commit（结束包）→ 服务端开始生成。 */
+    if (text == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (!dbws_is_connected()) {
+        ESP_LOGW(TAG, "push_text: not connected — 先 doubao_connect() 再重试");
+        return ESP_ERR_INVALID_STATE;
+    }
+    /* 上行 JSON 帧静态缓冲：文本 4x 转义 + 帧头开销，256B 文本需 ~1.1KB */
+    char frame[2048];
+    esp_err_t ret = proto_build_text_push(frame, sizeof(frame), text);
+    if (ret != ESP_OK) {
+        return ret;
+    }
+    ret = dbws_send_frame(frame, strlen(frame));
+    if (ret != ESP_OK) {
+        return ret;
+    }
+    ret = proto_build_text_commit(frame, sizeof(frame));
+    if (ret != ESP_OK) {
+        return ret;
+    }
+    return dbws_send_frame(frame, strlen(frame));
 }
 
 const char *doubao_get_session_id(void)

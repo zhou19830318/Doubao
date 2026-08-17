@@ -253,6 +253,20 @@ esp_err_t proto_build_text_push(char *buf, size_t cap, const char *text)
     return ESP_OK;
 }
 
+esp_err_t proto_build_text_commit(char *buf, size_t cap)
+{
+    if (buf == NULL || cap == 0) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    size_t off = 0;
+    return append_fmt(buf, cap, &off,
+                      "{\"event_id\":\"event_%u\",\"type\":\"speech_text_buffer."
+                      "replacement.commit\"}",
+                      (unsigned)s_evt_seq++)
+               ? ESP_OK
+               : ESP_ERR_NO_MEM;
+}
+
 /* ── Downstream stream parser ─────────────────────────────────────────── */
 
 /* string field helper: value or "" if missing/non-string */

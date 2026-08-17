@@ -334,6 +334,14 @@ static void case_builders(void)
         CHECK(text != NULL && cJSON_IsString(text) && strcmp(text->valuestring, "你好！说 \"hi\"") == 0, "text push content");
         cJSON_Delete(root);
     }
+    CHECK(proto_build_text_commit(buf, sizeof(buf)) == ESP_OK, "build text commit");
+    root = cJSON_Parse(buf);
+    CHECK(root != NULL, "text commit parses");
+    if (root != NULL) {
+        cJSON *type = cJSON_GetObjectItemCaseSensitive(root, "type");
+        CHECK(type != NULL && cJSON_IsString(type) && strcmp(type->valuestring, "speech_text_buffer.replacement.commit") == 0, "text commit type");
+        cJSON_Delete(root);
+    }
 
     printf("  [%s] upstream builders round-trip\n", s_fails == fails_before ? "ok " : "FAIL");
 }

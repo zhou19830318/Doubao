@@ -69,6 +69,7 @@
 #include "wake_word.h"
 #include "app_state_machine.h"
 #include "doubao_voice.h"
+#include "doubao_chat.h"
 
 static const char *TAG = "aiwatch";
 
@@ -351,25 +352,6 @@ static void speak_announcement(const char *text)
 
 /* ─── Doubao voice wiring (Task 6b: api_key web 配置) ─────────────────── */
 
-/* Task 7/8 会替换为完整的事件处理（状态机/UI/音频）；此处仅日志占位 */
-static void on_doubao_event(doubao_event_type_t type, const void *data, size_t len)
-{
-    switch (type) {
-    case DOUBAO_EVT_SESSION_CREATED:
-        ESP_LOGI(TAG, "Doubao session created: id=%s",
-                 doubao_get_session_id() ? doubao_get_session_id() : "(none)");
-        break;
-    case DOUBAO_EVT_ERROR:
-        ESP_LOGE(TAG, "Doubao error: %s", data ? (const char *)data : "(null)");
-        break;
-    case DOUBAO_EVT_DISCONNECTED:
-        ESP_LOGW(TAG, "Doubao disconnected");
-        break;
-    default:
-        break;
-    }
-}
-
 /* cfg 指向 settings 静态字符串即可（doubao_init 内部深拷贝，无需 malloc） */
 static void doubao_init_from_settings(void)
 {
@@ -386,7 +368,8 @@ static void doubao_init_from_settings(void)
         .speed = 0,
         .loudness = 0,
     };
-    esp_err_t ret = doubao_init(&dc, on_doubao_event);
+    /* Task 7: 事件回调 → doubao_chat（气泡/状态机/指令/落盘）；WSS 任务上下文 */
+    esp_err_t ret = doubao_init(&dc, doubao_chat_on_event);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "doubao_init failed: %s", esp_err_to_name(ret));
     }

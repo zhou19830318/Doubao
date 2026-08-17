@@ -43,6 +43,7 @@
 #include "mp3_player.h"
 #include "notes_manager.h"
 #include "app_tasks.h"
+#include "esp_lvgl_port.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -341,21 +342,34 @@ static int cmd_say(int argc, char **argv)
         printf("Usage: say <message>\n");
         return 1;
     }
-    // TODO(Task 8): 由 doubao 链路替换 — openclaw_get_state/openclaw_chat_send deleted in Task 1
-    // if (openclaw_get_state() != OPENCLAW_STATE_CONNECTED) {
-    //     printf("Error: OpenClaw not connected.\n");
-    //     return 1;
-    // }
-    app_set_state(UI_STATE_SENDING);
-    printf("Sending: %s\n", argv[1]);
 
+    /* Task 7 文本链路：say <文本> → speech_text_buffer 直推。
+     * WS 未连接时先异步 connect（文本丢弃，提示稍后重试）。 */
+    if (!doubao_is_connected()) {
+        printf("Doubao not connected — connecting... (retry the message in a moment)\n");
+        doubao_connect();
+        return 0;
+    }
+
+    /* 用户气泡 + 状态（REPL 任务线程调 UI 必须持 LVGL 锁） */
+    lvgl_port_lock(0);
+    ui_add_user_bubble(argv[1]);
+    app_set_state(UI_STATE_SENDING);
+    lvgl_port_unlock();
+
+    /* 对话记录落盘（SD 慢操作，不持锁） */
     esp_err_t ret = notes_manager_save_message("user", argv[1], 0);
     if (ret != ESP_OK) {
         printf("Warning: failed to save to notes (%s)\n", esp_err_to_name(ret));
     }
 
-    // openclaw_chat_send(argv[1], app_on_chat_response);
-    return 0;
+    ret = doubao_push_text(argv[1]);
+    if (ret == ESP_OK) {
+        printf("Sent: %s\n", argv[1]);
+        return 0;
+    }
+    printf("Push failed: %s\n", esp_err_to_name(ret));
+    return 1;
 }
 
 static int cmd_cron_add_test(int argc, char **argv)

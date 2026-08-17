@@ -31,6 +31,9 @@ extern "C" {
 #define MP3_PLAYER_BIT      BIT11
 #define MP3_CMD_BIT         BIT12
 /* BIT13 — removed (was SNAPSHOT_BIT, not available on AMOLED-2.06) */
+/* BIT14 — DOUBAO_START_BIT: 对话开始入口（say 命令/唤醒词共用，
+ * Task 7 定义，Task 10 唤醒词接线消费） */
+#define DOUBAO_START_BIT    BIT14
 
 /** Global event group — created in app_main */
 extern EventGroupHandle_t g_app_events;
