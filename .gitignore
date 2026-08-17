@@ -3,3 +3,4 @@ managed_components/
 sdkconfig
 esp32-s3-log.txt
 esp_log.txt
+main/include/secrets.h

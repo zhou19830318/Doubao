@@ -364,15 +364,9 @@ void app_main(void)
     settings_t defaults = {0};
     strncpy(defaults.wifi_ssid,     SECRETS_WIFI_SSID,     sizeof(defaults.wifi_ssid) - 1);
     strncpy(defaults.wifi_password, SECRETS_WIFI_PASSWORD,  sizeof(defaults.wifi_password) - 1);
-    strncpy(defaults.oc_host,       SECRETS_OPENCLAW_HOST,  sizeof(defaults.oc_host) - 1);
-    defaults.oc_port = SECRETS_OPENCLAW_PORT;
-    strncpy(defaults.oc_token,      SECRETS_OPENCLAW_TOKEN, sizeof(defaults.oc_token) - 1);
-    strncpy(defaults.oc_device_key, SECRETS_DEVICE_KEY_HEX, sizeof(defaults.oc_device_key) - 1);
-    strncpy(defaults.mimo_api_key,      SECRETS_MIMO_API_KEY,      sizeof(defaults.mimo_api_key) - 1);
-    strncpy(defaults.mimo_url,          SECRETS_MIMO_ENDPOINT,     sizeof(defaults.mimo_url) - 1);
-    strncpy(defaults.asr_model,         SECRETS_ASR_MODEL,         sizeof(defaults.asr_model) - 1);
-    strncpy(defaults.tts_model,         SECRETS_TTS_MODEL,         sizeof(defaults.tts_model) - 1);
-    strncpy(defaults.tts_voice,         SECRETS_TTS_VOICE,         sizeof(defaults.tts_voice) - 1);
+    /* openclaw/mimo secrets removed with their components (Task 1);
+     * doubao settings defaults (api_key/voice/instructions) are wired at
+     * Task 7 (key via SECRETS_DOUBAO_API_KEY / Task 6b web config). */
     defaults.volume = APP_SPEAKER_VOLUME;
     settings_init(&defaults);
 

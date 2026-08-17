@@ -7,7 +7,9 @@
  * Task 4 skeleton: public API locked, stub bodies only.
  * Real logic lands in later tasks:
  *   - Task 5:  protocol.c (Doubao binary protocol / JSON payloads)
- *   - Task 6:  ws_client.c (esp_websocket_client wiring)
+ *   - Task 6:  ws_client.c (esp_websocket_client wiring) — lifecycle
+ *              wired here (init/connect/disconnect/status/session id)
+ *   - Task 8:  doubao_send_audio/commit (upstream frames via dbws_send_frame)
  *   - Task 10: resampler.c (24k/16bit TTS PCM -> codec rate)
  */
 
@@ -15,6 +17,8 @@
 
 #include "esp_log.h"
 #include <string.h>
+
+#include "doubao_ws_client.h"
 
 static const char *TAG = "doubao_voice";
 
@@ -29,10 +33,10 @@ static int8_t s_speed;
 static int8_t s_loudness;
 
 static doubao_event_cb_t s_cb;
-static bool s_connected = false;
 
 /* ── Event dispatch ──────────────────────────────────────────────────── */
-/* Stub: no events are generated yet; forwarding hook ready for later tasks. */
+/* Forwarding hook: ws_client (via proto_feed and connection events) calls
+ * this from the websocket client task context. */
 
 static void dispatch(doubao_event_type_t type, const void *data, size_t len)
 {
@@ -41,7 +45,17 @@ static void dispatch(doubao_event_type_t type, const void *data, size_t len)
     }
 }
 
-/* ── Public API (stubs) ──────────────────────────────────────────────── */
+/* Build a cfg view over the deep-copied statics (stable pointers). */
+static void cfg_view(doubao_cfg_t *out)
+{
+    out->api_key = s_api_key;
+    out->voice = s_voice;
+    out->instructions = s_instructions;
+    out->speed = s_speed;
+    out->loudness = s_loudness;
+}
+
+/* ── Public API ──────────────────────────────────────────────────────── */
 
 esp_err_t doubao_init(const doubao_cfg_t *cfg, doubao_event_cb_t cb)
 {
@@ -58,60 +72,75 @@ esp_err_t doubao_init(const doubao_cfg_t *cfg, doubao_event_cb_t cb)
     s_instructions[sizeof(s_instructions) - 1] = '\0';
     s_speed    = cfg->speed;
     s_loudness = cfg->loudness;
-    s_cb       = cb;
+    s_cb       = cb;   /* NULL allowed: connection-only mode (CLI test) */
 
-    ESP_LOGW(TAG, "not implemented yet");
-    return ESP_ERR_NOT_SUPPORTED;
+    doubao_cfg_t view;
+    cfg_view(&view);
+    return dbws_start(&view, dispatch);
 }
 
 esp_err_t doubao_connect(void)
 {
-    ESP_LOGW(TAG, "not implemented yet");
-    return ESP_ERR_NOT_SUPPORTED;
+    if (s_cb == NULL && s_api_key[0] == '\0') {
+        /* init() was never called with a key */
+        return ESP_ERR_INVALID_STATE;
+    }
+    doubao_cfg_t view;
+    cfg_view(&view);
+    esp_err_t ret = dbws_start(&view, dispatch);   /* restart after stop; no-op if running */
+    if (ret != ESP_OK) {
+        return ret;
+    }
+    if (!dbws_is_connected()) {
+        dbws_request_reconnect();   /* cancel backoff → connect now */
+    }
+    return ESP_OK;
 }
 
 esp_err_t doubao_disconnect(void)
 {
-    ESP_LOGW(TAG, "not implemented yet");
-    return ESP_ERR_NOT_SUPPORTED;
+    return dbws_stop();
 }
 
 bool doubao_is_connected(void)
 {
-    return false;
+    return dbws_is_connected();
 }
 
 esp_err_t doubao_send_audio(const int16_t *pcm16, size_t samples)
 {
-    ESP_LOGW(TAG, "not implemented yet");
+    (void)pcm16;
+    (void)samples;
+    ESP_LOGW(TAG, "not implemented yet (Task 8)");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
 esp_err_t doubao_commit_audio(void)
 {
-    ESP_LOGW(TAG, "not implemented yet");
+    ESP_LOGW(TAG, "not implemented yet (Task 8)");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
 esp_err_t doubao_interrupt(void)
 {
-    ESP_LOGW(TAG, "not implemented yet");
+    ESP_LOGW(TAG, "not implemented yet (Task 8)");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
 esp_err_t doubao_clear_session(void)
 {
-    ESP_LOGW(TAG, "not implemented yet");
+    ESP_LOGW(TAG, "not implemented yet (Task 8)");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
 esp_err_t doubao_push_text(const char *text)
 {
-    ESP_LOGW(TAG, "not implemented yet");
+    (void)text;
+    ESP_LOGW(TAG, "not implemented yet (Task 8)");
     return ESP_ERR_NOT_SUPPORTED;
 }
 
 const char *doubao_get_session_id(void)
 {
-    return NULL;
+    return dbws_get_session_id();
 }

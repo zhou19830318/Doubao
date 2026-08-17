@@ -332,6 +332,14 @@ static bool handle_json(const char *json, doubao_event_cb_t cb)
             ESP_LOGI(TAG, "session created: id=%.40s", s_session_id);
         }
         cb(DOUBAO_EVT_SESSION_CREATED, NULL, 0);
+    } else if (strcmp(type, "session.closed") == 0) {
+        /* Server closed the session (e.g. after our session.close, design
+         * doc §4.4). The stored session.id must NOT be resumed — clear it
+         * so the next connect starts a fresh session. No DOUBAO_EVT_*
+         * fits this (locked enum); the ws layer observes the cleared id
+         * via proto_get_session_id()==NULL. */
+        s_session_id[0] = '\0';
+        ESP_LOGI(TAG, "session closed — session id cleared");
     } else if (strcmp(type, "conversation.item.input_audio_transcription.started") == 0) {
         /* server confirms new user utterance → interrupt local playback */
         cb(DOUBAO_EVT_INTERRUPTED, NULL, 0);

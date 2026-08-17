@@ -24,6 +24,8 @@
 #include "board.h"
 #include "board_loopback_test.h"   // 临时测试模块，Task 12 Step 5 删除
 #include "proto_test.h"            // 临时测试模块，Task 5 的 proto test 命令
+#include "doubao_voice.h"          // Task 6 测试命令: doubao connect/disconnect/status
+#include "secrets.h"               // 本地密钥（git 忽略）— 仅 CLI 测试注入；Task 7 正式接线
 // TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "wifi_manager.h"
 #include "ui.h"
@@ -120,6 +122,8 @@ static int cmd_help(int argc, char **argv)
     printf("║  NETWORK:                                   ║\n");
     printf("║    wifi <ssid> <pwd> — Set & connect WiFi   ║\n");
     printf("║    web             — Toggle webserver       ║\n");
+    printf("║    doubao connect  — Connect Doubao voice   ║\n");
+    printf("║    doubao status   — Show WSS/session state ║\n");
     printf("╠══════════════════════════════════════════════╣\n");
     printf("║  SYSTEM:                                    ║\n");
     printf("║    status / s      — Show device status     ║\n");
@@ -355,6 +359,46 @@ static int cmd_cron_add_test(int argc, char **argv)
     return 0;
 }
 
+/* ── Doubao WSS test commands (Task 6; 真机验收入口) ───────────────────── */
+
+static int cmd_doubao(int argc, char **argv)
+{
+    const char *sub = (argc >= 2) ? argv[1] : "help";
+
+    if (strcmp(sub, "connect") == 0) {
+        doubao_cfg_t cfg = {
+            .api_key = SECRETS_DOUBAO_API_KEY,
+            .voice = "zh_female_vv_jupiter_bigtts",
+            .instructions = "你是一个桌面上放置的语音助手，用简洁的中文回答。",
+            .speed = 0,
+            .loudness = 0,
+        };
+        esp_err_t ret = doubao_init(&cfg, NULL);
+        if (ret != ESP_OK) {
+            printf("doubao init failed: %s\n", esp_err_to_name(ret));
+            return 1;
+        }
+        ret = doubao_connect();
+        printf("doubao connect: %s — 等待日志出现 session.created 且 session.id=<id>\n",
+               ret == ESP_OK ? "OK" : esp_err_to_name(ret));
+        return ret == ESP_OK ? 0 : 1;
+    }
+    if (strcmp(sub, "disconnect") == 0) {
+        esp_err_t ret = doubao_disconnect();
+        printf("doubao disconnect: %s\n", ret == ESP_OK ? "OK" : esp_err_to_name(ret));
+        return ret == ESP_OK ? 0 : 1;
+    }
+    if (strcmp(sub, "status") == 0) {
+        const char *sid = doubao_get_session_id();
+        printf("doubao: %s  session.id=%s\n",
+               doubao_is_connected() ? "CONNECTED" : "DISCONNECTED",
+               sid ? sid : "(none)");
+        return 0;
+    }
+    printf("Usage: doubao connect | disconnect | status\n");
+    return 1;
+}
+
 static int cmd_cron_remove(int argc, char **argv)
 {
     if (argc < 2) {
@@ -437,6 +481,7 @@ void serial_cmd_task_start(void)
         { .command = "mp3pause", .help = "Pause MP3 playback",             .func = &cmd_mp3pause },
         { .command = "mp3resume", .help = "Resume MP3 playback",           .func = &cmd_mp3resume },
         { .command = "audio", .help = "Audio test (M1 temp): audio loop [start|stop], audio rec", .func = &cmd_audio },
+        { .command = "doubao", .help = "Doubao WSS test: doubao connect|disconnect|status", .func = &cmd_doubao },
     };
 
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
