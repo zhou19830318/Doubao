@@ -23,6 +23,7 @@
 
 #include "board.h"
 #include "board_loopback_test.h"   // 临时测试模块，Task 12 Step 5 删除
+#include "proto_test.h"            // 临时测试模块，Task 5 的 proto test 命令
 // TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h (components deleted in Task 1)
 #include "wifi_manager.h"
 #include "ui.h"
@@ -126,6 +127,7 @@ static int cmd_help(int argc, char **argv)
     printf("║    quiet / q       — Toggle log suppression ║\n");
     printf("║    cron-add-test   — Add test cron job      ║\n");
     printf("║    cron-remove <id> — Remove cron job       ║\n");
+    printf("║    proto test      — Doubao codec self-test ║\n");
     printf("║    help / h / ?    — Show this help         ║\n");
     printf("╚══════════════════════════════════════════════╝\n");
     printf("\nFor built-in help (all registered commands):  help\n");
@@ -440,6 +442,9 @@ void serial_cmd_task_start(void)
     for (size_t i = 0; i < sizeof(cmds) / sizeof(cmds[0]); i++) {
         esp_console_cmd_register(&cmds[i]);
     }
+
+    /* Doubao protocol codec self-test (Task 5, temp) */
+    proto_test_register();
 
     /* Start REPL task — this handles stdin, line editing, and dispatch */
     ESP_ERROR_CHECK(esp_console_start_repl(repl));
