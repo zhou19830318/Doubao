@@ -48,7 +48,7 @@ flowchart TD
     classDef default fill:#fff,stroke:#333,stroke-width:1px;
     classDef cloud fill:#f9f9f9,stroke:#666,stroke-dasharray: 5 5;
     class K cloud;
-
+```
 ---
 
 ## 核心特性
