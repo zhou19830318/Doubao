@@ -19,32 +19,25 @@
 flowchart TD
     subgraph Robot["豆包语音机器人"]
         direction TB
-        
         subgraph Logic["上层逻辑"]
             A["唤醒词<br>(ESP-SR)"] --> B["豆包对话<br>引擎"]
             B <--> C["豆包语音 API<br>(WSS 全双工)"]
         end
-        
         subgraph AudioIn["音频输入"]
             D["I2S 麦克风<br>(ES7210)"] --> A
             E["VAD<br>(16kHz)"] --> B
         end
-        
         subgraph AudioOut["音频输出"]
             C --> F["I2S 扬声器<br>(ES8311)"]
         end
-        
         subgraph Other["其他外设与功能"]
             G["LVGL UI<br>(AMOLED)"]
             H["MP3<br>播放器"]
             I["Web<br>配置页"]
-            J["唤醒词<br>(\"你好小智\")"]
+            J["唤醒词<br>('你好小智')"]
         end
     end
-
     C --> K["云端"]
-    
-    %% 样式调整
     classDef default fill:#fff,stroke:#333,stroke-width:1px;
     classDef cloud fill:#f9f9f9,stroke:#666,stroke-dasharray: 5 5;
     class K cloud;
