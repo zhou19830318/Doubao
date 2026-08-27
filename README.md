@@ -16,26 +16,21 @@ An open-source AI voice companion robot based on ESP32-S3, featuring full-duplex
 Doubao Voice Robot transforms an ESP32-S3 board into a voice-first AI companion. It connects to [Volcengine Doubao](https://www.volcengine.com/product/doubao) real-time voice API via a single WebSocket connection for end-to-end voice conversations — ASR + LLM + TTS in one connection.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Doubao Voice Robot                         │
-│                                                                 │
-│  ┌──────────┐    ┌──────────────┐    ┌──────────────────────┐  │
-│  │  Wake    │    │   Doubao     │    │   Doubao Voice API   │  │
-│  │  Word    │───▶│   Chat       │◀──▶│   (WSS Full-Duplex)  │──┼──▶ Cloud
-│  │ (ESP-SR) │    │   Engine     │    │                      │  │
-│  └──────────┘    └──────────────┘    └──────────────────────┘  │
-│       ▲                   ▲                       │             │
-│       │                   │                       ▼             │
-│  ┌────┴─────┐      ┌─────┴─────┐         ┌──────────────┐     │
-│  │ I2S Mic  │      │   VAD     │         │  I2S Speaker  │     │
-│  │ (ES7210) │      │ (16kHz)   │         │  (ES8311)     │     │
-│  └──────────┘      └───────────┘         └──────────────┘     │
-│                                                                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
-│  │ LVGL UI  │  │ MP3      │  │ Web      │  │ Wake Word    │  │
-│  │ (AMOLED) │  │ Player   │  │ Config   │  │ ("你好小智")  │  │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+graph LR
++----------------------------------------------------------------------+
+|                            Doubao Voice Robot                        |
++----------------------------------------------------------------------+
+|                                                                      |
+|   [Wake Word]  --->  [Doubao Chat]  <--->  [Doubao Voice API] ---> [Cloud]
+|   (ESP-SR)           Engine                  (WSS Full-Duplex)       |
+|       ^                  ^                          |                |
+|       |                  |                          v                |
+|   [I2S Mic]          [VAD]                    [I2S Speaker]          |
+|   (ES7210)           (16kHz)                  (ES8311)               |
+|                                                                      |
+|   [LVGL UI]  [MP3 Player]  [Web Config]  [Wake Word ("你好小智")]     |
+|   (AMOLED)                                                           |
++----------------------------------------------------------------------+
 ```
 
 ---
