@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 player UI — music.html-inspired design (no-transform safe version):
@@ -99,6 +99,12 @@ static bool     s_touch_active  = false;
 static int64_t  s_last_tap_time = 0;
 static int32_t  s_last_tap_x    = 0;
 static int32_t  s_last_tap_y    = 0;
+
+/* Selection confirmation flag — set when double-tap confirms a song.
+ * The main loop checks and clears this to suppress DOUBLE_TAP_BIT
+ * (the global gesture detector also fires on the same touch, but
+ * the MP3 panel's handler already queued the play command). */
+static bool     s_selection_confirmed = false;
 
 /* ══════════════════════════════════════════════════════════════════════════
  * Forward declarations
@@ -233,6 +239,11 @@ static void mp3_panel_event_cb(lv_event_t *e)
                         snprintf(cmd, sizeof(cmd), "play:%s", lst[*idx]);
                         app_queue_mp3_cmd(cmd);
                         ui_mp3_ui_hide();
+                        /* Signal the main loop to suppress DOUBLE_TAP_BIT.
+                         * The global gesture detector also fires on this
+                         * same touch — without this flag it would interrupt
+                         * the dialogue and force IDLE, racing the play cmd. */
+                        s_selection_confirmed = true;
                     }
                 }
                 s_last_tap_time = 0;
@@ -257,7 +268,11 @@ static void mp3_panel_event_cb(lv_event_t *e)
     }
 
     /* ── Playback mode — tap toggles play/pause ──────────────────────── */
-    if (code == LV_EVENT_CLICKED) {
+    /* Guard: LV_EVENT_CLICKED fires AFTER LV_EVENT_RELEASED. If a
+     * selection was just confirmed in the RELEASED handler above,
+     * s_selection_mode is already false — but we must NOT queue a
+     * play/pause command that would overwrite the queued play: song. */
+    if (code == LV_EVENT_CLICKED && !s_selection_confirmed) {
         ESP_LOGD(TAG, "Tap → toggle play/pause (currently %s)",
                  s_is_playing ? "playing" : "paused");
         ring_flash();
@@ -364,7 +379,7 @@ esp_err_t ui_mp3_ui_init(lv_obj_t *parent)
     /* ── Artist / secondary text ─────────────────────────────────────── */
     s_artist_label = lv_label_create(s_mp3_panel);
     lv_label_set_text(s_artist_label, "");
-    lv_obj_set_style_text_font(s_artist_label, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(s_artist_label, &SourceHanSansCN_Medium_16, 0);
     lv_obj_set_style_text_color(s_artist_label, COLOR_TEXT_GRAY, 0);
     lv_obj_set_style_text_align(s_artist_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(s_artist_label, LV_ALIGN_TOP_MID, 0, ARTIST_Y + 60);
@@ -574,4 +589,13 @@ bool ui_mp3_ui_handle_selection_input(int delta)
     s_current_index  = NULL;
 
     return true;
+}
+
+bool ui_mp3_ui_consume_selection_confirmed(void)
+{
+    if (s_selection_confirmed) {
+        s_selection_confirmed = false;
+        return true;
+    }
+    return false;
 }

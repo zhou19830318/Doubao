@@ -1,8 +1,8 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
- * AIWatch — OpenClaw ESP32 Interface Device
+ * Doubao Voice Robot (ESP32-S3)
  *
  * This file handles initialization and main event loop only.
  * Logic is split into: voice_chat.c, serial_cmd.c, app_tasks.c, app_state.c
@@ -28,6 +28,7 @@
 #include "app_tasks.h"
 #include "settings.h"
 #include "error_log.h"
+#include "cJSON.h"
 /* dev 便利值：secrets.h 是 gitignored 磁盘文件，fresh checkout 可能缺失，
  * 必须用编译守卫；缺失时回落空串。 */
 #if __has_include("secrets.h")
@@ -59,7 +60,6 @@
 #endif
 
 #include "wifi_manager.h"
-// TODO(Task 7/8): 由 doubao 链路替换 — removed openclaw_client.h/tts_client.h/stt_client.h (components deleted in Task 1)
 #include "notes_manager.h"
 #include "ui.h"
 #include "ui_tasks.h"
@@ -153,201 +153,33 @@ static void on_wifi_state(wifi_state_t state)
     }
 }
 
-/* ─── OpenClaw state callback ────────────────────────────────────────── */
-
-/* Notification callback: incoming message not initiated by this device */
-// TODO(Task 8): 由 doubao 链路替换 — openclaw_client deleted in Task 1; parse_device_commands kept
-// /* ── External chat [DEVICE:xxx] command parser ─────────────────────────
-//  * Called by openclaw_client when an external (non-device-initiated) chat
-//  * final response arrives — e.g. from Feishu, WhatsApp, WebUI.
-//  * Accumulates ALL content items so device commands are found regardless
-//  * of which content block the AI placed them in. */
-// static void on_external_device_cmd(const char *text)
-// {
-//     if (!text || !text[0]) return;
-//     char *copy = strdup(text);
-//     if (!copy) return;
-//     int n = parse_device_commands(copy);
-//     if (n > 0) {
-//         ESP_LOGI(TAG, "External device cmd: parsed %d command(s) from chat response", n);
-//     }
-//     free(copy);
-// }
-
-// TODO(Task 8): 由 doubao 链路替换 — openclaw_client deleted in Task 1 (notify callback)
-// static void on_openclaw_notify(const char *text, const char *source)
-// {
-//     ESP_LOGI(TAG, "Notification received from %s: %.40s", source ? source : "unknown", text);
-//
-//     /* ── Device commands always go first, regardless of state ──
-//      * [DEVICE:mp3=...], [DEVICE:volume=...], etc. must be processed even
-//      * when the device is busy with TTS playback or sending audio.
-//      * The state guard below only applies to voice notifications. */
-//     char *text_copy = strdup(text);
-//     if (text_copy) {
-//         int cmd_count = parse_device_commands(text_copy);
-//         free(text_copy);
-//         if (cmd_count > 0) {
-//             ESP_LOGI(TAG, "Parsed %d DEVICE command(s) from notification", cmd_count);
-//             return;
-//         }
-//     }
-//
-//     const settings_t *cfg = settings_get();
-//     if (!cfg->auto_notify) {
-//         ESP_LOGI(TAG, "Notification suppressed (auto_notify=off): %.40s", text);
-//         return;
-//     }
-//
-//     /* Skip voice notifications while transcribing or speaking.
-//      * LISTENING (waiting for user) or RESPONSE (showing text) should not block reminders. */
-//     ui_state_t st = ui_get_state();
-//     if (st == UI_STATE_SENDING || st == UI_STATE_TTS_LOADING || st == UI_STATE_TTS_PLAYING) {
-//         ESP_LOGI(TAG, "Notification skipped (device busy in state %d)", st);
-//         return;
-//     }
-//
-//     /* Wake device if sleeping */
-//     app_reset_activity_timer();
-//
-//     /* Show on display if available — LVGL lock required (callback runs in
-//      * WebSocket task, not LVGL task) */
-// #if BOARD_HAS_DISPLAY
-//     lvgl_port_lock(0);
-//     app_set_state(UI_STATE_RESPONSE);
-//     ui_set_response("Notification", text);
-//     lvgl_port_unlock();
-// #endif
-//
-//     /* Always TTS the notification */
-//     xEventGroupSetBits(g_app_events, TTS_PLAY_BIT);
-//     /* Store text for TTS playback — reuse g_tts_text buffer */
-//     extern char g_tts_text[1024];
-//     /* Append to buffer if it already contains text (multi-notification handling) */
-//     size_t cur_len = strlen(g_tts_text);
-//     if (cur_len > 0 && cur_len < sizeof(g_tts_text) - 10) {
-//         strncat(g_tts_text, "。 ", sizeof(g_tts_text) - cur_len - 1);
-//         cur_len = strlen(g_tts_text);
-//     }
-//     strncpy(g_tts_text + cur_len, text, sizeof(g_tts_text) - cur_len - 1);
-//     g_tts_text[sizeof(g_tts_text) - 1] = '\0';
-//
-//     /* RGB notification pattern (amber pulse) */
-// #if BOARD_HAS_RGB_RING
-//     board_rgb_animate(RGB_MODE_BREATHE, 20, 16, 0);  /* amber */
-// #endif
-// }
-
-// TODO(Task 8): 由 doubao 链路替换 — openclaw_client deleted in Task 1 (state callback)
-// static void on_openclaw_state(openclaw_state_t state)
-// {
-//     /* LVGL lock required — this callback runs in the WebSocket task, not the
-//      * LVGL task. All cases below call UI functions (ui_set_*, app_set_state,
-//      * app_state_request) which invoke LVGL APIs. Recursive mutex — safe. */
-//     lvgl_port_lock(0);
-//     switch (state) {
-//     case OPENCLAW_STATE_CONNECTED: {
-//         ui_state_t cur = ui_get_state();
-//         ESP_LOGI(TAG, "OpenClaw connected");
-//         xEventGroupSetBits(g_app_events, OC_CONNECTED_BIT);
-//         ui_set_openclaw_connected(true);
-//         openclaw_request_health();
-//         openclaw_request_usage();
-//         if (cur <= UI_STATE_CONNECTING || cur == UI_STATE_ERROR) {
-//             app_state_request(UI_STATE_IDLE);
-//         }
-//         break;
-//     }
-//     case OPENCLAW_STATE_CONNECTING:
-//     case OPENCLAW_STATE_AUTHENTICATING:
-//         ui_set_openclaw_connected(false);
-//         app_state_request(UI_STATE_CONNECTING);
-//         ui_set_status_message("Connecting OpenClaw...");
-//         break;
-//     case OPENCLAW_STATE_CHAT_THINKING:
-//         app_set_state(UI_STATE_THINKING);
-//         break;
-//     case OPENCLAW_STATE_CHAT_STREAMING:
-//         app_set_state(UI_STATE_STREAMING);
-//         break;
-//     case OPENCLAW_STATE_DISCONNECTED:
-//         ESP_LOGW(TAG, "OpenClaw disconnected — will auto-reconnect");
-//         xEventGroupClearBits(g_app_events, OC_CONNECTED_BIT);
-//         ui_set_openclaw_connected(false);
-//         {
-//             ui_state_t cur = ui_get_state();
-//             if (cur == UI_STATE_IDLE || cur == UI_STATE_BOOT || cur == UI_STATE_CONNECTING) {
-//                 app_state_request(UI_STATE_CONNECTING);
-//                 ui_set_status_message("Reconnecting...");
-//             }
-//         }
-//         error_log_add(ERR_SRC_OPENCLAW, ERR_SEV_WARNING, "WebSocket disconnected");
-//         break;
-//     case OPENCLAW_STATE_ERROR:
-//         ui_set_openclaw_connected(false);
-//         app_set_state(UI_STATE_ERROR);
-//         ui_set_status_message("OpenClaw error");
-//         error_log_add(ERR_SRC_OPENCLAW, ERR_SEV_ERROR, "OpenClaw connection error");
-//         break;
-//     default:
-//         break;
-//     }
-//     lvgl_port_unlock();
-// }
-
 /* Forward-declare webserver toggle handler */
 static void handle_webserver_toggle(void);
 
-/* ── One-shot TTS announcement task (PSRAM stack) ────────────────────── */
-static volatile bool s_announce_running = false;
-static char s_announce_msg[128];
-static StaticTask_t s_announce_tcb;
-static StackType_t *s_announce_stack = NULL;
-
-static void announce_tts_task(void *arg)
-{
-    const char *text = (const char *)arg;
-    ESP_LOGI(TAG, "TTS announce start: %s", text);
-    wake_word_pause();
-    /* TODO(Task 7): 由 doubao 链路替换 — tts_speak deleted in Task 1 (tts_client component) */
-    esp_err_t err = ESP_ERR_NOT_SUPPORTED;
-    wake_word_resume();
-    if (err != ESP_OK) {
-        ESP_LOGE(TAG, "TTS announce failed: %s", esp_err_to_name(err));
-    } else {
-        ESP_LOGI(TAG, "TTS announce complete");
-    }
-    s_announce_running = false;
-    vTaskDelete(NULL);
-}
-
+/* ── TTS announcement (inline, no one-shot task) ──────────────────────── */
+/* Previous design: xTaskCreateStaticPinnedToCore + vTaskDelete(NULL)
+ * caused LoadProhibited in prvSelectHighestPriorityTaskSMP — the idle
+ * task on Core 1 never cleaned up the static TCB before the scheduler
+ * re-encountered the dangling list entry.  Calling inline eliminates
+ * the race entirely (doubao_push_text is non-blocking; it just queues
+ * JSON into the WS TX buffer). */
 static void speak_announcement(const char *text)
 {
-    if (s_announce_running) {
-        ESP_LOGW(TAG, "TTS announce busy, skipping: %s", text);
-        return;
+    /* Announcements are best-effort with the doubao link: speech_text
+     * requires an OPEN session, and sessions only exist during a voice
+     * turn (per-conversation model). At boot / config time there is no
+     * session (and often no connection yet) — skip quietly instead of
+     * raising an error that feeds the consecutive-error deep-sleep
+     * counter. The wake_word_pause/resume pair is gone too: push only
+     * queues JSON, and an unconditional resume here would hand the mic
+     * back to the wake-word task mid-conversation. */
+    esp_err_t err = doubao_push_text(text);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "TTS announce sent: %s", text);
+    } else {
+        ESP_LOGI(TAG, "TTS announce skipped (%s): %s",
+                 esp_err_to_name(err), text);
     }
-    s_announce_running = true;
-    snprintf(s_announce_msg, sizeof(s_announce_msg), "%s", text);
-
-#if CONFIG_IDF_TARGET_ESP32S3
-    /* Allocate PSRAM stack once (reused across calls) */
-    if (!s_announce_stack) {
-        s_announce_stack = heap_caps_calloc(1, 16384, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    }
-    if (!s_announce_stack) {
-        ESP_LOGE(TAG, "Failed to alloc announce stack");
-        s_announce_running = false;
-        return;
-    }
-    memset(s_announce_stack, 0, 16384);  /* Clear stack for reuse */
-    xTaskCreateStaticPinnedToCore(announce_tts_task, "tts_ann", 16384,
-                                   s_announce_msg, 3, s_announce_stack,
-                                   &s_announce_tcb, 1);
-#else
-    xTaskCreatePinnedToCore(announce_tts_task, "tts_ann", 12288,
-                            s_announce_msg, 3, NULL, 0);
-#endif
 }
 
 /* ─── Doubao voice wiring (Task 6b: api_key web 配置) ─────────────────── */
@@ -361,12 +193,84 @@ static void doubao_init_from_settings(void)
         ESP_LOGW(TAG, "Doubao API key 未配置（settings 为空且无 secrets.h dev 值）— 连接将报 AUTH 错误");
     }
 
+    /* Voice must be a voice name ("zh_female_vv_jupiter_bigtts"), NOT a
+     * URL. A past config entry stuffed the old MiMo endpoint URL into the
+     * voice field (NVS "db_voice"), and the server accepted the session
+     * while never producing a single ASR/response event — silently
+     * swallowing a bad required field. Guard here and on every
+     * re-init (this fn also runs on web config change). */
+    static const char *default_voice = "zh_female_vv_jupiter_bigtts";
+    const char *voice = (cfg->voice[0] && strstr(cfg->voice, "://") == NULL)
+                        ? cfg->voice : NULL;
+    if (voice == NULL) {
+        if (cfg->voice[0]) {
+            ESP_LOGW(TAG, "voice='%s' is not a voice name — falling back to "
+                          "zh_female_vv_jupiter_bigtts", cfg->voice);
+        }
+        voice = default_voice;
+        /* Write the correct default back to NVS so the warning doesn't
+         * repeat on every boot. Without this, a cleared field stays empty
+         * and triggers the fallback log on every power cycle. */
+        settings_t *mutable_cfg = settings_get_mutable();
+        strncpy(mutable_cfg->voice, default_voice, sizeof(mutable_cfg->voice) - 1);
+        mutable_cfg->voice[sizeof(mutable_cfg->voice) - 1] = '\0';
+        settings_save();
+    }
+
+    /* Build instructions: user prompt + device command guide.
+     * The device command guide is ALWAYS appended so that even old NVS
+     * prompts (written before device commands were added) get the
+     * [DEVICE:...] capability. Without this, existing devices that
+     * upgraded firmware keep their old prompt and the LLM never
+     * outputs device commands. */
+    static const char *dev_cmd_guide =
+        "\n"
+        "## 设备控制指令\n"
+        "当用户要求调节音量时，回复中必须包含 [DEVICE:volume=0-100]\n"
+        "当用户要求调节亮度时，回复中必须包含 [DEVICE:brightness=0-100]\n"
+        "当用户要求停止音乐时，回复中必须包含 [DEVICE:mp3=stop]\n"
+        "当用户要求暂停音乐时，回复中必须包含 [DEVICE:mp3=pause]\n"
+        "当用户要求调节灯光时，回复中必须包含 [DEVICE:rgb=rainbow/aurora/fire/ocean/off/on]\n"
+        "示例：用户说'音量调到50'，你回复'好的，音量已调到50%'并包含 [DEVICE:volume=50]\n"
+        "注意：[DEVICE:...]指令单独一行，不要放在句子中间。"
+        "\n"
+        "## 音乐播放指令（重要！）\n"
+        "下方有SD卡中的MP3曲目列表，格式为 序号:歌名。\n"
+        "当用户要求播放音乐时：\n"
+        "1. 如果用户指定了歌名或歌手，从列表中找到最匹配的歌曲，用 [DEVICE:mp3=index:N] 播放（N是序号）\n"
+        "2. 如果用户没有指定具体歌曲（如'播放音乐'），用 [DEVICE:mp3=show] 显示曲目列表让用户选择\n"
+        "3. 如果找不到匹配的歌曲，用 [DEVICE:mp3=show] 显示列表并告知用户\n"
+        "示例：用户说'播放邓紫棋的歌'，你在列表中找到邓紫棋的歌曲，回复'正在播放邓紫棋的《喜欢你》'并包含 [DEVICE:mp3=index:15]\n"
+        "示例：用户说'播放第一首'，回复'正在播放'并包含 [DEVICE:mp3=index:1]\n"
+        "示例：用户说'播放音乐'，回复'已为你调出曲目列表'并包含 [DEVICE:mp3=show]\n";
+    char instructions_buf[4096];
+    if (cfg->system_prompt[0]) {
+        snprintf(instructions_buf, sizeof(instructions_buf), "%s%s",
+                 cfg->system_prompt, dev_cmd_guide);
+    } else {
+        snprintf(instructions_buf, sizeof(instructions_buf),
+                 "你是一个桌面语音助手，简洁中文回答。%s", dev_cmd_guide);
+    }
+    /* Append SD card MP3 song list so the AI knows exact indices.
+     * Without this, the AI cannot map user requests like "播放邓紫棋的歌"
+     * to the correct [DEVICE:mp3=index:N] command. */
+    const char *mp3_list = app_get_sd_mp3_list_str();
+    if (mp3_list && mp3_list[0]) {
+        size_t cur_len = strlen(instructions_buf);
+        size_t remaining = sizeof(instructions_buf) - cur_len - 2;
+        if (remaining > 80) {
+            snprintf(instructions_buf + cur_len, remaining,
+                     "\n\n## SD卡曲目列表（序号:歌名）\n%s", mp3_list);
+        }
+    }
     doubao_cfg_t dc = {
         .api_key = key,
-        .voice = "zh_female_vv_jupiter_bigtts",
-        .instructions = "你是一个桌面上放置的语音助手，用简洁的中文回答。",
-        .speed = 0,
-        .loudness = 0,
+        .voice = voice,
+        .instructions = instructions_buf,
+        .speed = cfg->speed,
+        .loudness = cfg->loudness,
+        .enable_search = cfg->enable_search,
+        .enable_music = cfg->enable_music,
     };
     /* Task 7: 事件回调 → doubao_chat（气泡/状态机/指令/落盘）；WSS 任务上下文 */
     esp_err_t ret = doubao_init(&dc, doubao_chat_on_event);
@@ -386,12 +290,39 @@ static void on_doubao_api_key_changed(void)
     doubao_connect();
 }
 
+/* ─── Boot-time internal DRAM attribution ─────────────────────────────
+ * Internal DRAM is the scarce resource on this board (PSRAM sits ~4.5MB
+ * free while internal runs out). Absolute numbers at the end of boot say
+ * nothing about *who* ate it, so each probe reports the delta since the
+ * previous one — the stage with the big negative delta is the culprit.
+ * Logged at WARN so it survives a raised log level. */
+static size_t s_heap_prev = 0;
+
+static void heap_probe(const char *stage)
+{
+    size_t now     = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+    size_t largest = heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL);
+    size_t dma     = heap_caps_get_free_size(MALLOC_CAP_DMA);
+    long   delta   = (s_heap_prev == 0) ? 0 : (long)now - (long)s_heap_prev;
+    ESP_LOGW(TAG, "HEAP[%-12s] internal=%6u largest=%6u dma=%6u delta=%+ld",
+             stage, (unsigned)now, (unsigned)largest, (unsigned)dma, delta);
+    s_heap_prev = now;
+}
+
+/* ── cJSON PSRAM hooks (set early, before webserver can serve requests) */
+static void *cjson_psram_malloc(size_t sz) {
+    return heap_caps_malloc(sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+}
+static void cjson_psram_free(void *p) {
+    heap_caps_free(p);
+}
+
 /* ─── Main ───────────────────────────────────────────────────────────── */
 void app_main(void)
 {
     ESP_LOGI(TAG, "========================================");
-    ESP_LOGI(TAG, "  AIWatch v%s", APP_VERSION_STRING);
-    ESP_LOGI(TAG, "  OpenClaw ESP32 Interface Device");
+    ESP_LOGI(TAG, "  Doubao v%s", APP_VERSION_STRING);
+    ESP_LOGI(TAG, "  Doubao Voice Robot");
     ESP_LOGI(TAG, "========================================");
 
     /* Suppress noisy I2C peripheral errors (occasional bus contention, harmless).
@@ -405,6 +336,10 @@ void app_main(void)
      * no data ready — suppress to WARN level to avoid log noise. */
     esp_log_level_set("lcd_panel.io.i2c", ESP_LOG_WARN);
     esp_log_level_set("FT5x06", ESP_LOG_WARN);
+    /* SPI DMA buffer allocation errors during LCD refresh are expected
+     * when internal RAM is tight — suppress to avoid log flood. */
+    esp_log_level_set("spi_master", ESP_LOG_NONE);      /* suppress SPI DMA alloc errors */
+    esp_log_level_set("lcd_panel.io.spi", ESP_LOG_NONE); /* suppress LCD SPI errors */
 
     /* Log wake cause (useful for deep sleep debugging) */
     esp_sleep_wakeup_cause_t wakeup = esp_sleep_get_wakeup_cause();
@@ -425,12 +360,23 @@ void app_main(void)
     settings_t defaults = {0};
     strncpy(defaults.wifi_ssid,     AIDB_DEV_WIFI_SSID,     sizeof(defaults.wifi_ssid) - 1);
     strncpy(defaults.wifi_password, AIDB_DEV_WIFI_PASSWORD,  sizeof(defaults.wifi_password) - 1);
-    /* openclaw/mimo secrets removed with their components (Task 1);
-     * doubao api_key 已由 Task 6b 接线（settings 优先，空回落
-     * SECRETS_DOUBAO_API_KEY）；voice/instructions 占位值在下方
-     * doubao_init_from_settings()，Task 7 完善。 */
+    /* doubao api_key: settings 优先，空回落 SECRETS_DOUBAO_API_KEY */
     defaults.volume = APP_SPEAKER_VOLUME;
     settings_init(&defaults);
+
+    /* Set cJSON global hooks to use PSRAM early — before the webserver
+     * can handle any requests. Without this, the first notes/files page
+     * load uses default internal RAM malloc for cJSON nodes, which
+     * exhausts internal DRAM → "setup_dma_priv_buffer: Failed to allocate
+     * priv TX buffer" ×8 (SPI LCD DMA stall). protocol.c also sets these
+     * hooks, but only after doubao_init() which runs later. */
+    {
+        cJSON_Hooks hooks = { .malloc_fn = cjson_psram_malloc,
+                              .free_fn = cjson_psram_free };
+        cJSON_InitHooks(&hooks);
+    }
+
+    heap_probe("baseline");
 
     /* Auto-generate device key if empty or invalid (not 64 chars) */
     settings_t *cfg_mut = settings_get_mutable();
@@ -471,6 +417,7 @@ void app_main(void)
         esp_restart();
     }
     ESP_LOGI(TAG, "Board: %s (%s)", board_get_name(), board_get_mcu());
+    heap_probe("board_init");
 
     /* Configure power management — CPU frequency scaling */
 #ifdef CONFIG_PM_ENABLE
@@ -495,6 +442,7 @@ void app_main(void)
     if (ret != ESP_OK) {
         ESP_LOGW(TAG, "SD card not available (no MP3 playback)");
     }
+    heap_probe("sdcard");
 
     /* Init MP3 player (after audio is ready) */
     if (board_sdcard_is_inserted()) {
@@ -507,6 +455,7 @@ void app_main(void)
             ESP_LOGW(TAG, "MP3 player init failed");
         }
     }
+    heap_probe("mp3_player");
 
     /* RGB - DISABLED: UI layer will control LEDs via ui_update_led_for_state */
     // board_rgb_task_start();
@@ -531,6 +480,7 @@ void app_main(void)
     /* Init tasks screen */
     ui_tasks_init();
     ui_tasks_set_event_group(g_app_events);
+    heap_probe("ui_init");
     /* MP3 player UI is initialized by ui_init() via ui_mp3_ui_init() */
     /* Post-init UI operations — LVGL lock required (main task != LVGL task) */
     lvgl_port_lock(0);
@@ -540,27 +490,6 @@ void app_main(void)
     
     /* Show boot screen for at least 2 seconds */
     vTaskDelay(pdMS_TO_TICKS(2000));
-
-    /* Init MiMo services from settings */
-    // TODO(Task 7): 由 doubao 链路替换 — stt_init/tts_init deleted in Task 1 (stt/tts components)
-    // /* ASR (MiMo-V2.5-ASR) */
-    // stt_config_t stt_cfg = {
-    //     .api_key   = cfg->mimo_api_key,
-    //     .model     = cfg->asr_model,
-    //     .url       = cfg->mimo_url,
-    //     .sample_rate = 16000,
-    //     .timeout_ms  = 60000,
-    // };
-    // stt_init(&stt_cfg);
-    //
-    // /* TTS (MiMo-V2.5-TTS) */
-    // tts_config_t tts_cfg = {
-    //     .api_key   = cfg->mimo_api_key,
-    //     .url       = cfg->mimo_url,
-    //     .model     = cfg->tts_model,
-    //     .voice     = cfg->tts_voice,
-    // };
-    // tts_init(&tts_cfg);
 
     /* Connect WiFi */
     wifi_manager_init(cfg->wifi_ssid, cfg->wifi_password, on_wifi_state);
@@ -572,6 +501,7 @@ void app_main(void)
     } else {
         ESP_LOGI(TAG, "WiFi ready");
     }
+    heap_probe("wifi");
 
     /* Start web server immediately after WiFi connects — before SNTP/OpenClaw.
      * This ensures the web UI is accessible for debugging even when OpenClaw
@@ -650,11 +580,13 @@ void app_main(void)
 
         /* Start background tasks */
         app_tasks_start();
+        heap_probe("app_tasks");
 
         /* Doubao voice: api_key 走 settings（web 配置），为空回落 dev 值。
          * Task 6b 接线；自动连接策略与完整事件回调在 Task 7/8。 */
         doubao_init_from_settings();
         webserver_set_doubao_changed_cb(on_doubao_api_key_changed);
+        heap_probe("doubao_init");
 
         /* Init wake word detection (non-critical — continue if fails) */
         ret = wake_word_init();
@@ -664,18 +596,22 @@ void app_main(void)
         } else {
             ESP_LOGW(TAG, "Wake word init failed — voice wake disabled");
         }
+        heap_probe("wake_word");
 
         /* Scan SD card for MP3 files so the AI knows what's available */
         app_sd_mp3_scan_init();
-        
+        heap_probe("mp3_scan");
+
         /* Initialize notes manager for chat history storage */
         notes_manager_init();
+        heap_probe("notes");
     } else {
         ESP_LOGI(TAG, "AP mode - skipping OpenClaw connect, background tasks, and wake word");
     }
     
     /* Serial command task always runs (useful for debugging in AP mode) */
     serial_cmd_task_start();
+    heap_probe("serial_cli");
 
     /* ── DEBUG: heap snapshot at startup ── */
     ESP_LOGI(TAG, "=== HEAP DEBUG ===");
@@ -705,27 +641,79 @@ void app_main(void)
                                               WEBSERVER_TOGGLE_BIT | DETAILS_BIT |
                                               TOUCH_BIT | TASKS_SCREEN_BIT |
                                               WAKE_WORD_BIT |
-                                              MP3_PLAYER_BIT | MP3_CMD_BIT,
+                                              MP3_PLAYER_BIT | MP3_CMD_BIT |
+                                              SETTINGS_LONG_PRESS_BIT | DOUBLE_TAP_BIT |
+                                              DOUBAO_START_BIT,
                                               pdTRUE, pdFALSE,
                                               pdMS_TO_TICKS(100));
 
+        if (ev & DOUBLE_TAP_BIT) {
+            /* Double tap: interrupt playback / dismiss response → idle.
+             * SKIP when MP3 selection was just confirmed — the panel's
+             * double-tap handler already queued the play command. The
+             * global gesture detector also fires on the same touch; without
+             * this check it would interrupt and force IDLE, racing the play. */
+            if (ui_mp3_ui_consume_selection_confirmed()) {
+                ESP_LOGD(TAG, "Double tap suppressed (MP3 selection confirmed)");
+            } else {
+                app_reset_activity_timer();
+                ESP_LOGI(TAG, "Double tap — interrupt/stop");
+                doubao_interrupt();
+                g_continue_listening = false;
+                lvgl_port_lock(0);
+                app_state_request(UI_STATE_IDLE);
+                lvgl_port_unlock();
+            }
+        }
+
+        if (ev & SETTINGS_LONG_PRESS_BIT) {
+            /* Long press: open light settings page */
+            app_reset_activity_timer();
+            ESP_LOGI(TAG, "Long press — opening settings");
+            /* Force interrupt if in dialogue */
+            ui_state_t cur = ui_get_state();
+            if (cur == UI_STATE_TTS_PLAYING || cur == UI_STATE_THINKING ||
+                cur == UI_STATE_STREAMING || cur == UI_STATE_LISTENING) {
+                doubao_interrupt();
+            }
+            lvgl_port_lock(0);
+            ui_settings_show();
+            lvgl_port_unlock();
+        }
+
         if (ev & TOUCH_BIT) {
             app_reset_activity_timer();
-            if (g_recording) {
-                /* Touch during recording = cancel */
+            /* Single tap from gesture detector */
+            if (ui_settings_is_visible()) {
+                /* Tap on settings page → ignore (use back button) */
+            } else if (g_recording) {
                 ESP_LOGI(TAG, "Touch during recording — cancelling");
                 xEventGroupSetBits(g_app_events, CANCEL_BIT);
             } else if (ui_get_state() == UI_STATE_RESPONSE) {
                 if (g_tts_pending) {
                     ESP_LOGD(TAG, "Touch during RESPONSE ignored — TTS pending");
                 } else {
-                    /* Touch during response = dismiss */
                     ESP_LOGI(TAG, "Touch dismissed response");
                     g_response_shown_at = 0;
                     lvgl_port_lock(0);
                     app_state_request(UI_STATE_IDLE);
                     lvgl_port_unlock();
                 }
+            } else if (ui_get_state() == UI_STATE_IDLE && !app_is_sleeping()) {
+                /* Single tap during IDLE → start dialogue (spec §5.2) */
+                ESP_LOGI(TAG, "Touch start dialogue");
+                board_play_tick();
+                /* 叮咚：播放触摸确认音，然后进入 LISTENING。 */
+                doubao_chat_play_wake_feedback();
+                /* app_set_state, NOT app_state_request: the doubao path
+                 * bypasses the legacy machine (its s_current_state goes
+                 * stale), so a request would be rejected ("7 -> 5 not
+                 * allowed") and the turn never starts. start_listening
+                 * pauses the wake word itself. */
+                lvgl_port_lock(0);
+                app_set_state(UI_STATE_LISTENING);
+                lvgl_port_unlock();
+                doubao_chat_start();
             } else if (!app_is_sleeping()) {
                 board_play_tick();
             }
@@ -798,40 +786,38 @@ void app_main(void)
             switch (cur) {
             case UI_STATE_IDLE:
             case UI_STATE_RESPONSE:
-                /* State machine handles wake_word_pause */
+                /* 叮咚：播放按键确认音，然后进入 LISTENING。 */
+                doubao_chat_play_wake_feedback();
+                /* app_set_state (not app_state_request): the legacy machine
+                 * state is stale on the doubao path and rejects the
+                 * request ("7 -> 5 not allowed") — start_listening pauses
+                 * the wake word itself. */
                 lvgl_port_lock(0);
-                esp_err_t req_ret = app_state_request(UI_STATE_LISTENING);
+                app_set_state(UI_STATE_LISTENING);
                 lvgl_port_unlock();
-                if (req_ret == ESP_OK) {
-                    // TODO(Task 10): 由 doubao 链路替换 — voice_chat.c deleted in Task 1
-                    // voice_chat_start();
-                }
+                doubao_chat_start();
                 break;
             case UI_STATE_TTS_PLAYING:
             case UI_STATE_TTS_LOADING:
-                // TODO(Task 7): 由 doubao 链路替换 — tts_stop deleted in Task 1
-                // tts_stop();
+                doubao_interrupt();
                 g_continue_listening = false;
                 lvgl_port_lock(0);
                 app_set_state(UI_STATE_IDLE);
                 lvgl_port_unlock();
                 break;
+            case UI_STATE_LISTENING:
+                /* 聆听中单击 BOOT → 取消本轮回 IDLE（咚叮提示，
+                 * go_idle 恢复唤醒词；Ver2.0 同款交互） */
+                doubao_chat_cancel();
+                break;
             case UI_STATE_THINKING:
             case UI_STATE_STREAMING:
-                /* Abort the current chat operation */
+                /* Abort the current chat operation — full cleanup via the
+                 * same cancel path (capture/session/wake word + 咚叮).
+                 * The old path (interrupt + raw app_set_state(IDLE)) left
+                 * the wake word paused — device went deaf. */
                 ESP_LOGI(TAG, "Aborting chat (state=%d)...", cur);
-                // TODO(Task 8): 由 doubao 链路替换 — openclaw_chat_abort deleted in Task 1
-                // openclaw_chat_abort();
-                lvgl_port_lock(0);
-                ui_set_status_message("Aborting...");
-                lvgl_port_unlock();
-#if BOARD_HAS_RGB_RING
-                board_rgb_animate(RGB_MODE_BLINK, 32, 16, 0);
-#endif
-                vTaskDelay(pdMS_TO_TICKS(800));
-                lvgl_port_lock(0);
-                app_set_state(UI_STATE_IDLE);
-                lvgl_port_unlock();
+                doubao_chat_cancel();
                 break;
             default:
                 break;
@@ -843,48 +829,54 @@ void app_main(void)
             ESP_LOGI(TAG, "Wake word detected!");
             ui_state_t cur = ui_get_state();
             /* Allow wake word from IDLE, RESPONSE, or PLAYING_MP3 states. */
-            if (cur == UI_STATE_IDLE || cur == UI_STATE_RESPONSE || cur == UI_STATE_PLAYING_MP3) {
+            /* Allow wake word from IDLE, RESPONSE, PLAYING_MP3, and TTS states.
+             * During TTS: interrupt and go to LISTENING (barge-in). */
+            if (cur == UI_STATE_IDLE || cur == UI_STATE_RESPONSE ||
+                cur == UI_STATE_PLAYING_MP3 ||
+                cur == UI_STATE_TTS_PLAYING || cur == UI_STATE_TTS_LOADING) {
                 /* Stop conflicting subsystems before requesting LISTENING state */
-                // TODO(Task 7): 由 doubao 链路替换 — tts_is_playing/tts_stop deleted in Task 1
-                // if (tts_is_playing()) {
-                //     ESP_LOGI(TAG, "Stopping TTS due to wake word");
-                //     tts_stop();
-                //     vTaskDelay(pdMS_TO_TICKS(50));
-                // }
+                if (cur == UI_STATE_TTS_PLAYING || cur == UI_STATE_TTS_LOADING) {
+                    ESP_LOGI(TAG, "Stopping TTS due to wake word (barge-in)");
+                    doubao_interrupt();
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                }
                 if (cur == UI_STATE_PLAYING_MP3) {
                     ESP_LOGI(TAG, "Stopping MP3 playback due to wake word");
                     mp3_player_stop();
                     vTaskDelay(pdMS_TO_TICKS(100));
                 }
 
-                /* State machine handles wake_word_pause() via
-                 * on_enter_state(LISTENING), and wake_word_resume()
-                 * via on_leave_state(LISTENING). */
+                /* 叮咚：播放唤醒确认音，然后进入 LISTENING。
+                 * play_wake_feedback 阻塞 ~200ms；start_listening() 检测
+                 * 到标志后跳过重复播放。 */
+                doubao_chat_play_wake_feedback();
+
+                /* app_set_state (not app_state_request): the legacy machine
+                 * state is stale on the doubao path and rejects the
+                 * request ("7 -> 5 not allowed") — the wake-word barge-in
+                 * must always reach start_listening, which pauses the
+                 * wake word itself. */
                 lvgl_port_lock(0);
-                esp_err_t ww_ret = app_state_request(UI_STATE_LISTENING);
+                app_set_state(UI_STATE_LISTENING);
                 lvgl_port_unlock();
-                if (ww_ret == ESP_OK) {
-                    // TODO(Task 10): 由 doubao 链路替换 — voice_chat.c deleted in Task 1
-                    // voice_chat_start();
-                }
+                doubao_chat_start();
             }
         }
 
-        // TODO(Task 8): 由 doubao 链路替换 — openclaw_get_state/openclaw_chat_send_details deleted in Task 1
-        // if (ev & DETAILS_BIT) {
-        //     app_reset_activity_timer();
-        //     if (openclaw_get_state() == OPENCLAW_STATE_CONNECTED) {
-        //         ESP_LOGI(TAG, "Requesting details...");
-        //         lvgl_port_lock(0);
-        //         app_set_state(UI_STATE_SENDING);
-        //         lvgl_port_unlock();
-        //         openclaw_chat_send_details(app_on_chat_response);
-        //     }
-        // }
+        if (ev & DOUBAO_START_BIT) {
+            app_reset_activity_timer();
+            /* doubao_chat_start() sets DOUBAO_START_BIT;
+             * call start_listening() to begin mic capture + VAD */
+            extern void doubao_chat_start_listening(void);
+            doubao_chat_start_listening();
+        }
 
         if (ev & WEBSERVER_TOGGLE_BIT) {
             handle_webserver_toggle();
         }
+
+        /* ── doubao_chat periodic tick (VAD, timeouts, interrupt detect) ── */
+        doubao_chat_tick();
 
         /* Periodic MP3 UI update — only redraw when track or play-state changes.
          * In steady state the pulse timer (inside LVGL context) drives the

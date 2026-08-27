@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Centralized state machine with resource arbitration.
@@ -60,6 +60,13 @@ void app_state_machine_init(void);
  * @brief Get the current state (thread-safe).
  */
 ui_state_t app_state_current(void);
+
+/**
+ * @brief Force the state machine's internal state to match a given state.
+ * Called by app_set_state() when the doubao path bypasses the state machine.
+ * Does NOT validate transitions or manage resources — only syncs the tracker.
+ */
+void app_state_machine_force_current(ui_state_t st);
 
 /**
  * @brief Release all resources held by a state.

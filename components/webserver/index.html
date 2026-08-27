@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AIWatch</title>
+<title>Doubao</title>
 <style>
 /* ── Premium dark design tokens ─────────────────────────────────────────
    Variables kept identical to the original so all inline styles & JS that
@@ -166,15 +166,13 @@ body{
 <body>
 
 <div class="header">
-  <h1>🦞 AIWatch <span id="hdr-ver"></span></h1>
+  <h1>🦞 Doubao <span id="hdr-ver"></span></h1>
   <span id="hdr-status" style="font-size:13px;color:var(--dim)"></span>
 </div>
 
 <div class="tabs">
   <div class="tab active" data-panel="dashboard" data-en="Dashboard" data-cn="仪表盘">Dashboard</div>
   <div class="tab" data-panel="device" data-en="Device" data-cn="设备">Device</div>
-  <div class="tab" data-panel="openclaw" data-en="OpenClaw" data-cn="服务连接">OpenClaw</div>
-  <div class="tab" data-panel="tasks" data-en="Tasks" data-cn="任务">Tasks</div>
   <div class="tab" data-panel="services" data-en="Services" data-cn="语音服务">Services</div>
   <div class="tab" data-panel="leds" data-en="LED Patterns" data-cn="灯效">LED Patterns</div>
   <div class="tab" data-panel="notes" data-en="Chat History" data-cn="聊天记录">Chat History</div>
@@ -189,24 +187,13 @@ body{
 </div>
 <div class="panel active" id="dashboard">
   <div class="card">
-    <h3><span class="dot" id="dash-oc-dot"></span> OpenClaw</h3>
+    <h3>🤖 <span data-en="Doubao Voice" data-cn="豆包语音">Doubao Voice</span></h3>
     <div class="grid">
       <div class="stat"><div class="val" id="d-oc-state">—</div><div class="lbl" data-en="Status" data-cn="状态">Status</div></div>
-      <div class="stat"><div class="val" id="d-oc-ver">—</div><div class="lbl" data-en="Version" data-cn="版本">Version</div></div>
-      <div class="stat"><div class="val" id="d-oc-up">—</div><div class="lbl" data-en="Uptime" data-cn="运行时间">Uptime</div></div>
-      <div class="stat"><div class="val" id="d-oc-sess">—</div><div class="lbl" data-en="Sessions" data-cn="会话数">Sessions</div></div>
-      <div class="stat"><div class="val" id="d-oc-wa">—</div><div class="lbl" data-en="WhatsApp" data-cn="WhatsApp">WhatsApp</div></div>
-      <div class="stat"><div class="val" id="d-oc-last">—</div><div class="lbl" data-en="Last Activity" data-cn="最后活动">Last Activity</div></div>
-    </div>
-  </div>
-  <div class="card">
-    <h3><span class="dot" id="dash-wifi-dot"></span> <span data-en="Device" data-cn="设备信息">Device</span></h3>
-    <div class="grid">
-      <div class="stat"><div class="val" id="d-wifi">—</div><div class="lbl" data-en="WiFi RSSI" data-cn="WiFi 信号">WiFi RSSI</div></div>
-      <div class="stat"><div class="val" id="d-ip">—</div><div class="lbl" data-en="IP" data-cn="IP 地址">IP</div></div>
-      <div class="stat"><div class="val" id="d-heap">—</div><div class="lbl" data-en="Free Heap" data-cn="剩余内存">Free Heap</div></div>
-      <div class="stat"><div class="val" id="d-bat">—</div><div class="lbl" data-en="Battery" data-cn="电池电量">Battery</div></div>
-      <div class="stat"><div class="val" id="d-errs">0</div><div class="lbl" data-en="Errors" data-cn="错误数">Errors</div></div>
+      <div class="stat"><div class="val" id="d-wifi">—</div><div class="lbl" data-en="WiFi" data-cn="WiFi 信号">WiFi</div></div>
+      <div class="stat"><div class="val" id="d-heap">—</div><div class="lbl" data-en="Heap" data-cn="内存">Heap</div></div>
+      <div class="stat"><div class="val" id="d-bat">—</div><div class="lbl" data-en="Battery" data-cn="电池">Battery</div></div>
+      <div class="stat"><div class="val" id="d-errs">0</div><div class="lbl" data-en="Errors" data-cn="错误">Errors</div></div>
     </div>
   </div>
   <div class="card" id="dash-controls">
@@ -313,95 +300,6 @@ body{
   </div>
 </div>
 
-<!-- OPENCLAW SETTINGS -->
-<div class="panel" id="openclaw">
-  <div class="card">
-    <h3>🤖 <span data-en="OpenClaw Connection" data-cn="OpenClaw 连接设置">OpenClaw Connection</span></h3>
-    <div class="form-row">
-      <div class="form-group"><label data-en="Host / IP" data-cn="主机地址 / IP">Host / IP</label><input type="text" id="s-oc_host" placeholder="OC_HOST" data-en-ph="OC_HOST" data-cn-ph="主机地址"></div>
-      <div class="form-group"><label data-en="Port" data-cn="端口">Port</label><input type="number" id="s-oc_port" value="18789"></div>
-    </div>
-    <div class="form-group"><label data-en="Token" data-cn="令牌">Token</label><input type="password" id="s-oc_token" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
-    <div class="form-group"><label data-en="Device Key (ED25519 hex)" data-cn="设备公钥 (ED25519 hex)">Device Key (ED25519 hex)</label><input type="text" id="s-oc_device_key" placeholder="****" data-en-ph="****" data-cn-ph="****" style="font-family:monospace;font-size:12px"></div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveSettings()" data-en="💾 Save" data-cn="💾 保存">💾 Save</button>
-      <button class="btn btn-secondary" onclick="testOpenClaw()" data-en="🔌 Test Connection" data-cn="🔌 测试连接">🔌 Test Connection</button>
-    </div>
-    <div id="oc-test-result" style="margin-top:8px;font-size:13px"></div>
-  </div>
-
-  <div class="card">
-    <h3>🧙 <span data-en="Setup Wizard" data-cn="配置向导">Setup Wizard</span></h3>
-    <p style="font-size:13px;color:var(--dim);margin-bottom:8px" data-en="Walk through configuring a new OpenClaw instance step by step." data-cn="按照步骤配置一个新的 OpenClaw 实例。">Walk through configuring a new OpenClaw instance step by step.</p>
-    <button class="btn btn-secondary" onclick="startWizard()" data-en="▶ Start Wizard" data-cn="▶ 开始向导">▶ Start Wizard</button>
-    <div id="wizard-area"></div>
-  </div>
-
-  <div class="card">
-    <h3>📖 <span data-en="Integration Guide" data-cn="集成指南">Integration Guide</span></h3>
-    <details style="margin-bottom:8px">
-      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">1. <span data-en="Device Pairing (Required)" data-cn="设备配对 (必填)">Device Pairing (Required)</span></summary>
-      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIWatch authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS." data-cn="AIWatch 通过 <b>ED25519 设备密钥</b> 与 OpenClaw 进行身份验证。首次启动时，设备会生成密钥对并存储在 NVS 中。">AIWatch authenticates with OpenClaw via <b>ED25519 device keys</b>. On first boot, the device generates a keypair and stores it in NVS.</p>
-        <p style="margin-top:6px"><b data-en="To pair:" data-cn="配对步骤:">To pair:</b></p>
-        <ol style="padding-left:18px;margin-top:4px">
-          <li data-en="Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)" data-cn="记录上方显示的 <b>Device Key</b> (或启动时的串口日志: <code>Device identity: &lt;hex&gt;</code>)">Note the <b>Device Key</b> shown above (or from serial log at boot: <code>Device identity: &lt;hex&gt;</code>)</li>
-          <li data-en="On the OpenClaw machine, run:" data-cn="在 OpenClaw 服务器上运行:">On the OpenClaw machine, run:<br><code style="background:var(--bg);padding:2px 6px;border-radius:4px">openclaw device approve &lt;device-key-hex&gt;</code></li>
-          <li data-en="The device will auto-connect on next WebSocket attempt (every 5s)" data-cn="设备将在下一次 WebSocket 尝试时自动连接 (每 5 秒一次)">The device will auto-connect on next WebSocket attempt (every 5s)</li>
-        </ol>
-        <p style="margin-top:6px;color:var(--orange)" data-en="⚠️ If using token auth instead of device keys, paste the token in the Token field above." data-cn="⚠️ 如果使用令牌验证而非设备密钥，请将令牌粘贴在上方的 Token 字段中。">⚠️ If using token auth instead of device keys, paste the token in the Token field above.</p>
-      </div>
-    </details>
-    <details style="margin-bottom:8px">
-      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">2. <span data-en="ASR — MiMo-V2.5 (Required for voice)" data-cn="ASR — MiMo-V2.5 (语音必选)">ASR — MiMo-V2.5 (Required for voice)</span></summary>
-      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="AIWatch uses <b>MiMo-V2.5-ASR</b> via HTTP POST for speech-to-text. Audio is sent as base64 WAV." data-cn="AIWatch 使用 <b>MiMo-V2.5-ASR</b> (HTTP POST) 进行语音转文字，音频以 base64 WAV 格式发送。">AIWatch uses <b>MiMo-V2.5-ASR</b> via HTTP POST for speech-to-text. Audio is sent as base64 WAV.</p>
-        <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
-        <ol style="padding-left:18px;margin-top:4px">
-          <li data-en="Get an API key from <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a> (same key works for both ASR &amp; TTS)" data-cn="从 <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥 (同一密钥可用于 ASR 和 TTS)">Get an API key from <a href="https://platform.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a> (same key works for both ASR &amp; TTS)</li>
-          <li data-en="Enter the API key and URL in the <b>Services</b> tab" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL">Enter the API key and URL in the <b>Services</b> tab</li>
-          <li data-en="Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>" data-cn="默认 URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>">Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code></li>
-          <li data-en="Default model: <code>mimo-v2.5-asr</code> (auto language detection)" data-cn="默认模型: <code>mimo-v2.5-asr</code> (自动语种检测)">Default model: <code>mimo-v2.5-asr</code> (auto language detection)</li>
-        </ol>
-      </div>
-    </details>
-    <details style="margin-bottom:8px">
-      <summary style="cursor:pointer;color:var(--blue);font-size:14px;font-weight:500">3. <span data-en="TTS — MiMo-V2.5 (Optional — for voice responses)" data-cn="TTS — MiMo-V2.5 (可选 — 用于语音回复)">TTS — MiMo-V2.5 (Optional — for voice responses)</span></summary>
-      <div style="padding:8px 0;font-size:13px;color:var(--dim);line-height:1.6">
-        <p data-en="For audio playback of responses, <b>MiMo-V2.5-TTS</b> is used via streaming SSE (PCM16 format)." data-cn="对于响应的音频播放，使用 <b>MiMo-V2.5-TTS</b> 流式 SSE 输出 (PCM16 格式)。">For audio playback of responses, <b>MiMo-V2.5-TTS</b> is used via streaming SSE (PCM16 format).</p>
-        <p style="margin-top:6px"><b data-en="Setup:" data-cn="设置步骤:">Setup:</b></p>
-        <ol style="padding-left:18px;margin-top:4px">
-          <li data-en="Get an API key from <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo Platform</a>" data-cn="从 <a href='https://platform.xiaomimimo.com/' target='_blank' style='color:var(--blue)'>MiMo 平台</a> 获取 API 密钥">Get an API key from <a href="https://platform.xiaomimimo.com/" target="_blank" style="color:var(--blue)">MiMo Platform</a></li>
-          <li data-en="Enter the API key and URL in the <b>Services</b> tab (key shared with ASR)" data-cn="在 <b>Services</b> 选项卡中输入 API 密钥和 URL (与 ASR 共用同一密钥)">Enter the API key and URL in the <b>Services</b> tab (key shared with ASR)</li>
-          <li data-en="Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>" data-cn="默认 URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code>">Default URL: <code>https://api.xiaomimimo.com/v1/chat/completions</code></li>
-          <li data-en="Default model: <code>mimo-v2.5-tts</code>, voice options: mimo_default, 冰糖, 茉莉, 苏打, 白桦" data-cn="默认模型: <code>mimo-v2.5-tts</code>, 音色: mimo_default, 冰糖, 茉莉, 苏打, 白桦">Default model: <code>mimo-v2.5-tts</code>, voice options: mimo_default, 冰糖, 茉莉, 苏打, 白桦</li>
-        </ol>
-      </div>
-    </details>
-  </div>
-</div>
-
-<!-- TASKS -->
-<div class="panel" id="tasks">
-  <div class="card">
-    <h3>📋 <span data-en="Background Tasks" data-cn="后台任务">Background Tasks</span> <span style="font-weight:400;font-size:13px;color:var(--dim)" id="tasks-count"></span></h3>
-    <div id="tasks-list"><p style="color:var(--dim);font-size:13px" data-en="Loading..." data-cn="加载中...">Loading...</p></div>
-    <div class="btn-row" style="margin-top:8px">
-      <button class="btn btn-secondary" onclick="loadTasks()" data-en="🔄 Refresh" data-cn="🔄 刷新">🔄 Refresh</button>
-    </div>
-  </div>
-  <div class="card">
-    <h3>ℹ️ <span data-en="Controls" data-cn="操作指南">Controls</span></h3>
-    <p style="font-size:13px;color:var(--dim);line-height:1.5">
-      <b data-en="Wheel click" data-cn="滚轮点击">Wheel click</b> <span data-en="on Tasks screen → back to main" data-cn="在任务页面 → 返回主页">on Tasks screen → back to main</span><br>
-      <b data-en="Touch task" data-cn="触摸任务">Touch task</b> <span data-en="→ toggle enabled/disabled" data-cn="→ 切换 启用/禁用">→ toggle enabled/disabled</span><br>
-      <b data-en="Wheel spin" data-cn="滚轮旋转">Wheel spin</b> <span data-en="→ scroll task list" data-cn="→ 滚动任务列表">→ scroll task list</span><br>
-      <b data-en="Touch empty area" data-cn="触摸空白区域">Touch empty area</b> <span data-en="→ back to main screen" data-cn="→ 返回主屏幕">→ back to main screen</span><br>
-      <b data-en="Tasks button" data-cn="任务按钮">Tasks button</b> <span data-en="on main screen → open Tasks screen" data-cn="在主屏幕 → 打开任务页面">on main screen → open Tasks screen</span>
-    </p>
-  </div>
-</div>
-
 <!-- SERVICES -->
 <div class="panel" id="services">
   <div class="card">
@@ -411,32 +309,69 @@ body{
       <div style="display:flex;gap:8px">
         <input type="password" id="s-doubao_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****" autocomplete="off" style="flex:1">
         <button class="btn btn-secondary" id="d-ak-toggle" onclick="toggleDoubaoKey()" style="flex:0 0 auto" data-en="👁 Show" data-cn="👁 显示">👁 Show</button>
+        <button class="btn btn-secondary" id="d-ak-test" onclick="testDoubaoKey()" style="flex:0 0 auto" data-en="🔌 Test" data-cn="🔌 测试">🔌 Test</button>
       </div>
+      <div id="doubao-test-result" style="margin-top:6px;font-size:12px;min-height:18px"></div>
       <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Leave blank to keep the current key. After saving, the device reconnects automatically." data-cn="留空则保持当前 Key 不变。保存后立即生效，设备会自动重连。">Leave blank to keep the current key. After saving, the device reconnects automatically.</p>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveDoubaoKey()" data-en="💾 Save Doubao API Key" data-cn="💾 保存豆包 API Key">💾 Save Doubao API Key</button>
+    <div class="form-group">
+      <label data-en="Voice (TTS Timbre)" data-cn="音色（语音角色）">Voice (TTS Timbre)</label>
+      <select id="s-doubao_voice">
+        <option value="zh_female_vv_jupiter_bigtts">zh_female_vv_jupiter (女声·活泼)</option>
+        <option value="zh_female_xiaoxiao_bigtts">zh_female_xiaoxiao (女声·温柔)</option>
+        <option value="zh_male_yunxi_bigtts">zh_male_yunxi (男声·阳光)</option>
+        <option value="zh_male_yunjian_bigtts">zh_male_yunjian (男声·沉稳)</option>
+        <option value="zh_female_yunxi_bigtts">zh_female_yunxi (女声·知性)</option>
+      </select>
+      <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Select the AI voice character. Custom voice IDs can be entered in the text box below." data-cn="选择 AI 语音角色。自定义音色 ID 可在下方文本框输入。">Select the AI voice character. Custom voice IDs can be entered in the text box below.</p>
+      <input type="text" id="s-doubao_voice_custom" placeholder="Custom voice ID (e.g. zh_female_vv_jupiter_bigtts)" data-en-ph="Custom voice ID" data-cn-ph="自定义音色 ID" style="margin-top:4px">
     </div>
-  </div>
-  <div class="card">
-    <h3>🗣️ <span data-en="TTS — MiMo-V2.5" data-cn="TTS — MiMo-V2.5">TTS — MiMo-V2.5</span></h3>
-    <div class="form-group"><label data-en="API URL" data-cn="API 地址">API URL</label><input type="text" id="s-mimo_url" placeholder="https://api.xiaomimimo.com/v1/chat/completions" data-en-ph="https://api.xiaomimimo.com/v1/chat/completions" data-cn-ph="https://api.xiaomimimo.com/v1/chat/completions"></div>
     <div class="form-row">
-      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-tts_model" placeholder="mimo-v2.5-tts" data-en-ph="mimo-v2.5-tts" data-cn-ph="mimo-v2.5-tts"></div>
-      <div class="form-group"><label data-en="Voice" data-cn="音色">Voice</label><input type="text" id="s-tts_voice" placeholder="mimo_default" data-en-ph="mimo_default" data-cn-ph="mimo_default"></div>
+      <div class="form-group">
+        <label data-en="Speed" data-cn="语速">Speed</label>
+        <input type="range" id="s-doubao_speed" min="-50" max="100" value="0" oninput="$('s-doubao_speed_val').textContent=this.value">
+        <span id="s-doubao_speed_val" style="font-size:13px;color:var(--dim)">0</span>
+        <p style="font-size:11px;color:var(--dim)" data-en="[-50=slowest, 0=default, 100=fastest]" data-cn="[-50=最慢, 0=默认, 100=最快]">[-50=slowest, 0=default, 100=fastest]</p>
+      </div>
+      <div class="form-group">
+        <label data-en="Loudness" data-cn="音量">Loudness</label>
+        <input type="range" id="s-doubao_loudness" min="-50" max="100" value="0" oninput="$('s-doubao_loudness_val').textContent=this.value">
+        <span id="s-doubao_loudness_val" style="font-size:13px;color:var(--dim)">0</span>
+        <p style="font-size:11px;color:var(--dim)" data-en="[-50=quiet, 0=default, 100=loud]" data-cn="[-50=轻声, 0=默认, 100=响亮]">[-50=quiet, 0=default, 100=loud]</p>
+      </div>
     </div>
-    <div class="form-group"><label data-en="API Key" data-cn="API 密钥">API Key</label><input type="password" id="s-mimo_api_key" placeholder="****" data-en-ph="****" data-cn-ph="****"></div>
-  </div>
-  <div class="card">
-    <h3>🎤 <span data-en="ASR — MiMo-V2.5" data-cn="ASR — MiMo-V2.5">ASR — MiMo-V2.5</span></h3>
-    <p style="font-size:12px;color:var(--dim);margin-bottom:8px" data-en="Uses the same API key and URL as TTS. Audio is sent as base64 WAV via HTTP POST." data-cn="使用与 TTS 相同的 API 密钥和 URL。音频以 base64 WAV 格式通过 HTTP POST 发送。">Uses the same API key and URL as TTS. Audio is sent as base64 WAV via HTTP POST.</p>
+    <div class="form-group">
+      <label data-en="System Prompt (Instructions)" data-cn="系统提示词（Instructions）">System Prompt (Instructions)</label>
+      <textarea id="s-doubao_prompt" rows="3" placeholder="You are a helpful voice assistant..." data-en-ph="You are a helpful voice assistant..." data-cn-ph="你是一个乐于助人的语音助手..."></textarea>
+      <p style="font-size:11px;color:var(--dim)" data-en="System instructions sent to the AI on every session. Controls personality and behavior." data-cn="每次会话发送给 AI 的系统指令，用于控制性格和行为。">System instructions sent to the AI on every session. Controls personality and behavior.</p>
+    </div>
     <div class="form-row">
-      <div class="form-group"><label data-en="Model" data-cn="模型">Model</label><input type="text" id="s-asr_model" placeholder="mimo-v2.5-asr" data-en-ph="mimo-v2.5-asr" data-cn-ph="mimo-v2.5-asr"></div>
+      <div class="form-group">
+        <label data-en="Auto-continue listening" data-cn="自动续听">Auto-continue listening</label>
+        <select id="s-doubao_auto_continue">
+          <option value="1" data-en="Enabled (listen after reply)" data-cn="开启（回复后继续听）">Enabled (listen after reply)</option>
+          <option value="0" data-en="Disabled (one-shot mode)" data-cn="关闭（单轮模式）">Disabled (one-shot mode)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-en="Idle timeout (sec)" data-cn="空闲超时（秒）">Idle timeout (sec)</label>
+        <input type="number" id="s-doubao_idle_s" min="3" max="60" value="8" placeholder="8">
+        <p style="font-size:11px;color:var(--dim)" data-en="Seconds of silence before returning to idle (3-60)" data-cn="静音多少秒后回到待机（3-60）">Seconds of silence before returning to idle (3-60)</p>
+      </div>
     </div>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Web Search (联网搜索)" data-cn="联网搜索（Web Search）">Web Search (联网搜索)</label>
+      <label class="toggle"><input type="checkbox" id="s-doubao_enable_search"><span class="slider"></span></label>
+    </div>
+    <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Enable internet search — AI can search the web for real-time information when needed." data-cn="开启联网搜索 — AI 需要时可搜索互联网获取实时信息。">Enable internet search — AI can search the web for real-time information when needed.</p>
+    <div class="form-group" style="display:flex;align-items:center;gap:12px">
+      <label style="margin:0" data-en="Singing (歌唱功能)" data-cn="歌唱功能">Singing (歌唱功能)</label>
+      <label class="toggle"><input type="checkbox" id="s-doubao_enable_music"><span class="slider"></span></label>
+    </div>
+    <p style="font-size:11px;color:var(--dim);margin-top:4px" data-en="Enable singing mode — AI can sing songs when asked." data-cn="开启歌唱模式 — AI 可以在被要求时唱歌。">Enable singing mode — AI can sing songs when asked.</p>
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="testSTT()" data-en="🔍 Check ASR Config" data-cn="🔍 检查 ASR 配置">🔍 Check ASR Config</button>
+      <button class="btn btn-primary" onclick="saveDoubaoSettings()" data-en="💾 Save Doubao Settings" data-cn="💾 保存豆包设置">💾 Save Doubao Settings</button>
     </div>
-    <div id="stt-test-result" style="margin-top:8px;font-size:13px"></div>
   </div>
   <div class="btn-row">
     <button class="btn btn-primary" onclick="saveSettings()" data-en="💾 Save Settings" data-cn="💾 保存设置">💾 Save Settings</button>
@@ -618,32 +553,15 @@ async function loadStatus() {
     const d = await r.json();
     $('hdr-ver').textContent = 'v' + d.device.version;
 
-    // Dashboard
-    const oc = d.openclaw;
-    const stateMap = {
-        'connected': { en: 'Connected', cn: '已连接' },
-        'disconnected': { en: 'Disconnected', cn: '未连接' },
-        'connecting': { en: 'Connecting...', cn: '正在连接...' },
-        'error': { en: 'Error', cn: '连接错误' }
-    };
-    const s = stateMap[oc.state_str] || { en: oc.state_str, cn: oc.state_str };
-    $('d-oc-state').textContent = lang === 'cn' ? s.cn : s.en;
-    $('d-oc-state').style.color = oc.state_str === 'connected' ? 'var(--green)' : 'var(--orange)';
-    $('dash-oc-dot').className = 'dot ' + (oc.state_str === 'connected' ? 'green' : 'red');
-    $('d-oc-ver').textContent = oc.version || '—';
-    $('d-oc-up').textContent = fmtTime(oc.uptime_min);
-    $('d-oc-sess').textContent = oc.sessions ?? '—';
-    $('d-oc-wa').textContent = oc.wa_status || '—';
-    $('d-oc-last').textContent = oc.last_activity_min !== undefined ? fmtTime(oc.last_activity_min) : '—';
-
-    $('dash-wifi-dot').className = 'dot ' + (d.wifi.connected ? 'green' : 'red');
-    $('d-wifi').textContent = d.wifi.connected ? d.wifi.rssi + ' dBm' : (lang === 'cn' ? '断开' : 'OFF');
-    $('d-ip').textContent = d.wifi.ip || '—';
-    $('d-ip').style.fontSize = '14px';
+    // Dashboard — Doubao status
+    const connected = d.wifi.connected;
+    $('d-oc-state').textContent = connected ? (lang === 'cn' ? '已连接' : 'Online') : (lang === 'cn' ? '未连接' : 'Offline');
+    $('d-oc-state').style.color = connected ? 'var(--green)' : 'var(--orange)';
+    $('d-wifi').textContent = connected ? d.wifi.rssi + ' dBm' : (lang === 'cn' ? '断开' : 'OFF');
     $('d-heap').textContent = Math.round(d.device.heap_free / 1024) + 'K';
     $('d-bat').textContent = d.device.battery_pct + '%';
     $('d-errs').textContent = d.error_count;
-    $('hdr-status').textContent = oc.state_str === 'connected' ? (lang === 'cn' ? '🟢 已在线' : '🟢 Online') : (lang === 'cn' ? '🔴 已离线' : '🔴 Offline');
+    $('hdr-status').textContent = connected ? (lang === 'cn' ? '🟢 已在线' : '🟢 Online') : (lang === 'cn' ? '🔴 离线' : '🔴 Offline');
 
     // Controls guide per device
     const cg = $('controls-guide');
@@ -706,8 +624,7 @@ async function loadSettings() {
     const r = await fetch('/api/settings');
     settings = await r.json();
     // Populate fields
-    const fields = ['wifi_ssid','wifi_password','oc_host','oc_port','oc_token','oc_device_key',
-      'mimo_api_key','mimo_url','asr_model','tts_model','tts_voice',
+    const fields = ['wifi_ssid','wifi_password',
       'volume','silence_timeout_ms','silence_threshold','max_record_seconds','no_speech_timeout_ms',
       'brightness','log_verbosity'];
     fields.forEach(f => {
@@ -733,13 +650,12 @@ async function loadSettings() {
 // Save settings
 async function saveSettings() {
   const data = {};
-  const fields = ['wifi_ssid','wifi_password','oc_host','oc_token','oc_device_key',
-    'mimo_api_key','mimo_url','asr_model','tts_model','tts_voice'];
+  const fields = ['wifi_ssid','wifi_password'];
   fields.forEach(f => {
     const el = $('s-'+f);
     if (el && el.value) data[f] = el.value;
   });
-  const nums = ['oc_port','volume','silence_timeout_ms',
+  const nums = ['volume','silence_timeout_ms',
     'silence_threshold','max_record_seconds','no_speech_timeout_ms','brightness','log_verbosity'];
   nums.forEach(f => {
     const el = $('s-'+f);
@@ -830,6 +746,75 @@ async function saveDoubaoKey() {
   } catch(e) { toast('Error: ' + e.message, false); }
 }
 
+// Load Doubao voice/speed/loudness/prompt settings from /api/doubao
+async function loadDoubaoSettings() {
+  try {
+    const r = await fetch('/api/doubao');
+    const d = await r.json();
+    // Voice: check if it matches a preset, otherwise show in custom field
+    const voiceSel = $('s-doubao_voice');
+    const voiceCustom = $('s-doubao_voice_custom');
+    if (voiceSel && d.voice) {
+      let matched = false;
+      for (const opt of voiceSel.options) {
+        if (opt.value === d.voice) { voiceSel.value = d.voice; matched = true; break; }
+      }
+      if (!matched && voiceCustom) { voiceCustom.value = d.voice; }
+    }
+    // Speed
+    const speedEl = $('s-doubao_speed');
+    if (speedEl && d.speed !== undefined) { speedEl.value = d.speed; const sv = $('s-doubao_speed_val'); if (sv) sv.textContent = d.speed; }
+    // Loudness
+    const loudEl = $('s-doubao_loudness');
+    if (loudEl && d.loudness !== undefined) { loudEl.value = d.loudness; const lv = $('s-doubao_loudness_val'); if (lv) lv.textContent = d.loudness; }
+    // System prompt
+    const promptEl = $('s-doubao_prompt');
+    if (promptEl && d.system_prompt) { promptEl.value = d.system_prompt; }
+    // Auto-continue
+    const acEl = $('s-doubao_auto_continue');
+    if (acEl && d.auto_continue !== undefined) { acEl.value = d.auto_continue ? '1' : '0'; }
+    // Idle timeout
+    const idleEl = $('s-doubao_idle_s');
+    if (idleEl && d.idle_timeout_s) { idleEl.value = d.idle_timeout_s; }
+    // Enable search
+    const searchEl = $('s-doubao_enable_search');
+    if (searchEl) searchEl.checked = !!d.enable_search;
+    // Enable music
+    const musicEl = $('s-doubao_enable_music');
+    if (musicEl) musicEl.checked = !!d.enable_music;
+  } catch(e) { console.error('loadDoubaoSettings:', e); }
+}
+
+// Save Doubao voice/speed/loudness/prompt settings to /api/doubao
+async function saveDoubaoSettings() {
+  // Voice: custom field takes priority over dropdown
+  const voiceCustom = $('s-doubao_voice_custom');
+  const voiceSel = $('s-doubao_voice');
+  let voice = (voiceCustom && voiceCustom.value.trim()) || (voiceSel ? voiceSel.value : '');
+  const speed = parseInt(($('s-doubao_speed') || {}).value || '0', 10);
+  const loudness = parseInt(($('s-doubao_loudness') || {}).value || '0', 10);
+  const system_prompt = ($('s-doubao_prompt') || {}).value || '';
+  const auto_continue = ($('s-doubao_auto_continue') || {}).value === '1';
+  const idle_timeout_s = parseInt(($('s-doubao_idle_s') || {}).value || '8', 10);
+  const enable_search = !!($('s-doubao_enable_search') || {}).checked;
+  const enable_music = !!($('s-doubao_enable_music') || {}).checked;
+  // Include the API key when the input holds one — a save button that
+  // omitted it once made the key un-savable at all (dead saveDoubaoKey()).
+  const keyEl = $('s-doubao_api_key');
+  const api_key = (keyEl && keyEl.value.trim()) ? keyEl.value.trim() : '';
+  const body = { voice, speed, loudness, system_prompt, auto_continue, idle_timeout_s, api_key, enable_search, enable_music };
+  try {
+    const r = await fetch('/api/doubao', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const d = await r.json();
+    if (d.ok) {
+      toast(lang === 'cn' ? '豆包设置已保存' : 'Doubao settings saved', true);
+      loadDoubaoSettings(); // reload to confirm
+    } else {
+      toast(lang === 'cn' ? '保存失败' : 'Save failed', false);
+    }
+  } catch(e) { toast('Error: ' + e.message, false); }
+}
+
 function toggleDoubaoKey() {
   const el = $('s-doubao_api_key');
   const btn = $('d-ak-toggle');
@@ -837,6 +822,44 @@ function toggleDoubaoKey() {
   const show = el.type === 'password';
   el.type = show ? 'text' : 'password';
   btn.textContent = show ? '🙈 Hide' : '👁 Show';
+}
+
+async function testDoubaoKey() {
+  const el = $('s-doubao_api_key');
+  const result = $('doubao-test-result');
+  const btn = $('d-ak-test');
+  if (!el || !result) return;
+
+  const val = el.value.trim();
+  const body = val ? {api_key: val} : {};
+
+  btn.disabled = true;
+  btn.textContent = '⏳...';
+  result.innerHTML = '<span style="color:var(--orange)">' +
+    (lang === 'cn' ? '测试中（最多8秒）...' : 'Testing (up to 8s)...') + '</span>';
+
+  try {
+    const r = await fetch('/api/doubao/test', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.ok) {
+      result.innerHTML = '<span style="color:var(--green)">✅ ' +
+        (lang === 'cn' ? '连接成功 — API Key 有效' : 'Connected — API key is valid') +
+        (d.applied ? (lang === 'cn' ? '，已应用并重连' : ', applied & reconnecting') : '') + '</span>';
+      if (d.applied && el) { el.value = ''; el.placeholder = '****'; }
+    } else {
+      result.innerHTML = '<span style="color:var(--red)">❌ ' +
+        (d.message || (lang === 'cn' ? '测试失败' : 'Test failed')) + '</span>';
+    }
+  } catch(e) {
+    result.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔌 Test';
+  }
 }
 
 async function rebootDevice() {
@@ -875,98 +898,7 @@ async function demoBuiltIn(mode) {
   } catch(e) { toast('Error: ' + e.message, false); }
 }
 
-// Test OpenClaw
-async function testOpenClaw() {
-  const host = $('s-oc_host').value;
-  const port = Number($('s-oc_port').value) || 18789;
-  $('oc-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '测试中...' : 'Testing...'}</span>`;
-  try {
-    const r = await fetch('/api/openclaw/test', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({host, port})});
-    const d = await r.json();
-    $('oc-test-result').innerHTML = d.ok
-      ? '<span style="color:var(--green)">✅ ' + d.message + '</span>'
-      : '<span style="color:var(--red)">❌ ' + d.error + '</span>';
-  } catch(e) {
-    $('oc-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
-  }
-}
 
-// Wizard
-function startWizard() {
-  const area = $('wizard-area');
-  const en = {
-    h4: 'OpenClaw Setup Wizard',
-    s1: '1. Enter OpenClaw host and port above',
-    s2: '2. Click "Test Connection" to verify',
-    s3: '3. Enter your API token',
-    s4: '4. Click "Save" to store configuration',
-    s5: '5. Reboot to connect with new settings',
-    p: 'Fill in the fields above and follow the steps. The device key is auto-generated on first connection.',
-    // Server setup wizard
-    sh: '🖥️ Server-Side OpenClaw Setup',
-    ss1: '1. On your OpenClaw server, edit gateway config:',
-    ss1_code: '"bind": "lan"',
-    ss2: '2. Restart the OpenClaw gateway',
-    ss3: '3. Check AIWatch logs for approval command:',
-    ss3_note: 'Look for: "Approve with: openclaw devices approve <device-id>"',
-    ss4: '4. Copy and run the approval command on your server'
-  };
-  const cn = {
-    h4: 'OpenClaw 配置向导',
-    s1: '1. 在上方输入 OpenClaw 服务器地址和端口',
-    s2: '2. 点击“测试连接”进行验证',
-    s3: '3. 输入您的 API 令牌 (Token)',
-    s4: '4. 点击“保存”存储配置',
-    s5: '5. 重启设备以应用新设置',
-    p: '填写上方字段并按照步骤操作。设备密钥将在首次连接时自动生成。',
-    // Server setup wizard
-    sh: '🖥️ 服务端 OpenClaw 设置',
-    ss1: '1. 在 OpenClaw 服务器上编辑网关配置：',
-    ss1_code: '"bind": "lan"',
-    ss2: '2. 重启 OpenClaw 网关',
-    ss3: '3. 查看 AIWatch 日志中的批准命令：',
-    ss3_note: '查找：“Approve with: openclaw devices approve <device-id>”',
-    ss4: '4. 复制并在服务器上运行批准命令'
-  };
-  const t = lang === 'cn' ? cn : en;
-  area.innerHTML = `<div class="wizard">
-    <h4>${t.h4}</h4>
-    <div class="step active" id="wiz-1">${t.s1}</div>
-    <div class="step" id="wiz-2">${t.s2}</div>
-    <div class="step" id="wiz-3">${t.s3}</div>
-    <div class="step" id="wiz-4">${t.s4}</div>
-    <div class="step" id="wiz-5">${t.s5}</div>
-    <p style="font-size:12px;color:var(--dim);margin-top:8px">${t.p}</p>
-    
-    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
-    
-    <h4>${t.sh}</h4>
-    <div class="step" id="wiz-s1">${t.ss1}<br><code style="background:var(--bg);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:4px">${t.ss1_code}</code></div>
-    <div class="step" id="wiz-s2">${t.ss2}</div>
-    <div class="step" id="wiz-s3">${t.ss3}<br><span style="font-size:11px;color:var(--dim)">${t.ss3_note}</span></div>
-    <div class="step" id="wiz-s4">${t.ss4}</div>
-  </div>`;
-}
-
-async function testSTT() {
-  $('stt-test-result').innerHTML = `<span style="color:var(--orange)">${lang === 'cn' ? '检查中...' : 'Checking ASR config...'}</span>`;
-  try {
-    const r = await fetch('/api/stt/health', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({})});
-    const d = await r.json();
-    if (d.ok) {
-        $('stt-test-result').innerHTML = '<span style="color:var(--green)">✅ ' +
-            (lang === 'cn' ? 'MiMo-V2.5-ASR 配置正确 (模型: ' : 'MiMo-V2.5-ASR configured (model: ') +
-            (d.model||'unknown') + ')</span>';
-    } else {
-        $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' +
-            (lang === 'cn' ? '配置缺失或错误' : (d.error||'Configuration missing')) + '</span>';
-    }
-  } catch(e) {
-    $('stt-test-result').innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
-  }
-}
 
 // Load errors
 async function loadErrors() {
@@ -993,50 +925,7 @@ async function loadErrors() {
   } catch(e) { console.error(e); }
 }
 
-// Load background tasks
-async function loadTasks() {
-  try {
-    const r = await fetch('/api/tasks');
-    const tasks = await r.json();
-    $('tasks-count').textContent = '(' + tasks.length + ')';
-    if (!tasks.length) {
-      $('tasks-list').innerHTML = `<p style="color:var(--dim);font-size:13px">${lang === 'cn' ? '暂无定时任务' : 'No scheduled tasks'}</p>`;
-      return;
-    }
-    let html = '';
-    tasks.forEach(t => {
-      const color = t.running ? 'var(--orange)' : (t.enabled ? 'var(--green)' : 'var(--dim)');
-      const statusEn = t.running ? 'Running' : (t.enabled ? 'Active' : 'Disabled');
-      const statusCn = t.running ? '运行中' : (t.enabled ? '激活' : '已禁用');
-      const status = lang === 'cn' ? statusCn : statusEn;
-      
-      const icon = t.running ? '⟳' : (t.last_status === 'ok' ? '✓' : (t.last_status === 'error' ? '✗' : '—'));
-      const iconColor = t.running ? 'var(--orange)' : (t.last_status === 'ok' ? 'var(--green)' : (t.last_status === 'error' ? 'var(--red)' : 'var(--dim)'));
-      
-      const btnText = t.enabled ? (lang === 'cn' ? '禁用' : 'Disable') : (lang === 'cn' ? '启用' : 'Enable');
-      
-      html += `<div class="card" style="padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
-        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>
-          <div style="font-size:12px;color:var(--dim)">${t.schedule_kind} ${t.schedule_expr} · ${status}${t.last_error ? ' · ' + t.last_error.substring(0, 40) : ''}</div>
-          ${t.consecutive_errors > 0 ? `<div style="font-size:11px;color:var(--red)">${lang === 'cn' ? '连续错误: ' : 'Consecutive errors: '} ${t.consecutive_errors}</div>` : ''}
-        </div>
-        <span style="font-size:18px;color:${iconColor}">${icon}</span>
-        <button class="btn btn-secondary" style="font-size:11px;padding:4px 10px" onclick="toggleTask('${t.id}',${!t.enabled})">${btnText}</button>
-      </div>`;
-    });
-    $('tasks-list').innerHTML = html;
-  } catch(e) { console.error(e); }
-}
 
-async function toggleTask(id, enabled) {
-  try {
-    await fetch('/api/tasks/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, enabled})});
-    toast(lang === 'cn' ? '任务已更新' : 'Task updated', true);
-    setTimeout(loadTasks, 500);
-  } catch(e) { toast('Failed: ' + e.message, false); }
-}
 
 
 
@@ -1466,6 +1355,7 @@ async function deleteGif(filename) {
 loadStatus();
 loadSettings();
 loadDoubaoKey();
+loadDoubaoSettings();
 setInterval(loadStatus, 5000);
 </script>
 </body>

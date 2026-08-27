@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Waveshare ESP32-S3-AUDIO-Board pin definitions and hardware constants.

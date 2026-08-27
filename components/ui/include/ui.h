@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * UI module — LVGL portrait (172×320) with iPhone 17 + Dynamic Island style
@@ -112,8 +112,11 @@ void ui_add_user_bubble(const char *text);
 void ui_add_bot_bubble(void);
 
 // Append a streamed reply chunk to the current bot bubble (auto-creates one
-// if needed). Task 7 uses full-text reset; streaming optimization in Task 13.
+// if needed). Small deltas use incremental append; large use full reset.
 void ui_bot_bubble_append(const char *delta);
+
+// Clear all chat bubbles (for clear conversation action)
+void ui_clear_bubbles(void);
 
 // Strip non-ASCII characters from text for display
 void ui_sanitize_text(char *dst, const char *src, size_t dst_size);
@@ -155,6 +158,14 @@ void ui_stop_led_breathing(void);
 
 // Stop the LED animation task entirely (call on UI shutdown)
 void ui_led_anim_stop(void);
+
+// ══════════════════════════════════════════════════════════════════════════
+// Settings page (long press to open)
+// ══════════════════════════════════════════════════════════════════════════
+
+void ui_settings_show(void);
+void ui_settings_hide(void);
+bool ui_settings_is_visible(void);
 
 // ══════════════════════════════════════════════════════════════════════════
 // System Info & Activity Tracking

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Notes Manager implementation
@@ -219,7 +219,10 @@ esp_err_t notes_manager_get_file_list(notes_file_info_t ***out_files, int max_fi
                 info->entry_count = 0;
                 FILE *f = fopen(info->filename, "r");
                 if (f) {
-                    char line[256];
+                    /* 128 bytes sufficient: we only search for "role" substring,
+                     * not parsing full JSON lines. Smaller buffer saves stack
+                     * in the httpd task (3KB total). */
+                    char line[128];
                     while (fgets(line, sizeof(line), f)) {
                         if (strstr(line, "\"role\"")) {
                             info->entry_count++;

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -39,9 +39,20 @@ static void apply_bare_defaults(settings_t *s)
     s->activity_carousel   = true;
     s->auto_notify         = true;
     s->log_verbosity       = 2;  /* INFO */
-    strncpy(s->tts_voice, "mimo_default", sizeof(s->tts_voice) - 1);
-    strncpy(s->tts_model, "mimo-v2.5-tts", sizeof(s->tts_model) - 1);
-    strncpy(s->asr_model, "mimo-v2.5-asr", sizeof(s->asr_model) - 1);
+    /* Doubao defaults (Task 17) */
+    strncpy(s->voice, "zh_female_vv_jupiter_bigtts", sizeof(s->voice) - 1);
+    s->speed    = 0;
+    s->loudness = 0;
+    strncpy(s->system_prompt,
+            "你是一个桌面语音助手，简洁中文回答。\n"
+            "控制设备：[DEVICE:volume=0-100] [DEVICE:brightness=0-100] \n"
+            "音乐：[DEVICE:mp3=index:N]播放 [DEVICE:mp3=stop]停止 [DEVICE:mp3=show]歌单 \n"
+            "灯光：[DEVICE:rgb=rainbow/aurora/fire/ocean/off/on]",
+            sizeof(s->system_prompt) - 1);
+    s->auto_continue = true;
+    s->idle_timeout_s = 8;
+    s->enable_search  = false;
+    s->enable_music   = false;
 }
 
 /* ── NVS helpers ─────────────────────────────────────────────────────── */
@@ -71,12 +82,7 @@ static void load_from_nvs(settings_t *s)
     NVS_STR(h, "oc_token",    oc_token);
     NVS_STR(h, "oc_devkey",   oc_device_key);
     NVS_STR(h, "oc_devtok",   oc_device_token);
-    NVS_STR(h, "mimo_apikey", mimo_api_key);
-    NVS_STR(h, "mimo_url",    mimo_url);
     NVS_STR(h, "api_key",     api_key);
-    NVS_STR(h, "asr_model",   asr_model);
-    NVS_STR(h, "tts_model",   tts_model);
-    NVS_STR(h, "tts_voice",   tts_voice);
     NVS_U8(h,  "volume",      volume);
     NVS_U16(h, "sil_timeout", silence_timeout_ms);
     NVS_U16(h, "sil_thresh",  silence_threshold);
@@ -95,6 +101,15 @@ static void load_from_nvs(settings_t *s)
     if (nvs_get_u8(h, "short_resp", &tmp) == ESP_OK) s->short_response = tmp;
     if (nvs_get_u8(h, "carousel", &tmp) == ESP_OK) s->activity_carousel = tmp;
     if (nvs_get_u8(h, "auto_notify", &tmp) == ESP_OK) s->auto_notify = tmp;
+    /* Doubao settings (Task 17) */
+    NVS_STR(h, "db_voice",    voice);
+    { int8_t v = 0; if (nvs_get_i8(h, "db_speed", &v) == ESP_OK) s->speed = v; }
+    { int8_t v = 0; if (nvs_get_i8(h, "db_loud", &v) == ESP_OK) s->loudness = v; }
+    NVS_STR(h, "db_prompt",   system_prompt);
+    if (nvs_get_u8(h, "db_autocont", &tmp) == ESP_OK) s->auto_continue = tmp;
+    if (nvs_get_u8(h, "db_idle_s", &tmp) == ESP_OK) s->idle_timeout_s = tmp;
+    if (nvs_get_u8(h, "db_search", &tmp) == ESP_OK) s->enable_search = tmp;
+    if (nvs_get_u8(h, "db_music", &tmp) == ESP_OK) s->enable_music = tmp;
 
     nvs_close(h);
     ESP_LOGI(TAG, "Settings loaded from NVS");
@@ -113,12 +128,7 @@ static esp_err_t save_to_nvs(const settings_t *s)
     nvs_set_str(h, "oc_token",    s->oc_token);
     nvs_set_str(h, "oc_devkey",   s->oc_device_key);
     nvs_set_str(h, "oc_devtok",   s->oc_device_token);
-    nvs_set_str(h, "mimo_apikey", s->mimo_api_key);
-    nvs_set_str(h, "mimo_url",    s->mimo_url);
     nvs_set_str(h, "api_key",     s->api_key);
-    nvs_set_str(h, "asr_model",   s->asr_model);
-    nvs_set_str(h, "tts_model",   s->tts_model);
-    nvs_set_str(h, "tts_voice",   s->tts_voice);
     nvs_set_u8(h,  "volume",      s->volume);
     nvs_set_u16(h, "sil_timeout", s->silence_timeout_ms);
     nvs_set_u16(h, "sil_thresh",  s->silence_threshold);
@@ -135,6 +145,14 @@ static esp_err_t save_to_nvs(const settings_t *s)
     nvs_set_u8(h,  "short_resp",  s->short_response ? 1 : 0);
     nvs_set_u8(h,  "carousel",    s->activity_carousel ? 1 : 0);
     nvs_set_u8(h,  "auto_notify", s->auto_notify ? 1 : 0);
+    /* Doubao settings (Task 17) */
+    nvs_set_str(h, "db_voice",    s->voice);
+    nvs_set_i8(h,  "db_speed",    s->speed);
+    nvs_set_i8(h,  "db_loud",     s->loudness);
+    nvs_set_str(h, "db_prompt",   s->system_prompt);    nvs_set_u8(h, "db_autocont", s->auto_continue ? 1 : 0);
+    nvs_set_u8(h, "db_idle_s",   s->idle_timeout_s);
+    nvs_set_u8(h, "db_search",   s->enable_search ? 1 : 0);
+    nvs_set_u8(h, "db_music",    s->enable_music ? 1 : 0);
 
     err = nvs_commit(h);
     nvs_close(h);
@@ -168,11 +186,7 @@ esp_err_t settings_init(const settings_t *defaults)
         COPY_IF_SET(oc_token);
         COPY_IF_SET(oc_device_key);
         COPY_IF_SET(oc_device_token);
-        COPY_IF_SET(mimo_api_key);
-        COPY_IF_SET(mimo_url);
-        COPY_IF_SET(asr_model);
-        COPY_IF_SET(tts_model);
-        COPY_IF_SET(tts_voice);
+
         if (defaults->volume) s_settings.volume = defaults->volume;
 #undef COPY_IF_SET
     }
@@ -228,15 +242,10 @@ char *settings_to_json(bool include_secrets)
     cJSON_AddStringToObject(j, "oc_token", include_secrets ? s->oc_token : "****");
     cJSON_AddStringToObject(j, "oc_device_key", include_secrets ? s->oc_device_key : "****");
 
-    /* MiMo API */
-    cJSON_AddStringToObject(j, "mimo_api_key", include_secrets ? s->mimo_api_key : "****");
-    cJSON_AddStringToObject(j, "mimo_url",     s->mimo_url);
-    cJSON_AddStringToObject(j, "asr_model",    s->asr_model);
-    cJSON_AddStringToObject(j, "tts_model",    s->tts_model);
-    cJSON_AddStringToObject(j, "tts_voice",    s->tts_voice);
-
     /* Doubao */
     cJSON_AddStringToObject(j, "api_key",      include_secrets ? s->api_key : "****");
+    cJSON_AddBoolToObject(j, "enable_search",  s->enable_search);
+    cJSON_AddBoolToObject(j, "enable_music",   s->enable_music);
 
     /* Audio */
     cJSON_AddNumberToObject(j, "volume", s->volume);
@@ -313,12 +322,7 @@ esp_err_t settings_from_json(const char *json, size_t len)
     JSON_U16("oc_port",          oc_port);
     JSON_STR("oc_token",         oc_token);
     JSON_STR("oc_device_key",    oc_device_key);
-    JSON_STR("mimo_api_key",      mimo_api_key);
-    JSON_STR("mimo_url",          mimo_url);
     JSON_STR("api_key",           api_key);
-    JSON_STR("asr_model",         asr_model);
-    JSON_STR("tts_model",         tts_model);
-    JSON_STR("tts_voice",         tts_voice);
     JSON_U8("volume",            volume);
     JSON_U16("silence_timeout_ms", silence_timeout_ms);
     JSON_U16("silence_threshold", silence_threshold);
@@ -335,6 +339,8 @@ esp_err_t settings_from_json(const char *json, size_t len)
     JSON_BOOL("activity_carousel", activity_carousel);
     JSON_BOOL("auto_notify",     auto_notify);
     JSON_U8("log_verbosity",     log_verbosity);
+    JSON_BOOL("enable_search",   enable_search);
+    JSON_BOOL("enable_music",    enable_music);
 
     cJSON_Delete(j);
     ESP_LOGI(TAG, "Settings updated from JSON");

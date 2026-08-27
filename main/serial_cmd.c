@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Serial CLI — ESP-IDF esp_console-based interactive command line.
@@ -10,11 +10,11 @@
  *
  * To use:
  *   idf.py monitor               # or picocom / minicom at 115200 baud
- *   AIWatch> help             # at the prompt (logs scroll alongside)
- *   AIWatch> quiet            # suppress ESP_LOG* noise
- *   AIWatch> logs             # re-enable ESP_LOG* output
- *   AIWatch> status           # show device state
- *   AIWatch> exit             # (not needed, just press Ctrl+D or reboot)
+ *   Doubao> help              # at the prompt (logs scroll alongside)
+ *   Doubao> quiet             # suppress ESP_LOG* noise
+ *   Doubao> logs              # re-enable ESP_LOG* output
+ *   Doubao> status            # show device state
+ *   Doubao> exit              # (not needed, just press Ctrl+D or reboot)
  */
 
 #include "serial_cmd.h"
@@ -107,7 +107,7 @@ static int cmd_help(int argc, char **argv)
        to show our custom list alongside the registered commands. */
     printf("\n");
     printf("╔══════════════════════════════════════════════╗\n");
-    printf("║            AIWatch Serial Commands            ║\n");
+    printf("║            Doubao Serial Commands             ║\n");
     printf("╠══════════════════════════════════════════════╣\n");
     printf("║  CHAT:                                      ║\n");
     printf("║    talk / t        — Start voice chat       ║\n");
@@ -451,8 +451,8 @@ void serial_cmd_task_start(void)
     esp_console_repl_t *repl = NULL;
     esp_console_repl_config_t repl_config = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
 
-    /* Set prompt — "AIWatch> " */
-    repl_config.prompt = "AIWatch> ";
+    /* Set prompt — "Doubao> " */
+    repl_config.prompt = "Doubao> ";
     repl_config.max_cmdline_length = 256;
     repl_config.task_stack_size = 4096;
     repl_config.task_priority = 3;
@@ -472,9 +472,9 @@ void serial_cmd_task_start(void)
 #error "No supported console backend is enabled (CONFIG_ESP_CONSOLE_UART_DEFAULT / USB_SERIAL_JTAG / USB_CDC)"
 #endif
 
-    /* Register all AIWatch commands (handles help, h, ? internally) */
+    /* Register all Doubao commands (handles help, h, ? internally) */
     const esp_console_cmd_t cmds[] = {
-        { .command = "help",    .help = "Show AIWatch command reference",   .func = &cmd_help },
+        { .command = "help",    .help = "Show Doubao command reference",    .func = &cmd_help },
         { .command = "h",       .help = NULL,                               .func = &cmd_help },
         { .command = "?",       .help = NULL,                               .func = &cmd_help },
         { .command = "status",  .help = "Show device status",              .func = &cmd_status },

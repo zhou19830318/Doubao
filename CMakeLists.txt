@@ -1,4 +1,4 @@
-# AIWatch - ESP32 OpenClaw Interface Device
+# Doubao Voice Robot - ESP32-S3 AI Voice Companion
 # Requires ESP-IDF v5.5+
 
 cmake_minimum_required(VERSION 3.16)

@@ -314,3 +314,53 @@ doubao_clear_session()            // 清空对话：session.close + 重建
 5. 3:2 多相重采样 CPU 开销未实测——M2 评估，超出预算降级带限线性插值。
 6. API Key 凭据安全：v1 = NVS 存储 + 网页输入（无明文硬编码）+ UI 打码/显示切换 + 网页"仅可信局域网"提示；NVS 加密/Flash 加密为 v2 加固项（威胁模型：桌面设备物理读取场景低，加密增加 bootloader 复杂度）。
 7. 网页为局域网 HTTP——v1 仅提示可信网络，自签名 HTTPS 暂不做（LAN 场景收益低）。
+
+## 12. 修订记录（真机联调后，2026-08-21）
+
+依据真机日志 + 官方 Python demo 对照（demo/python3.7_duplex_demo/）修订，覆盖 §3、§6、§7：
+
+1. **播报期上行保持（静音泵）**——修订 §3.4/§6.1。时序分段模型下播报期采集暂停，send 任务必须以 20ms/320 样本的真实零值 PCM 帧维持上行流。实测：上行断流 → 服务端 TTS 停摆 → ~30s 后 `55000000/52000016 AudioTTSIdleTimeoutError` 杀会话（demo 的 mic 线程全程不停，流从不中断）。"静音=采集帧清零"的旧假设不成立（采集停了就没有帧源）。
+2. **状态转移修正**——修订 §6.1/§6.2。THINKING 边 = `transcription.completed`（旧实现第一条 delta 就进 THINKING，用户还在说话）；COMMITTING = commit 实际发出后（VAD 回调置 `s_commit_pending`，tick 晋升），15s 看门狗从该边起算，transcript delta 重置计数（长句不误触发）；transcript 流式期间保持 LISTENING。
+3. **会话生命周期**——修订 §7。服务端主动 `session.closed`（错误/空闲超时）→ `dbws_session_mark_closed()` 清除全部会话标志（旧实现残留 active，下次唤醒不重建会话 → 上行全被无视）；chat 的 SESSION_CLOSED/ERROR 处理器在非 IDLE 态执行 `go_idle()`（错误不再卡 UI ERROR，唤醒词回来用户直接重试——与 demo error→结束会话→可重开一致）。
+4. **唤醒词恢复**——修订 §6.1。`go_idle()` 显式 `wake_word_resume()`：`app_set_state(UI_STATE_IDLE)` 绕过旧状态机 `on_enter_state(IDLE)` 钩子，旧实现对话结束后唤醒词永不恢复（设备聋，真机确认）。
+5. **RX 抗丢帧**——修订 §4.3。rx ring 8→32 槽；按 `payload_offset==0` 的消息边界复位片段累积（掉帧只损失所在消息，不再毒化后续消息导致 64KB 溢出）；掉帧计数变化即复位；dbws 任务 RX 处理优先于 TX 排空，send 锁等待 200→50ms。
+6. **开机 TTS 播报**——speech_text 必须有会话，开机无会话 → 跳过并降级 INFO（不再喂 consecutive-error 计数器）。
+7. **播报缓冲与收尾**——修订 §3.4/§6.2（2026-08-21 第二次真机日志：断断续续）。服务端以 ~2× 实时速度突发推送 TTS（4.8s 音频 2.3s 送达），旧 2s 播放环每次回复必溢出、丢最旧样本 → 语音被跳切。修复：播放环 64KB→1MB（32.8s）；audio.done 不再即时停播，改为 `dbaudio_out_drain_stop()` 排空积压（SPEAKING 持续到环干，tick 再转 auto-listen，回复尾巴不再被切）；打断（interrupt）改为丢弃积压而非排空（环变大后排空会让"停止"再播 30s）。
+8. **音质/显示/交互打磨**（2026-08-21 第三次真机日志：轻微刺啦声 + 用户需求）：
+   - **刺啦声**：播放首尾硬阶跃（静音预滚→全幅音频、音频→静音，`apply_fade` 一直未被调用）→ 启用首 50ms 淡入 + drain 收尾淡出；session.create 的 dialog.extra 加 `enable_loudness_norm:true`（demo 同款，防 TTS 削波）；`CONFIG_I2S_ISR_IRAM_SAFE=y`（铁律 9）。
+   - **竖屏**：移除 `bsp_display_rotate(ROTATION_90)`，原生竖屏 410×502（同 Ver2.0；UI 本就按竖屏尺寸编写）。
+   - **字体**：所有承载中文的 label 统一 `SourceHanSansCN_Medium_16`（气泡、中文标题、mp3 曲名/歌手、状态消息、设置页返回键）。
+   - **提示音与按键**（Ver2.0 同款）：进入聆听播 `snd_rec_start`（叮咚）；LISTENING/THINKING 单击 BOOT → `doubao_chat_cancel()`（go_idle + `snd_rec_stop` 咚叮，唤醒词恢复）。
+   - **日志精简**：VAD 逐帧 silence、proto 下行事件+raw、dispatch、chat_event、tick 等诊断日志降为 ESP_LOGD（LOG_MAXIMUM=INFO 下编译剔除）；TX 队列 16→32 槽。
+9. **第四轮真机日志优化**（2026-08-21 21:55 日志）：
+   - **SPI DMA 分配失败**（`setup_dma_priv_buffer: Failed to allocate priv TX buffer`，播报期屏/SD 卡顿风险）：根因 = cJSON 解析在内部堆大量小节点分配（ALWAYSINTERNAL=256 下 <256B 全落内部），2× 音频突发期间挤爆内部 RAM。修复：protocol.c 里 `cJSON_InitHooks` 全局钩子改用 PSRAM malloc/free。
+   - **TX 饿死**（"Could not lock ws-client" + "TX queue full" 洪水）：根因 = ws 客户端内部任务在连续 RX 突发期间 give→poll→take 循环无让渡点，同优先级（5）的 dbws 任务抢不到锁发送。修复：dbws 任务优先级 5→7（ws 内部任务保持 5），锁一释放即可发送；仍低于采集 9/播放 10（铁律 7）。
+   - **气泡样式**（用户需求）：聊天气泡统一黑底（0x000000）+ 白字 + 细灰边框（0x333333）；用户 STT 气泡居右、文本右对齐，AI 回复气泡居左、文本左对齐；气泡列表仍在屏幕底部（y=380 起，底对齐滚动）。
+10. **第五轮：卡顿与气泡样式修订**（2026-08-21 22:17 日志）：
+    - **AI 播报轻微卡顿 / 叮咚咚叮卡顿**：播放环健康（play loop 显示 ring 13058/6157 样本、无下溢）→ 卡顿在 I2S TX DMA 层。旧 DMA 6×240 帧 @16kHz = 90ms 深度（原按 48kHz 调优），偶发停滞即断流。修复：dma_desc_num 6→10（150ms）；提示音改经 audio_out 播放任务（prio 10）播放（`dbaudio_out_play_tone()`，静音垫吃掉淡入斜坡保证音头清脆）——低优先级任务直写是叮咚卡顿主因；play 任务对 codec 写失败加限速告警（可观测）。
+    - **TX 争用收尾**：drain 仅在 rx ring 清空时执行（突发期不白耗锁等待）；send 锁等待 50→250ms（软件 AES 解 22KB 消息需 100-500ms，长等才能推进）；入队超时 50→10ms（队满时泵节奏快速恢复）；`esp_log_level_set("websocket_client", WARN)` 消除良性锁争用 E 刷屏（真实断连仍由自研 handler 记录）。残余认识：库设计上锁横跨整条消息接收，TX 在持续 RX 突发期必然排队——丢的只是静音泵帧，对语音与协议无害。
+    - **气泡样式修订**（用户需求）：无边框、透明背景（与黑屏融为一体）、文本水平居中；用户 STT 用稍暗白 0xBBBBBB、AI 回复纯白 0xFFFFFF 以区分双方。
+11. **第六轮：播报平滑性**（2026-08-21 22:37 日志：播报仍有卡顿/丢帧感）：
+    - 日志量测：drain 期播放速率 ≈1.03×（完美），交付期只消费了 ~0.78×——交付期存在 ~0.84s 的有效停滞；codec 写零失败（排除 codec/DMA 喂失败）。
+    - 修复：①欠载补丁路径不再补零——改播实际样本（补零曾在每次交付间隙插入 20-40ms 静音丢字，即"丢帧感"）；②首播前预缓冲 0.5s（PREBUF_SAMPLES=8192，提示音经 s_skip_prebuf 跳过）；③可观测性：play 任务记录"loop 慢"（>60ms 循环周期，限速）与"ring empty"（真实输出缺口，限速）——下一轮日志可直接定位残余停滞机制；④静音泵自适应节流：TX 队列积压 >8 帧时跳过发送（消除 TX queue full 丢帧与泵节奏紊乱，流仍存活）。
+12. **第七轮：DMA 池耗尽与状态机卡死**（2026-08-21 用户贴日志）：
+    - **`setup_dma_priv_buffer: Failed to allocate priv TX buffer` 洪水**：根因 = I2S DMA 10 描述符（9.6KB）吃掉 DMA 池，SD 卡 SPI 事务（notes 落盘）在 DMA 池只剩 ~3.4KB 时分配不到私有 DMA 缓冲 → 快速重试刷屏 → UART/任务整体失速 → rx ring 溢出（124 掉片）+ TX queue full 连带洪水。修复：**I2S DMA 回退 6 描述符（90ms）**——150ms 深度对平滑性无贡献（上轮量测 drain 1.03×/交付期停滞不在 DMA），但 9.6KB 的 DMA 代价是系统性的。
+    - **`state_machine: Rejected transition: 7 -> 5`（状态机卡死）**：根因 = doubao 路径在进入 LISTENING 之后全部用 `app_set_state` 旁路旧状态机，旧机器 `s_current_state` 停留在 THINKING(7)；唤醒词/单击/触摸再请求 `app_state_request(LISTENING)` 时被转移表拒绝（THINKING→LISTENING 非法）→ 唤醒词打断/下一轮直接失效。修复：app_main 三处进入 LISTENING 的请求全部改 `app_set_state`（旧机器只保留 CONNECTING/IDLE 等骨架态；唤醒词暂停由 start_listening 显式负责）。
+
+## 13. 与 res.prd 架构对照（2026-08-22）
+
+对照 `/home/conor/esp/esp32/AIWatch_Doubao/res.prd`（豆包 Seeduplex 架构建议），采纳其可落地原则，逐条修复当前日志问题：
+
+| res.prd 原则 | 现状 | 处理 |
+|---|---|---|
+| 并行子状态机（连接/会话/采集/对话/播放分开建模） | 已按此分层（ws_client 会话标志、chat 状态、audio_out 播放态），但 UI 层残留双头状态机（7→5 拒绝） | 上一轮已修复入口请求；不再重写 |
+| 事件队列通信、WS 任务不做重活 | WS 内部任务只拷贝片段 ✓；dbws 任务做解析/重采样 | 保持 |
+| **播放中随时插话 + generation 丢弃旧音频**（§8） | 打断清空播放环，但**迟到旧 delta 无门控** | 新增 `s_audio_stream_open` 门（AUDIO_STARTED 开、AUDIO_DONE/本地 interrupt 关），迟到音频丢弃 |
+| 发送不得阻塞接收 | drain 锁等待 250ms 曾阻塞 dbws 任务 → rx 溢出 → 音频丢失 → ring empty 76 次（本轮日志实锤卡顿链） | drain 改 **try-lock（timeout 0）**，发送在锁空闲间隙推进；泵节流兜底 |
+| 下行缓冲吸收突发 | rx ring 32 槽在快速 TTS flush 时溢出（掉片 40） | rx ring 64 槽（268KB PSRAM） |
+| SPI/DMA 内存纪律 | SD SPI max_transfer_sz=65536 → 每事务 64KB 内部 DMA 私有缓冲 → 64KB 保留池必失败 → 507 条重试洪水 | max_transfer_sz → 4096（4KB 事务缓冲可分配） |
+| 超时设计 | 已有（思考 30s/播报 60s/commit 15s/session.create 5s） | 保持 |
+| API Key 不入固件 | 走 NVS + 网页（§5.6）✓ | 保持 |
+| WS 事件回调必须轻（铁律 8/22） | ❌ CONNECTED/DISCONNECTED 回调内联调用 s_cb → chat go_idle 在 ws 内部任务退出路径里做 400ms 阻塞停等 → 任务在 destroy 后仍存活，与库的延迟释放机制 double-free（真机 3 连崩：LoadProhibited / xEventGroupSetBits assert / LoadStoreAlignment，全在 esp_websocket_client_task） | 修复：handler 只置 pending 标志 + 事件位，dbws 任务分发事件；create_client 增加陈旧句柄清理 |
+| 库自身销毁竞态（第二轮崩溃根因） | esp_websocket_client 1.1.0 上游 bug：传输错误 abort 路径置 run=false + selected_for_destroying，destroy() 见 run==false 跳过 join 立即释放 → 任务收尾阶段（transport_close/STOPPED_BIT/state 写/自释放）与释放竞态 double-free | **本地化覆盖 components/esp_websocket_client**：destroy() 恒 join（run==false 且有任务时等 STOPPED_BIT）；任务退出路径 STOPPED_BIT 设为最后访问、任务不自释放（destroy 为唯一释放点）。离线构建配套：托管目录从组件管理器缓存恢复 + 补 .component_hash |
+

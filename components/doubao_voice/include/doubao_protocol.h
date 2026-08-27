@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * doubao_protocol — Doubao (Volcengine) realtime duplex dialogue protocol:
@@ -46,7 +46,7 @@ extern "C" {
 
 /* session.create. `session_id` is NULL for the first handshake, non-NULL
  * on reconnect to restore context (id field only then). */
-esp_err_t proto_build_session_create(char *buf, size_t cap, const doubao_cfg_t *cfg, const char *session_id);
+esp_err_t proto_build_session_create(char *buf, size_t cap, const doubao_cfg_t *cfg);
 
 /* input_audio_buffer.append. PCM 16k/16bit little-endian; encoded Base64
  * straight into `buf`. 640 samples (40ms) need cap >= ~1.8KB. */
@@ -95,6 +95,9 @@ void proto_reset(void);
 /* Session id extracted from `session.created` (for reconnect session.create),
  * NULL if no session has been created yet. */
 const char *proto_get_session_id(void);
+
+/* Diagnostic counters: audio delta count and total events dispatched. */
+void proto_get_stats(uint32_t *audio_deltas, uint32_t *total_events);
 
 #ifdef __cplusplus
 }

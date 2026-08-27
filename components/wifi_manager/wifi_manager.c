@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  */
 
@@ -21,7 +21,7 @@ static char s_ip_str[16] = {0};
 static int s_retry_count = 0;
 static esp_netif_t *s_ap_netif = NULL;
 #define MAX_RETRIES 10
-#define AP_SSID_PREFIX "AIWatch_"
+#define AP_SSID_PREFIX "Doubao_"
 
 static void set_state(wifi_state_t st)
 {
@@ -146,7 +146,7 @@ esp_err_t wifi_manager_reconnect(const char *ssid, const char *password)
 
 esp_err_t wifi_manager_start_ap(const char *ssid, const char *password)
 {
-    if (!ssid) ssid = "AIWatch_Config";
+    if (!ssid) ssid = "Doubao_Config";
 
     ESP_LOGI(TAG, "Starting AP mode: %s", ssid);
 

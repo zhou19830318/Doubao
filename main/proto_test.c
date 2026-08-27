@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * proto_test — temporary on-target self-test for the doubao protocol codec
@@ -250,31 +250,33 @@ static void case_builders(void)
         .speed = 0,
         .loudness = 0,
     };
-    CHECK(proto_build_session_create(buf, sizeof(buf), &cfg, "dlg_reconnect_1") == ESP_OK, "build session.create");
+    CHECK(proto_build_session_create(buf, sizeof(buf), &cfg) == ESP_OK, "build session.create");
     cJSON *root = cJSON_Parse(buf);
     CHECK(root != NULL, "session.create parses");
     if (root != NULL) {
         cJSON *sess = cJSON_GetObjectItemCaseSensitive(root, "session");
+        cJSON *stype = sess ? cJSON_GetObjectItemCaseSensitive(sess, "type") : NULL;
+        CHECK(stype != NULL && cJSON_IsString(stype) && strcmp(stype->valuestring, "realtime") == 0, "session.type=realtime");
+        cJSON *ext = cJSON_GetObjectItemCaseSensitive(root, "extension");
+        CHECK(ext != NULL && cJSON_GetObjectItemCaseSensitive(ext, "asr") != NULL &&
+              cJSON_GetObjectItemCaseSensitive(ext, "tts") != NULL &&
+              cJSON_GetObjectItemCaseSensitive(ext, "dialog") != NULL,
+              "top-level extension asr/tts/dialog");
         cJSON *model = sess ? cJSON_GetObjectItemCaseSensitive(sess, "model") : NULL;
         CHECK(model != NULL && cJSON_IsString(model) && strcmp(model->valuestring, "1.2.6.1") == 0, "model");
+        /* Client-generated UUID, always present — mirrors the official
+         * demo (server echoes it back as the dialog id). */
         cJSON *id = sess ? cJSON_GetObjectItemCaseSensitive(sess, "id") : NULL;
-        CHECK(id != NULL && cJSON_IsString(id) && strcmp(id->valuestring, "dlg_reconnect_1") == 0, "id on reconnect");
+        CHECK(id != NULL && cJSON_IsString(id) && strlen(id->valuestring) == 36 &&
+              id->valuestring[8] == '-' && id->valuestring[13] == '-', "client uuid session.id");
+        cJSON *evid = cJSON_GetObjectItemCaseSensitive(root, "event_id");
+        CHECK(evid != NULL && cJSON_IsString(evid), "event_id on session.create");
         cJSON *instr = sess ? cJSON_GetObjectItemCaseSensitive(sess, "instructions") : NULL;
         CHECK(instr != NULL && cJSON_IsString(instr) && strstr(instr->valuestring, "\"quote\"") != NULL, "instructions escaped");
         cJSON *voice = sess ? cJSON_GetObjectItemCaseSensitive(sess, "audio") : NULL;
         voice = voice ? cJSON_GetObjectItemCaseSensitive(voice, "output") : NULL;
         voice = voice ? cJSON_GetObjectItemCaseSensitive(voice, "voice") : NULL;
         CHECK(voice != NULL && cJSON_IsString(voice) && strcmp(voice->valuestring, "zh_female_vv_jupiter_bigtts") == 0, "voice");
-        cJSON_Delete(root);
-    }
-
-    /* session.create without id (fresh handshake) */
-    CHECK(proto_build_session_create(buf, sizeof(buf), &cfg, NULL) == ESP_OK, "build session.create (no id)");
-    root = cJSON_Parse(buf);
-    CHECK(root != NULL && cJSON_GetObjectItemCaseSensitive(root, "session") != NULL, "no-id variant parses");
-    if (root != NULL) {
-        cJSON *sess = cJSON_GetObjectItemCaseSensitive(root, "session");
-        CHECK(cJSON_GetObjectItemCaseSensitive(sess, "id") == NULL, "no id on fresh session");
         cJSON_Delete(root);
     }
 

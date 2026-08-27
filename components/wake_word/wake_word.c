@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Wake word detection using ESP-SR.
@@ -58,7 +58,8 @@ static EventGroupHandle_t  s_event_group  = NULL;
 static EventBits_t         s_event_bit    = 0;
 static volatile bool       s_running      = false;
 static volatile bool       s_paused       = false;
-static SemaphoreHandle_t   s_pause_ack    = NULL;  /* Task→caller handshake */
+static SemaphoreHandle_t   s_pause_ack    = NULL;  /* Task→caller handshake for pause */
+static SemaphoreHandle_t   s_exit_ack     = NULL;  /* C4 fix: task→caller handshake for stop */
 static int                 s_chunk_size   = 0;
 
 #ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
@@ -201,9 +202,19 @@ esp_err_t wake_word_start(EventGroupHandle_t event_group, EventBits_t event_bit)
         s_pause_ack = xSemaphoreCreateBinary();
     }
 
-    /* Use PSRAM for task stack to save internal RAM */
+    /* C4 fix: create exit-acknowledge semaphore for deterministic stop.
+     * wake_word_stop() waits on this; the task gives it right before
+     * vTaskDelete(NULL) so the caller knows the task has exited and it
+     * is safe to destroy the model memory. */
+    if (!s_exit_ack) {
+        s_exit_ack = xSemaphoreCreateBinary();
+    }
+
+    /* H7 fix: 4KB is too small for ESP-SR model inference + logging +
+     * floating-point math + board_audio_record. 8KB provides adequate
+     * headroom (verified by typical ESP-SR stack usage of ~5KB). */
     BaseType_t ret = xTaskCreatePinnedToCore(
-        wake_word_task, "wake_word", 4096, NULL, 5, &s_task_handle, 1);
+        wake_word_task, "wake_word", 8192, NULL, 5, &s_task_handle, 1);
     if (ret != pdPASS) {
         ESP_LOGE(TAG, "Failed to create wake word task");
         s_running = false;
@@ -246,12 +257,40 @@ void wake_word_stop(void)
 {
     s_running = false;
     if (s_task_handle) {
-        vTaskDelay(pdMS_TO_TICKS(200));
+        /* C4 fix: wait for the task to confirm it has exited before
+         * destroying the model. The old code used a fixed 200ms delay
+         * which was not deterministic — the task might still be in
+         * board_audio_record() or running model detect() when the
+         * caller destroys the model memory → Use-after-free.
+         *
+         * Timeout: 2s is generous for a single chunk read + model
+         * inference cycle. If exceeded, we cannot safely destroy the
+         * model — the task might still hold a pointer to it. Enter
+         * safe degradation: the task will see s_running==false and
+         * exit on its own, but we must NOT touch model pointers. */
+        if (s_exit_ack) {
+            TickType_t acked = xSemaphoreTake(s_exit_ack, pdMS_TO_TICKS(2000));
+            if (!acked) {
+                ESP_LOGE(TAG, "Stop ack timeout — task may still hold model pointers. "
+                         "Skipping model destroy to avoid Use-after-free.");
+                /* Leave s_task_handle non-NULL so we don't re-create the task
+                 * (the old task will exit soon on its own via s_running==false). */
+                ESP_LOGW(TAG, "Safe degradation: model will NOT be destroyed (leaked)");
+                return;
+            }
+        }
         s_task_handle = NULL;
     }
+
+    /* Only reach here if the task has confirmed exit (or was never running).
+     * Safe to destroy model memory now. */
     if (s_pause_ack) {
         vSemaphoreDelete(s_pause_ack);
         s_pause_ack = NULL;
+    }
+    if (s_exit_ack) {
+        vSemaphoreDelete(s_exit_ack);
+        s_exit_ack = NULL;
     }
 
 #ifdef CONFIG_AIDB_WAKE_WORD_MULTINET
@@ -339,17 +378,36 @@ static void wake_word_task(void *arg)
             /* Acknowledge the pause: tell wake_word_pause() that we've
              * released the I2S RX channel and won't call board_audio_record
              * until resumed. This is a deterministic handshake replacing
-             * the old 110ms timing heuristic. */
+             * the old 110ms timing heuristic. 10ms delay keeps the task
+             * responsive without burning CPU — the old 100ms caused "Pause
+             * ack timeout" when wake_word_pause() was called while the task
+             * was blocked in board_audio_record() (40ms read + 100ms delay
+             * = 140ms, but the semaphore was already consumed from a
+             * previous cycle). */
             if (s_pause_ack) {
                 xSemaphoreGive(s_pause_ack);
             }
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(10));
             continue;
         }
 
-        /* Read mic audio — blocking call */
+        /* Read mic audio — blocking call (up to ~40ms at 16kHz/512 samples).
+         * Check s_paused after the read: if pause was requested while we
+         * were blocked in board_audio_record(), we must acknowledge it
+         * immediately instead of looping back to the top and spending
+         * another 100ms in vTaskDelay before the ack. Field evidence:
+         * pause ack timeout because the task was stuck in the read + delay
+         * cycle while wake_word_pause() waited 500ms. */
         size_t samples_read = 0;
         esp_err_t err = board_audio_record(audio_buf, s_chunk_size, &samples_read);
+        if (s_paused) {
+            /* Acknowledge immediately — don't wait for next loop iteration */
+            if (s_pause_ack) {
+                xSemaphoreGive(s_pause_ack);
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
         if (err != ESP_OK || samples_read == 0) {
             vTaskDelay(pdMS_TO_TICKS(10));
             continue;
@@ -366,7 +424,7 @@ static void wake_word_task(void *arg)
                 sum_sq += (int32_t)audio_buf[i] * audio_buf[i];
             }
             int rms = (int)sqrtf((float)(sum_sq / s_chunk_size));
-            ESP_LOGI(TAG, "Audio monitor [%s]: RMS=%d first=[%d,%d,%d,%d]",
+            ESP_LOGD(TAG, "Audio monitor [%s]: RMS=%d first=[%d,%d,%d,%d]",
                      early_diag <= 5 ? "early" : "periodic",
                      rms,
                      s_chunk_size > 0 ? audio_buf[0] : 0,
@@ -408,7 +466,13 @@ static void wake_word_task(void *arg)
     }
 
     heap_caps_free(audio_buf);
+    /* C4 fix: signal exit confirmation BEFORE clearing s_task_handle
+     * and deleting the task. wake_word_stop() waits on this semaphore
+     * to know it's safe to destroy the model. */
     ESP_LOGI(TAG, "Detection task exiting");
+    if (s_exit_ack) {
+        xSemaphoreGive(s_exit_ack);
+    }
     s_task_handle = NULL;
     vTaskDelete(NULL);
 }

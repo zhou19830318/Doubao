@@ -1,8 +1,21 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Centralized state machine — validates transitions and arbitrates resources.
+ *
+ * Design:
+ *   All state transitions go through app_state_request(), which:
+ *    1. Validates the transition under the mutex (short critical section)
+ *    2. Acquires required hardware resources
+ *    3. Releases old state's resources
+ *    4. Updates s_current_state and resource owners (under mutex)
+ *    5. Releases the mutex
+ *    6. Executes hooks (wake_word_pause/resume) OUTSIDE the mutex —
+ *       these may block up to 500ms and must never be called while
+ *       holding s_state_mutex to prevent recursive deadlock (C1) and
+ *       long-lock-held blocking (C2).
+ *    7. Applies the UI state via app_set_state()
  */
 
 #include "app_state_machine.h"
@@ -24,10 +37,8 @@ static ui_state_t s_resource_owner[RES_COUNT] = {0};
 /* ── Transition table ────────────────────────────────────────────
  * For each state, bitmask of states it can transition TO.
  * BIT(n) = allowed target for state n.
- * All unlisted transitions are rejected.
- * Special: UI_STATE_BOOT (value 2) can go to CONNECTING or directly to IDLE.
- *           UI_STATE_CONNECTING (value 3) can go to IDLE or ERROR.
- *           Any state can transition to ERROR (unspecified = allowed).
+ * All unlisted transitions are REJECTED (S2 fix: unknown = deny).
+ * Special: ERROR is only allowed via explicit transition entries (S3 fix).
  */
 #define STATE_MASK(s) (1ULL << (s))
 
@@ -53,16 +64,22 @@ static const uint64_t s_valid_transitions[] = {
     [ST_IDLE]       = STATE_MASK(ST_LISTENING) | STATE_MASK(ST_MP3) |
                       STATE_MASK(ST_NOTIFYING) | STATE_MASK(ST_CONNECTING) |
                       STATE_MASK(ST_ERROR),
-    [ST_LISTENING]  = STATE_MASK(ST_SENDING) | STATE_MASK(ST_IDLE),
-    [ST_SENDING]    = STATE_MASK(ST_THINKING) | STATE_MASK(ST_IDLE),
-    [ST_THINKING]   = STATE_MASK(ST_STREAMING) | STATE_MASK(ST_IDLE) |
+    [ST_LISTENING]  = STATE_MASK(ST_SENDING) | STATE_MASK(ST_THINKING) |
+                      STATE_MASK(ST_IDLE) | STATE_MASK(ST_ERROR),
+    [ST_SENDING]    = STATE_MASK(ST_THINKING) | STATE_MASK(ST_IDLE) |
                       STATE_MASK(ST_ERROR),
-    [ST_STREAMING]  = STATE_MASK(ST_RESPONSE) | STATE_MASK(ST_IDLE),
-    [ST_RESPONSE]   = STATE_MASK(ST_TTS_LOAD) | STATE_MASK(ST_TTS_PLAY) | STATE_MASK(ST_IDLE),
-    [ST_TTS_LOAD]   = STATE_MASK(ST_TTS_PLAY) | STATE_MASK(ST_IDLE),
-    [ST_TTS_PLAY]   = STATE_MASK(ST_IDLE) | STATE_MASK(ST_LISTENING),
-    [ST_MP3]        = STATE_MASK(ST_IDLE),
-    [ST_NOTIFYING]  = STATE_MASK(ST_IDLE),
+    [ST_THINKING]   = STATE_MASK(ST_STREAMING) | STATE_MASK(ST_IDLE) |
+                      STATE_MASK(ST_LISTENING) | STATE_MASK(ST_ERROR),
+    [ST_STREAMING]  = STATE_MASK(ST_RESPONSE) | STATE_MASK(ST_IDLE) |
+                      STATE_MASK(ST_ERROR),
+    [ST_RESPONSE]   = STATE_MASK(ST_TTS_LOAD) | STATE_MASK(ST_TTS_PLAY) |
+                      STATE_MASK(ST_IDLE) | STATE_MASK(ST_ERROR),
+    [ST_TTS_LOAD]   = STATE_MASK(ST_TTS_PLAY) | STATE_MASK(ST_IDLE) |
+                      STATE_MASK(ST_ERROR),
+    [ST_TTS_PLAY]   = STATE_MASK(ST_IDLE) | STATE_MASK(ST_LISTENING) |
+                      STATE_MASK(ST_ERROR),
+    [ST_MP3]        = STATE_MASK(ST_IDLE) | STATE_MASK(ST_ERROR),
+    [ST_NOTIFYING]  = STATE_MASK(ST_IDLE) | STATE_MASK(ST_ERROR),
     [ST_ERROR]      = STATE_MASK(ST_CONNECTING) | STATE_MASK(ST_IDLE),
 };
 
@@ -93,40 +110,64 @@ static int state_priority(ui_state_t st)
 static bool is_valid_transition(ui_state_t from, ui_state_t to)
 {
     if (from == to) return true;
-    if (from >= sizeof(s_valid_transitions) / sizeof(s_valid_transitions[0]))
-        return true; /* Unknown state — allow */
-    if (to == UI_STATE_ERROR) return true; /* ERROR always allowed */
-    if (!s_valid_transitions[from]) return true; /* Unspecified — allow */
+
+    /* S2 fix: reject out-of-range states — no silent allow */
+    if (from >= sizeof(s_valid_transitions) / sizeof(s_valid_transitions[0])) {
+        return false;
+    }
+    if (to >= sizeof(s_valid_transitions) / sizeof(s_valid_transitions[0])) {
+        return false;
+    }
+
+    /* S3 fix: ERROR is only allowed via explicit entries in the table,
+     * not as a global escape hatch. Callers must route through a proper
+     * ERROR event if they want to enter ERROR state. */
+    if (!s_valid_transitions[from]) return false; /* No entries = reject */
     return (s_valid_transitions[from] & STATE_MASK(to)) != 0;
 }
 
-/* ── Pre-transition hooks ─────────────────────────────────────── */
-static void on_enter_state(ui_state_t target)
-{
-    switch (target) {
-    case UI_STATE_LISTENING:
-        /* Pause wake word (I2S RX) */
-        wake_word_pause();
-        break;
-    case UI_STATE_PLAYING_MP3:
-        wake_word_pause();
-        break;
-    default:
-        break;
-    }
-}
+/* ── Deferred hook tracking ──────────────────────────────────────
+ * C1/C2 fix: hooks (wake_word_pause/resume) must execute OUTSIDE
+ * the state machine mutex. These small structures record what hooks
+ * need to run, populated during the locked critical section, then
+ * executed after the mutex is released. */
+typedef struct {
+    ui_state_t leave_state;  /* State being left (for on_leave_state) */
+    ui_state_t enter_state;  /* State being entered (for on_enter_state) */
+    bool has_leave;
+    bool has_enter;
+} state_hooks_t;
 
-static void on_leave_state(ui_state_t from)
+/* Execute hooks outside the mutex — may block (wake_word_pause up to 500ms) */
+static void execute_hooks(const state_hooks_t *hooks)
 {
-    switch (from) {
-    case UI_STATE_LISTENING:
-        wake_word_resume();
-        break;
-    case UI_STATE_PLAYING_MP3:
-        wake_word_resume();
-        break;
-    default:
-        break;
+    if (hooks->has_leave) {
+        switch (hooks->leave_state) {
+        case UI_STATE_PLAYING_MP3:
+            wake_word_resume();
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (hooks->has_enter) {
+        switch (hooks->enter_state) {
+        case UI_STATE_LISTENING:
+        case UI_STATE_PLAYING_MP3:
+            wake_word_pause();
+            break;
+        case UI_STATE_IDLE:
+            /* Wake word runs ONLY in IDLE. Resuming it on leave(LISTENING)
+             * made it read the mic concurrently with the doubao capture
+             * task during STREAMING/SPEAKING — three tasks then contended
+             * for the codec mutex and the priority-9 capture task lost every
+             * race ("mic read incomplete" floods). One reader at a time. */
+            wake_word_resume();
+            break;
+        default:
+            break;
+        }
     }
 }
 
@@ -141,6 +182,30 @@ static bool state_is_resource_owner(ui_state_t st)
             st == UI_STATE_PLAYING_MP3 ||
             st == UI_STATE_TTS_PLAYING ||
             st == UI_STATE_NOTIFYING);
+}
+
+/* C1 fix: Internal variant that operates WITHOUT taking the mutex.
+ * Called only from app_state_request() which already holds it.
+ * Releases resource ownership for a given state. Does NOT call hooks
+ * (on_leave_state) — those are deferred to execute_hooks(). */
+static void state_release_resources_locked(ui_state_t state)
+{
+    for (int i = 0; i < RES_COUNT; i++) {
+        if (s_resource_owner[i] == state) {
+            s_resource_owner[i] = 0;
+        }
+    }
+}
+
+/* C1 fix: Internal variant for force-idle that operates WITHOUT
+ * recursively taking the mutex. Only updates internal bookkeeping —
+ * does NOT call app_set_state() (caller must do that after releasing mutex). */
+static void state_force_idle_locked(ui_state_t state)
+{
+    state_release_resources_locked(state);
+    if (s_current_state == state) {  /* S4 fix: only if still current */
+        s_current_state = UI_STATE_IDLE;
+    }
 }
 
 /* ── Public API ────────────────────────────────────────────────── */
@@ -167,6 +232,14 @@ ui_state_t app_state_current(void)
     return st;
 }
 
+void app_state_machine_force_current(ui_state_t st)
+{
+    if (!s_state_mutex) return;
+    xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+    s_current_state = st;
+    xSemaphoreGive(s_state_mutex);
+}
+
 esp_err_t app_state_request(ui_state_t target)
 {
     if (!s_state_mutex) {
@@ -174,11 +247,14 @@ esp_err_t app_state_request(ui_state_t target)
         return ESP_ERR_INVALID_STATE;
     }
 
+    state_hooks_t hooks = {0};
+    ui_state_t ui_target = target;  /* What to pass to app_set_state() */
+
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
 
     ui_state_t old = s_current_state;
 
-    /* 1. Validate transition */
+    /* 1. Validate transition (S2/S3: unknown/ERROR handled inside) */
     if (!is_valid_transition(old, target)) {
         xSemaphoreGive(s_state_mutex);
         ESP_LOGW(TAG, "Rejected transition: %d -> %d (not allowed)", old, target);
@@ -199,8 +275,10 @@ esp_err_t app_state_request(ui_state_t target)
                 if (target_prio < owner_prio) {
                     ESP_LOGW(TAG, "Preempting state %d (prio %d) for state %d (prio %d)",
                              owner, owner_prio, target, target_prio);
-                    app_state_force_idle(owner);
-                    s_resource_owner[res] = 0;
+                    /* C1 fix: use _locked variant instead of
+                     * app_state_force_idle() which would recursively
+                     * take the mutex → deadlock. */
+                    state_force_idle_locked(owner);
                 } else {
                     xSemaphoreGive(s_state_mutex);
                     ESP_LOGW(TAG, "Resource %d owned by state %d (prio %d), requested by %d (prio %d)",
@@ -218,12 +296,9 @@ esp_err_t app_state_request(ui_state_t target)
                        (state_is_resource_owner(old) && !state_is_resource_owner(target));
 
     if (old != target && release_old) {
-        on_leave_state(old);
-        for (int i = 0; i < RES_COUNT; i++) {
-            if (s_resource_owner[i] == old) {
-                s_resource_owner[i] = 0;
-            }
-        }
+        hooks.has_leave = true;
+        hooks.leave_state = old;
+        state_release_resources_locked(old);
     }
 
     /* 4. Acquire new state's resources (only if it's a resource owner) */
@@ -233,46 +308,76 @@ esp_err_t app_state_request(ui_state_t target)
             if (res >= RES_COUNT) break;
             s_resource_owner[res] = target;
         }
-        on_enter_state(target);
+        hooks.has_enter = true;
+        hooks.enter_state = target;
     }
 
     s_current_state = target;
     xSemaphoreGive(s_state_mutex);
 
-    /* 5. Apply the UI state */
-    app_set_state(target);
+    /* 5. C2 fix: Execute hooks OUTSIDE the mutex.
+     * wake_word_pause() can block up to 500ms waiting for the detection
+     * task to acknowledge the pause. Holding the state machine mutex
+     * during that wait causes:
+     *   - Any other state transition request deadlocks (C1)
+     *   - Audio tasks that need state info are blocked for 500ms+ (C2)
+     * The two-phase approach (validate+update under lock, then side-effects
+     * after release) keeps the critical section to a few μs. */
+    execute_hooks(&hooks);
+
+    /* 6. Apply the UI state */
+    app_set_state(ui_target);
     return ESP_OK;
 }
 
 void app_state_release(ui_state_t state)
 {
     if (!s_state_mutex) return;
+
+    state_hooks_t hooks = {0};
+
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
-    on_leave_state(state);
-    for (int i = 0; i < RES_COUNT; i++) {
-        if (s_resource_owner[i] == state) {
-            s_resource_owner[i] = 0;
-        }
-    }
+    hooks.has_leave = true;
+    hooks.leave_state = state;
+    state_release_resources_locked(state);
     xSemaphoreGive(s_state_mutex);
+
+    /* C2 fix: hooks execute outside the mutex */
+    execute_hooks(&hooks);
     ESP_LOGI(TAG, "Released resources for state %d", state);
 }
 
 void app_state_force_idle(ui_state_t state)
 {
-    /* Release all resources owned by this state */
-    app_state_release(state);
+    if (!s_state_mutex) return;
 
-    /* If this was the current state, reset to IDLE */
+    state_hooks_t hooks = {0};
+
     xSemaphoreTake(s_state_mutex, portMAX_DELAY);
+
+    /* C1 fix: use _locked variant instead of app_state_release()
+     * which would recursively take the mutex → deadlock. */
+    state_release_resources_locked(state);
+
+    /* S4 fix: only update to IDLE if the caller's state is still current.
+     * If the state has already changed (e.g., a higher-priority transition
+     * happened), don't overwrite the new state. */
     if (s_current_state == state) {
         s_current_state = UI_STATE_IDLE;
+        hooks.has_leave = true;
+        hooks.leave_state = state;
+        hooks.has_enter = true;
+        hooks.enter_state = UI_STATE_IDLE;
     }
+
     xSemaphoreGive(s_state_mutex);
 
-    /* Apply IDLE state (outside mutex to avoid deadlock with app_set_state) */
-    app_set_state(UI_STATE_IDLE);
-    ESP_LOGI(TAG, "Forced state %d → IDLE", state);
+    /* Execute hooks and UI update outside the mutex */
+    execute_hooks(&hooks);
+    if (hooks.has_leave || hooks.has_enter) {
+        app_set_state(UI_STATE_IDLE);
+    }
+    ESP_LOGI(TAG, "Forced state %d -> IDLE", state);
 }
 
 bool app_resource_is_owned(app_resource_t res)

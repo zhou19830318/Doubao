@@ -1,10 +1,10 @@
-menu "AIWatch Doubao Application Configuration"
+menu "Doubao Application Configuration"
 
     choice AIDB_BOARD_SELECT
         prompt "Select target board"
         default AIDB_BOARD_AMOLED_206
         help
-            Select the hardware board target for AIWatchDB.
+            Select the hardware board target for Doubao Voice Robot.
 
         config AIDB_BOARD_SENSECAP_WATCHER
             bool "SenseCAP Watcher"

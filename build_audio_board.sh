@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build AIWearable for Waveshare ESP32-S3-AUDIO-Board
+# Build Doubao for Waveshare ESP32-S3-AUDIO-Board
 # Target: ESP32-S3, 16MB flash, USB JTAG console
 
 set -e
 cd "$(dirname "$0")"
 
 echo "============================================"
-echo " AIWearable - Waveshare ESP32-S3-AUDIO-Board"
+echo " Doubao - Waveshare ESP32-S3-AUDIO-Board"
 echo "============================================"
 
 # Check if we need to switch to ESP32-S3 or switch board

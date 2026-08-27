@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Settings — NVS-backed runtime configuration
@@ -34,19 +34,16 @@ typedef struct {
     char     oc_device_token[192];  /* Paired device token issued by hello-ok */
     bool     oc_use_tls;            /* Use wss:// instead of ws:// */
 
-    /* MiMo API (Xiaomi) — shared key for both ASR and TTS */
-    char     mimo_api_key[128];
-    char     mimo_url[128];
-
     /* Doubao (Volcengine) realtime voice — X-Api-Key header */
     char     api_key[64];           /* empty → main 回落 secrets.h dev 值 */
-
-    /* ASR (MiMo-V2.5-ASR) */
-    char     asr_model[64];
-
-    /* TTS (MiMo-V2.5-TTS) */
-    char     tts_model[32];
-    char     tts_voice[32];
+    char     voice[48];             /* 音色，如 "zh_female_vv_jupiter_bigtts" */
+    int8_t   speed;                 /* 语速 [-50,100]，默认 0 */
+    int8_t   loudness;              /* 音量 [-50,100]，默认 0 */
+    char     system_prompt[512];    /* 系统提示词 */
+    bool     auto_continue;         /* 自动续听，默认 true */
+    uint8_t  idle_timeout_s;        /* 续听空闲超时（秒），默认 8 */
+    bool     enable_search;         /* 联网搜索（tool_search），默认 false */
+    bool     enable_music;          /* 歌唱功能（dialog.extra.enable_music），默认 false */
 
     /* Audio */
     uint8_t  volume;               /* 0-100 */

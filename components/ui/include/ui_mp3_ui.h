@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 player UI module - Progress bar, track name, control buttons
@@ -73,6 +73,15 @@ void ui_mp3_ui_enter_selection_mode(const char **song_list, int song_count, int 
  * @return true if user confirmed selection (button pressed)
  */
 bool ui_mp3_ui_handle_selection_input(int delta);
+
+/**
+ * @brief Check (and clear) the selection-confirmed flag.
+ * When the MP3 panel's double-tap handler confirms a selection,
+ * it sets this flag so the main loop can suppress DOUBLE_TAP_BIT
+ * (the global gesture detector also fires on the same touch).
+ * @return true if a selection was just confirmed (flag consumed)
+ */
+bool ui_mp3_ui_consume_selection_confirmed(void);
 
 #ifdef __cplusplus
 }

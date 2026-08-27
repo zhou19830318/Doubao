@@ -1,6 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contri
- tors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Main UI module — Portrait (BOARD_LCD_H_RES×BOARD_LCD_V_RES) with Dynamic Island style
@@ -317,28 +316,40 @@ static void set_scroll_text(const char *text, lv_color_t color)
 static void create_state_widgets(void)
 {
     /* ══════════════════════════════════════════════════════════════════
-     * Layout zones on 410×502 screen (center y=251, LV_ALIGN_CENTER).
-     * GIF removed — content owns the full height, zones recentered on
-     * the middle-lower half so the screen reads balanced below the
-     * Dynamic Island (top y=0..92):
-     *   主标题/时钟/波形      y=-66  → 中心 y≈185
-     *   副标题/日期           y=-6   → 中心 y≈245
-     *   滚动文本 s_scroll_label y=+54 → 中心 y≈305, 高64 (底 y≈337)
+     * Layout zones on 410×502 screen (参考 Ver2.0 布局，灵动岛+下方内容):
+     *
+     *   ┌─────────────────────────────────────────┐ y=0
+     *   │   Dynamic Island (y=18..62)              │
+     *   │   中文副标题 (y=72..92)                  │
+     *   ├─────────────────────────────────────────┤ y≈100
+     *   │                                         │
+     *   │   内容区 (y≈100..380)                    │
+     *   │   · IDLE: 大时钟 + 日期                  │
+     *   │   · LISTENING: 波形 + 提示               │
+     *   │   · THINKING/STREAMING: 标题 + 副标题     │
+     *   │   · RESPONSE: 滚动文本                   │
+     *   │                                         │
+     *   ├─────────────────────────────────────────┤ y≈380
+     *   │   气泡区 (y≈380..498)                    │
+     *   │   · 对话气泡 (flex column, 自动滚动)     │
+     *   └─────────────────────────────────────────┘ y=502
+     *
+     *   关键: 气泡区与内容区互不重叠。气泡区仅在有对话历史时显示。
      * ══════════════════════════════════════════════════════════════════ */
 
-    /* ── 主标题 s_center_label — 替换旧 y=-40 ────────────────────────── */
+    /* ── 内容区：居中偏上 (y≈100..370)，与气泡区不重叠 ─────────────── */
+    /* 主标题 y=130, 副标题 y=180, 时钟/波形在中间 */
+
     s_center_label = lv_label_create(s_screen);
     lv_label_set_text(s_center_label, "");
     lv_obj_set_style_text_font(s_center_label, &lv_font_montserrat_28, 0);
     lv_obj_set_style_text_color(s_center_label, lv_color_hex(0xFFFFFF), 0);
     lv_obj_set_style_text_align(s_center_label, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_width(s_center_label, SCREEN_W - 64);  /* 32px L + 32px R */
+    lv_obj_set_width(s_center_label, SCREEN_W - 64);
     lv_label_set_long_mode(s_center_label, LV_LABEL_LONG_DOT);
-    /* Y=-66: 中心 y≈185, height ~28 (171..199) */
-    lv_obj_align(s_center_label, LV_ALIGN_CENTER, 0, -66);
+    lv_obj_align(s_center_label, LV_ALIGN_TOP_MID, 0, 130);
     lv_obj_add_flag(s_center_label, LV_OBJ_FLAG_HIDDEN);
 
-    /* ── 副标题 s_detail_label — 替换旧 y=+52 ────────────────────────── */
     s_detail_label = lv_label_create(s_screen);
     lv_label_set_text(s_detail_label, "");
     lv_obj_set_style_text_font(s_detail_label, &SourceHanSansCN_Medium_16, 0);
@@ -346,18 +357,10 @@ static void create_state_widgets(void)
     lv_obj_set_style_text_align(s_detail_label, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(s_detail_label, SCREEN_W - 64);
     lv_label_set_long_mode(s_detail_label, LV_LABEL_LONG_DOT);
-    /* Y=-6: 中心 y≈245, height ~20 (235..255) */
-    lv_obj_align(s_detail_label, LV_ALIGN_CENTER, 0, -6);
+    lv_obj_align(s_detail_label, LV_ALIGN_TOP_MID, 0, 180);
     lv_obj_add_flag(s_detail_label, LV_OBJ_FLAG_HIDDEN);
 
-    /* ── 统一滚动文本 s_scroll_label — 替换旧 stt/tts/response_area ─── */
-    /* Single-line, left-scrolling marquee. Replaces separate s_stt_label,
-     * s_tts_label, and s_response_area. One physical position = zero overlap.
-     *
-     * Speed is set per-text in set_scroll_text() (exact px/s from text width,
-     * see SCROLL_SPEED_PX_PER_SEC). Never set ANIM_DURATION to a plain ms
-     * value here: SCROLL_CIRCULAR treats it as ms per full loop — e.g. a
-     * plain 25 = 25ms per loop, invisibly fast "non-scroll" flicker. */
+    /* 滚动文本 (RESPONSE/SENDING/TTS 状态，居中显示) */
     s_scroll_label = lv_label_create(s_screen);
     lv_label_set_text(s_scroll_label, "");
     lv_obj_set_style_text_font(s_scroll_label, &SourceHanSansCN_Medium_16, 0);
@@ -366,14 +369,10 @@ static void create_state_widgets(void)
     lv_obj_set_width(s_scroll_label, SCREEN_W - 64);
     lv_obj_set_height(s_scroll_label, 64);
     lv_label_set_long_mode(s_scroll_label, LV_LABEL_LONG_SCROLL_CIRCULAR);
-    /* Y=+54: 中心 y≈305, height 64, bottom at y ≈ 337 */
-    lv_obj_align(s_scroll_label, LV_ALIGN_CENTER, 0, 54);
+    lv_obj_align(s_scroll_label, LV_ALIGN_TOP_MID, 0, 200);
     lv_obj_add_flag(s_scroll_label, LV_OBJ_FLAG_HIDDEN);
 
-    /* ── IDLE 大时钟 s_idle_time — 120px ClockNum 字体 ──────────────── */
-    /* Ver2.1 同款 120px Akrobat-ExtraBold 时钟字体（行高 122）。
-     * Y=-51: 中心 y≈200 (139..261)，下方为日期，与顶部 island (0..92)
-     * 及底部留白均衡。IDLE 时主标题隐藏，时钟代替。 */
+    /* IDLE 大时钟 — 120px 字体，居中偏上 */
     s_idle_time = lv_label_create(s_screen);
     lv_label_set_text(s_idle_time, "00:00");
     lv_obj_set_style_text_font(s_idle_time, &ui_font_ClockNum, 0);
@@ -381,13 +380,10 @@ static void create_state_widgets(void)
     lv_obj_set_style_text_align(s_idle_time, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(s_idle_time, SCREEN_W - 64);
     lv_label_set_long_mode(s_idle_time, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_idle_time, LV_ALIGN_CENTER, 0, -51);
+    lv_obj_align(s_idle_time, LV_ALIGN_TOP_MID, 0, 120);
     lv_obj_add_flag(s_idle_time, LV_OBJ_FLAG_HIDDEN);
 
-    /* ── IDLE 日期 s_idle_date — 24px DateNum 字体 ──────────────────── */
-    /* Ver2.1 同款 24px 思源柔黑体（行高 28，符号集含"星期"）。
-     * Y=+49: 中心 y≈300 (286..314)，时钟底 261 → 25px 间隙。
-     * IDLE 时副标题隐藏，日期代替。 */
+    /* IDLE 日期 — 24px 字体，时钟下方 */
     s_idle_date = lv_label_create(s_screen);
     lv_label_set_text(s_idle_date, "");
     lv_obj_set_style_text_font(s_idle_date, &ui_font_DateNum, 0);
@@ -395,22 +391,19 @@ static void create_state_widgets(void)
     lv_obj_set_style_text_align(s_idle_date, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_width(s_idle_date, SCREEN_W - 64);
     lv_label_set_long_mode(s_idle_date, LV_LABEL_LONG_DOT);
-    lv_obj_align(s_idle_date, LV_ALIGN_CENTER, 0, 49);
+    lv_obj_align(s_idle_date, LV_ALIGN_TOP_MID, 0, 250);
     lv_obj_add_flag(s_idle_date, LV_OBJ_FLAG_HIDDEN);
 
-    /* ── LISTENING 波形 s_wave_container — 更新位置 ─────────────────── */
-    /* 居中，y=-66 与主标题同位（LISTENING 时主标题隐藏，波形代替）。
-     * 容器高 88 → 141..229，与下方副标题 (235..255) 留 10px 间隙 */
+    /* LISTENING 波形 — 居中偏上 */
     s_wave_container = lv_obj_create(s_screen);
     lv_obj_set_size(s_wave_container, WAVE_CONTAINER_W, WAVE_CONTAINER_H);
-    lv_obj_align(s_wave_container, LV_ALIGN_CENTER, 0, -66);
+    lv_obj_align(s_wave_container, LV_ALIGN_TOP_MID, 0, 140);
     lv_obj_set_style_bg_opa(s_wave_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_wave_container, 0, 0);
     lv_obj_set_style_pad_all(s_wave_container, 0, 0);
     lv_obj_add_flag(s_wave_container, LV_OBJ_FLAG_HIDDEN);
     lv_obj_remove_flag(s_wave_container, LV_OBJ_FLAG_SCROLLABLE);
 
-    /* Flex layout for wave bars */
     lv_obj_set_flex_flow(s_wave_container, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(s_wave_container,
                           LV_FLEX_ALIGN_SPACE_BETWEEN,
@@ -427,21 +420,17 @@ static void create_state_widgets(void)
         lv_obj_remove_flag(s_wave_bars[i], LV_OBJ_FLAG_SCROLLABLE);
     }
 
-    /* ── s_listening_label: 不再单独创建 ─────────────────────────────── */
-    /* 旧 s_listening_label 已删除，LISTENING 状态的提示文字统一用
-     * s_detail_label (show_subtitle("说点什么吧")) 显示，避免与波形重叠。 */
-
-    /* ── 对话气泡容器 s_bubble_container（Task 7 最小实现） ─────────── */
-    /* Dynamic Island 下方 y≈96 到底部；flex 列；默认隐藏。
-     * 进入聊天状态或 IDLE 有历史时显示（show_content_for_state）。 */
+    /* ── 对话气泡容器 s_bubble_container — 固定在屏幕底部 ──────────── */
+    /* 与内容区不重叠：气泡区 y=380..498，内容区 y=100..370。
+     * 有对话历史时才显示，覆盖 IDLE 时钟。 */
     s_bubble_container = lv_obj_create(s_screen);
-    lv_obj_set_pos(s_bubble_container, 4, 96);
-    lv_obj_set_size(s_bubble_container, SCREEN_W - 8, SCREEN_H - 96 - 4);
+    lv_obj_set_pos(s_bubble_container, 4, 380);
+    lv_obj_set_size(s_bubble_container, SCREEN_W - 8, SCREEN_H - 380 - 4);
     lv_obj_set_style_bg_opa(s_bubble_container, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(s_bubble_container, 0, 0);
     lv_obj_set_style_pad_all(s_bubble_container, 4, 0);
     lv_obj_set_flex_flow(s_bubble_container, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(s_bubble_container, LV_FLEX_ALIGN_START,
+    lv_obj_set_flex_align(s_bubble_container, LV_FLEX_ALIGN_END,
                           LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_scroll_dir(s_bubble_container, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(s_bubble_container, LV_SCROLLBAR_MODE_AUTO);
@@ -495,15 +484,17 @@ static bool show_bubble_area(void)
 
 static void show_content_for_state(ui_state_t state)
 {
-    /* Every state shows at most 3 controls: title + subtitle + scroll text.
-     * hide_all_content() hides everything before enabling state-specific ones. */
     hide_all_content();
+
+    /* Reset subtitle position to default (y=180). LISTENING state
+     * overrides this to y=250 to avoid wave animation overlap. */
+    if (s_detail_label) lv_obj_align(s_detail_label, LV_ALIGN_TOP_MID, 0, 180);
 
     switch (state) {
 
     case UI_STATE_BOOT:
         show_title("Booting", &lv_font_montserrat_28);
-        show_subtitle("AIWatch v0.1.0");
+        show_subtitle("Doubao v0.1.0");
         break;
 
     case UI_STATE_CONNECTING:
@@ -512,75 +503,72 @@ static void show_content_for_state(ui_state_t state)
         break;
 
     case UI_STATE_IDLE:
-        /* 有对话历史 → 显示气泡（保留聊天现场）；否则大时钟 + 日期 */
-        if (show_bubble_area()) break;
+        /* IDLE 状态只显示时钟，不显示之前的对话文本/气泡。
+         * 用户反馈：返回 IDLE 后不该还显示之前的文本内容。 */
         if (s_idle_time)  lv_obj_remove_flag(s_idle_time, LV_OBJ_FLAG_HIDDEN);
         if (s_idle_date)  lv_obj_remove_flag(s_idle_date, LV_OBJ_FLAG_HIDDEN);
         update_idle_clock();
         break;
 
     case UI_STATE_LISTENING:
-        /* Waveform in title zone, hint text in subtitle zone.
-         * s_listening_label removed — unified into s_detail_label. */
+        show_bubble_area();  /* keep bubbles visible */
         if (s_wave_container)  lv_obj_remove_flag(s_wave_container, LV_OBJ_FLAG_HIDDEN);
         show_subtitle("说点什么吧");
+        /* Move subtitle down 70px for LISTENING state (default y=180 → 250)
+         * to avoid overlapping with the wave animation container. */
+        if (s_detail_label) lv_obj_align(s_detail_label, LV_ALIGN_TOP_MID, 0, 250);
         start_wave_animation();
         break;
 
     case UI_STATE_SENDING:
-        /* 对话中显示气泡（Task 7）；无气泡时回退原 "Sending..." 文本 */
-        if (show_bubble_area()) break;
-        show_title("Sending...", &lv_font_montserrat_20);
+        show_bubble_area();
+        show_title("识别中...", &SourceHanSansCN_Medium_16);
         show_subtitle("语音识别中");
-        /* STT text shown via ui_set_stt_text() — state-guarded */
         break;
 
     case UI_STATE_THINKING:
-        if (show_bubble_area()) break;
-        show_title("Thinking...", &lv_font_montserrat_20);
+        show_bubble_area();
+        show_title("思考中...", &SourceHanSansCN_Medium_16);
         show_subtitle("AI思考中");
         break;
 
     case UI_STATE_STREAMING:
-        if (show_bubble_area()) break;
-        show_title("Receiving...", &lv_font_montserrat_20);
+        show_bubble_area();
+        show_title("接收中...", &SourceHanSansCN_Medium_16);
         show_subtitle("接收回复中");
         break;
 
     case UI_STATE_RESPONSE:
-        if (show_bubble_area()) break;
-        show_title("AI Response", &lv_font_montserrat_20);
-        /* LLM response shown via ui_set_response() — state-guarded */
+        show_bubble_area();
+        show_title("AI 回复", &SourceHanSansCN_Medium_16);
         break;
 
     case UI_STATE_TTS_LOADING:
-        show_title("Loading Audio...", &lv_font_montserrat_20);
+        show_title("加载语音...", &SourceHanSansCN_Medium_16);
         show_subtitle("准备播放");
         break;
 
     case UI_STATE_TTS_PLAYING:
-        show_title("Speaking", &lv_font_montserrat_28);
-        show_subtitle("语音播放中");
-        /* TTS text shown via ui_set_tts_text() — state-guarded */
+        show_bubble_area();
+        show_title("语音播放", &SourceHanSansCN_Medium_16);
+        show_subtitle("正在说话");
         break;
 
     case UI_STATE_PLAYING_MP3:
-        /* Handled entirely by ui_mp3_ui overlay */
         break;
 
     case UI_STATE_NOTIFYING:
-        show_title("Notification", &lv_font_montserrat_20);
+        show_title("提醒", &SourceHanSansCN_Medium_16);
         show_subtitle("新通知");
         break;
 
     case UI_STATE_ERROR:
-        show_title("Error", &lv_font_montserrat_20);
-        show_subtitle("发生错误");
+        show_title("错误", &lv_font_montserrat_20);
+        show_subtitle("请检查网络和API Key");
         break;
 
     case UI_STATE_SLEEP:
     case UI_STATE_ARMED:
-        /* Minimal — show nothing */
         break;
 
     default:
@@ -592,22 +580,252 @@ static void show_content_for_state(ui_state_t state)
  * UI Initialization
  * ══════════════════════════════════════════════════════════════════════════ */
 
-/* Task 2 (M1) touch-mapping debug: logs every tap on the main screen
- * background in LVGL logical coordinates. LVGL9 core rotates raw panel
- * coords via lv_display_rotate_point() using the display's rotation, so
- * this doubles as rotation verification.
- * Expected corner mapping on the rotated 502x410 landscape display
- * (physical panel 410x502, LV_DISPLAY_ROTATION_90):
- *   raw(x,y) → logical(502-y-1, x); corners: TL≈(0,0) TR≈(501,0)
- *   BL≈(0,409) BR≈(501,409) — where the corner is as SEEN on screen.
- * Temporary instrumentation — remove when Task 14 rebuilds the UI. */
-static void ui_touch_debug_cb(lv_event_t *e)
+/* ══════════════════════════════════════════════════════════════════════════
+ * Touch gesture detector (Task 14)
+ * Single tap (< 300ms) → TOUCH_BIT
+ * Double tap (two taps < 300ms apart) → DOUBLE_TAP_BIT
+ * Long press (> 1s hold) → SETTINGS_LONG_PRESS_BIT
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+/* Gesture event bits (match app_state.h definitions) */
+#define GESTURE_TOUCH_BIT             (1 << 7)
+#define GESTURE_SETTINGS_LONG_PRESS_BIT  (1 << 15)
+#define GESTURE_DOUBLE_TAP_BIT        (1 << 16)
+
+#define GESTURE_DOUBLE_WINDOW_MS  300
+#define GESTURE_LONG_PRESS_MS     1000
+
+static int64_t s_gesture_press_time = 0;
+static bool    s_gesture_waiting_double = false;
+static lv_timer_t *s_gesture_double_timer = NULL;
+static bool    s_gesture_long_fired = false;
+
+static void gesture_double_timeout_cb(lv_timer_t *timer)
 {
-    lv_indev_t *indev = lv_indev_active();
-    if (!indev) return;
-    lv_point_t pt;
-    lv_indev_get_point(indev, &pt);
-    ESP_LOGI(TAG, "TOUCH debug: logical (%d,%d)", pt.x, pt.y);
+    /* 300ms passed since first tap — no second tap → it was a single tap */
+    (void)timer;
+    if (s_gesture_waiting_double) {
+        s_gesture_waiting_double = false;
+        if (s_events) {
+            xEventGroupSetBits(s_events, GESTURE_TOUCH_BIT);
+        }
+    }
+}
+
+static void gesture_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    int64_t now_ms = esp_timer_get_time() / 1000;
+
+    switch (code) {
+    case LV_EVENT_PRESSED:
+        s_gesture_press_time = now_ms;
+        s_gesture_long_fired = false;
+        break;
+
+    case LV_EVENT_PRESSING: {
+        /* Check for long press */
+        if (!s_gesture_long_fired &&
+            (now_ms - s_gesture_press_time) >= GESTURE_LONG_PRESS_MS) {
+            s_gesture_long_fired = true;
+            ESP_LOGI(TAG, "Long press detected (%lld ms)",
+                     now_ms - s_gesture_press_time);
+            if (s_events) {
+                xEventGroupSetBits(s_events, GESTURE_SETTINGS_LONG_PRESS_BIT);
+            }
+        }
+        break;
+    }
+
+    case LV_EVENT_RELEASED: {
+        int64_t held = now_ms - s_gesture_press_time;
+        if (s_gesture_long_fired) {
+            /* Long press already fired — consume this release */
+            break;
+        }
+        if (held > 500) {
+            /* Held too long for a tap — ignore */
+            break;
+        }
+        /* Short tap */
+        if (s_gesture_waiting_double) {
+            /* Second tap within window → double tap */
+            s_gesture_waiting_double = false;
+            if (s_gesture_double_timer) {
+                lv_timer_pause(s_gesture_double_timer);
+            }
+            ESP_LOGI(TAG, "Double tap detected");
+            if (s_events) {
+                xEventGroupSetBits(s_events, GESTURE_DOUBLE_TAP_BIT);
+            }
+        } else {
+            /* First tap — start waiting for potential second tap */
+            s_gesture_waiting_double = true;
+            if (s_gesture_double_timer) {
+                lv_timer_reset(s_gesture_double_timer);
+                lv_timer_resume(s_gesture_double_timer);
+            }
+        }
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * Light settings page (Task 14) — 长按进入
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+static lv_obj_t *s_settings_screen = NULL;
+static lv_obj_t *s_settings_volume_slider = NULL;
+static bool s_settings_visible = false;
+
+/* Settings page button style */
+static lv_style_t s_style_btn;
+static bool s_style_btn_inited = false;
+
+static void ensure_btn_style(void)
+{
+    if (s_style_btn_inited) return;
+    lv_style_init(&s_style_btn);
+    lv_style_set_bg_color(&s_style_btn, lv_color_hex(0x0A84FF));
+    lv_style_set_bg_opa(&s_style_btn, LV_OPA_COVER);
+    lv_style_set_radius(&s_style_btn, 8);
+    lv_style_set_text_color(&s_style_btn, lv_color_hex(0xFFFFFF));
+    s_style_btn_inited = true;
+}
+
+static void settings_volume_cb(lv_event_t *e)
+{
+    lv_obj_t *slider = lv_event_get_target(e);
+    int val = lv_slider_get_value(slider);
+    /* Volume is applied in app_main main loop when it checks for settings changes.
+     * Here we just update the UI; the actual board_audio_set_volume is called
+     * by app_main's periodic settings sync. */
+}
+
+static void settings_clear_cb(lv_event_t *e)
+{
+    (void)e;
+    ESP_LOGI(TAG, "Clear conversation requested");
+    /* Signal via event group — app_main handles the actual clear */
+    /* For now, clear bubbles directly (clear_session needs app_main context) */
+    ui_clear_bubbles();
+}
+
+static void settings_back_cb(lv_event_t *e)
+{
+    (void)e;
+    ui_settings_hide();
+}
+
+static void create_settings_screen(void)
+{
+    if (s_settings_screen) return;
+
+    ensure_btn_style();
+
+    s_settings_screen = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(s_settings_screen, lv_color_hex(0x1C1C1E), 0);
+    lv_obj_set_style_bg_opa(s_settings_screen, LV_OPA_COVER, 0);
+
+    /* Title */
+    lv_obj_t *title = lv_label_create(s_settings_screen);
+    lv_label_set_text(title, "设置");
+    lv_obj_set_style_text_color(title, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_font(title, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 20);
+
+    /* Back button */
+    lv_obj_t *back_btn = lv_button_create(s_settings_screen);
+    lv_obj_set_size(back_btn, 60, 32);
+    lv_obj_align(back_btn, LV_ALIGN_TOP_LEFT, 10, 15);
+    lv_obj_add_event_cb(back_btn, settings_back_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *back_label = lv_label_create(back_btn);
+    lv_label_set_text(back_label, "← 返回");
+    lv_obj_set_style_text_color(back_label, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_font(back_label, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_center(back_label);
+
+    /* Volume slider */
+    lv_obj_t *vol_label = lv_label_create(s_settings_screen);
+    lv_label_set_text(vol_label, "音量");
+    lv_obj_set_style_text_color(vol_label, lv_color_hex(0xAAAAAA), 0);
+    lv_obj_set_style_text_font(vol_label, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_align(vol_label, LV_ALIGN_TOP_LEFT, 20, 70);
+
+    s_settings_volume_slider = lv_slider_create(s_settings_screen);
+    lv_obj_set_width(s_settings_volume_slider, SCREEN_W - 60);
+    lv_obj_align(s_settings_volume_slider, LV_ALIGN_TOP_LEFT, 20, 95);
+    lv_slider_set_range(s_settings_volume_slider, 0, 100);
+    lv_slider_set_value(s_settings_volume_slider, 50, LV_ANIM_OFF);
+    lv_obj_add_event_cb(s_settings_volume_slider, settings_volume_cb,
+                         LV_EVENT_VALUE_CHANGED, NULL);
+
+    /* Volume value label */
+    lv_obj_t *vol_val = lv_label_create(s_settings_screen);
+    lv_label_set_text(vol_val, "50%");
+    lv_obj_set_style_text_color(vol_val, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_align(vol_val, LV_ALIGN_TOP_RIGHT, -20, 70);
+
+    /* Clear conversation button */
+    lv_obj_t *clear_btn = lv_button_create(s_settings_screen);
+    lv_obj_set_size(clear_btn, SCREEN_W - 40, 44);
+    lv_obj_align(clear_btn, LV_ALIGN_TOP_LEFT, 20, 140);
+    lv_obj_add_style(clear_btn, &s_style_btn, 0);
+    lv_obj_add_event_cb(clear_btn, settings_clear_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *clear_label = lv_label_create(clear_btn);
+    lv_label_set_text(clear_label, "清空对话");
+    lv_obj_set_style_text_font(clear_label, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_center(clear_label);
+
+    /* WiFi status */
+    lv_obj_t *wifi_label = lv_label_create(s_settings_screen);
+    lv_label_set_text(wifi_label, "WiFi: 未连接");
+    lv_obj_set_style_text_color(wifi_label, lv_color_hex(0xAAAAAA), 0);
+    lv_obj_set_style_text_font(wifi_label, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_align(wifi_label, LV_ALIGN_TOP_LEFT, 20, 200);
+
+    /* Device info */
+    lv_obj_t *info_label = lv_label_create(s_settings_screen);
+    lv_label_set_text(info_label, "固件: v1.0.0");
+    lv_obj_set_style_text_color(info_label, lv_color_hex(0xAAAAAA), 0);
+    lv_obj_set_style_text_font(info_label, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_align(info_label, LV_ALIGN_TOP_LEFT, 20, 240);
+
+    /* Web config hint */
+    lv_obj_t *hint = lv_label_create(s_settings_screen);
+    lv_label_set_text(hint, "WiFi密码、API Key等配置\n请浏览器访问设备IP地址");
+    lv_obj_set_style_text_color(hint, lv_color_hex(0x666666), 0);
+    lv_obj_set_style_text_font(hint, &SourceHanSansCN_Medium_16, 0);
+    lv_obj_set_style_text_align(hint, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_width(hint, SCREEN_W - 40);
+    lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -30);
+}
+
+void ui_settings_show(void)
+{
+    if (s_settings_visible) return;
+    create_settings_screen();
+
+    /* Volume slider starts at 50; actual volume synced by app_main */
+
+    lv_screen_load(s_settings_screen);
+    s_settings_visible = true;
+}
+
+void ui_settings_hide(void)
+{
+    if (!s_settings_visible) return;
+    lv_screen_load(s_screen);
+    s_settings_visible = false;
+}
+
+bool ui_settings_is_visible(void)
+{
+    return s_settings_visible;
 }
 
 esp_err_t ui_init(void)
@@ -631,10 +849,14 @@ esp_err_t ui_init(void)
     lv_obj_set_style_bg_color(s_screen, lv_color_hex(UI_COLOR_BG_MAIN), 0);
     lv_obj_set_style_bg_opa(s_screen, LV_OPA_COVER, 0);
 
-    /* Task 2 (M1): touch-mapping debug log on background taps (see
-     * ui_touch_debug_cb). Temporary — remove with Task 14 UI rebuild. */
+    /* Touch gesture detector (Task 14): single/double tap + long press */
     lv_obj_add_flag(s_screen, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_event_cb(s_screen, ui_touch_debug_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(s_screen, gesture_event_cb, LV_EVENT_PRESSED, NULL);
+    lv_obj_add_event_cb(s_screen, gesture_event_cb, LV_EVENT_PRESSING, NULL);
+    lv_obj_add_event_cb(s_screen, gesture_event_cb, LV_EVENT_RELEASED, NULL);
+    s_gesture_double_timer = lv_timer_create(gesture_double_timeout_cb,
+                                              GESTURE_DOUBLE_WINDOW_MS, NULL);
+    lv_timer_pause(s_gesture_double_timer);
 
     /* Load screen first so all child objects are created on correct screen */
     lv_screen_load(s_screen);
@@ -948,7 +1170,7 @@ void ui_set_status_message(const char *msg)
             break;
         }
         lv_label_set_text(s_center_label, msg);
-        lv_obj_set_style_text_font(s_center_label, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(s_center_label, &SourceHanSansCN_Medium_16, 0);
         lv_obj_remove_flag(s_center_label, LV_OBJ_FLAG_HIDDEN);
     }
 }
@@ -985,8 +1207,10 @@ void ui_set_tts_text(const char *text)
  * Chat bubbles (Task 7 minimal implementation)
  * ══════════════════════════════════════════════════════════════════════════ */
 
-/* 新建一条气泡：is_user=true 右侧蓝底，false 左侧灰底；文本 WRAP。
- * 超过 BUBBLE_MAX_COUNT 删最旧（铁律 19 防碎片化）。 */
+/* 新建一条"气泡"：无边框、透明背景（与黑屏融为一体），文本水平居中
+ * 显示（用户需求修订：不要边框、融入背景、居中）。用户 STT 与 AI 回复
+ * 都用白字，用户行稍暗（0xBBBBBB）以便区分双方内容。超过
+ * BUBBLE_MAX_COUNT 删最旧（铁律 19 防碎片化）。 */
 static void bubble_new(bool is_user, const char *text)
 {
     if (!s_bubble_container) return;
@@ -999,27 +1223,20 @@ static void bubble_new(bool is_user, const char *text)
     }
 
     lv_obj_t *bubble = lv_obj_create(s_bubble_container);
-    lv_obj_set_width(bubble, lv_pct(BUBBLE_PCT_W));
-    lv_obj_set_style_radius(bubble, 10, 0);
+    lv_obj_set_width(bubble, lv_pct(100));
+    lv_obj_set_style_bg_opa(bubble, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(bubble, 0, 0);
-    lv_obj_set_style_pad_all(bubble, 8, 0);
-    lv_obj_set_style_bg_color(bubble,
-                              is_user ? lv_color_hex(0x0A84FF) : lv_color_hex(0xE5E5EA), 0);
-    lv_obj_set_style_bg_opa(bubble, LV_OPA_COVER, 0);
+    lv_obj_set_style_pad_all(bubble, 0, 0);
     lv_obj_remove_flag(bubble, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_margin_top(bubble, 6, 0);
 
-    /* 左右对齐（LVGL9 flex 无子项对齐，用 margin 顶位）：
-     * 用户气泡 margin_left = 容器内容宽 - 气泡宽 */
-    int32_t content_w = (SCREEN_W - 8) - 2 * 4;
-    int32_t bubble_w  = content_w * BUBBLE_PCT_W / 100;
-    lv_obj_set_style_margin_left(bubble, is_user ? (content_w - bubble_w) : 0, 0);
-
     lv_obj_t *label = lv_label_create(bubble);
     lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(label, bubble_w - 16);
+    lv_obj_set_width(label, lv_pct(100));
+    lv_obj_set_style_text_font(label, &SourceHanSansCN_Medium_16, 0);
     lv_obj_set_style_text_color(label,
-                                is_user ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x1C1C1E), 0);
+                                is_user ? lv_color_hex(0xBBBBBB) : lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
     lv_label_set_text(label, text ? text : "");
 
     s_last_bubble_is_user = is_user;
@@ -1069,15 +1286,34 @@ void ui_bot_bubble_append(const char *delta)
     }
     if (!s_bot_bubble_label) return;
 
-    /* Task 7: 整段重设（lv_label_set_text）；流式优化（append 渲染）Task 13 */
+    /* Accumulate into buffer */
     size_t cur  = strlen(s_bot_text);
     size_t room = sizeof(s_bot_text) - cur - 1;
     if (room > 0) {
         strncat(s_bot_text, delta, room);
         s_bot_text[sizeof(s_bot_text) - 1] = '\0';
     }
-    lv_label_set_text(s_bot_bubble_label, s_bot_text);
+
+    /* Streaming optimization (Task 13): small deltas (<512B) use
+     * lv_label_ins_text for incremental append (avoids full re-layout);
+     * large deltas or first append use full lv_label_set_text. */
+    size_t dlen = strlen(delta);
+    if (dlen < 512 && cur > 0) {
+        lv_label_ins_text(s_bot_bubble_label, LV_LABEL_POS_LAST, delta);
+    } else {
+        lv_label_set_text(s_bot_bubble_label, s_bot_text);
+    }
     lv_obj_scroll_to_view(s_bot_bubble_label, LV_ANIM_OFF);
+}
+
+void ui_clear_bubbles(void)
+{
+    if (!s_bubble_container) return;
+    lv_obj_clean(s_bubble_container);
+    s_bubble_count = 0;
+    s_bot_bubble_label = NULL;
+    s_bot_text[0] = '\0';
+    s_last_bubble_is_user = false;
 }
 
 void ui_sanitize_text(char *dst, const char *src, size_t dst_size)

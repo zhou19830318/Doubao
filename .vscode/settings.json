@@ -1,0 +1,5 @@
+{
+    "idf.currentSetup": "/home/conor/esp/esp-idf",
+    "idf.port": "/dev/ttyACM0",
+    "idf.flashType": "UART"
+}

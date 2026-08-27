@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Board initialization — multi-board support:
@@ -709,11 +709,14 @@ esp_err_t board_audio_init(void)
     i2s_chan_config_t chan_cfg = {
         .id = BOARD_I2S_NUM,
         .role = I2S_ROLE_MASTER,
-        .dma_desc_num = 6,      /* 6 descriptors = better tolerance for CPU unavailability during MP3 decode.
-                                   Total DMA buffer: 6 × 240 × 2 bytes = 2880 bytes (TX) + 2880 bytes (RX)
-                                   = 5760 bytes internal DRAM. This is LESS than the previous 4×512=4096×2=8192 bytes.
-                                   Each descriptor lasts 240/48000 = 5ms at 48kHz, giving ~25ms of CPU
-                                   unavailability tolerance (4 descriptors of headroom). */
+        .dma_desc_num = 6,      /* 6 descriptors × 240 frames = 90ms @16kHz.
+                                   10 descriptors (150ms) was tried for audio
+                                   smoothness but cost 9.6KB internal DMA RAM —
+                                   with the DMA pool at ~3.4KB the SD-card SPI
+                                   transactions started failing ("Failed to
+                                   allocate priv TX buffer" floods), which
+                                   stalled the whole WS pipeline. 90ms + the
+                                   pre-buffered 1MB ring is the right balance. */
         .dma_frame_num = 240,   /* Match official Waveshare BSP default; 240 frames per descriptor */
         .auto_clear = true,
         .intr_priority = 3,
@@ -1352,7 +1355,14 @@ esp_err_t board_spi2_init(void)
         .sclk_io_num = BOARD_SPI2_SCLK,
         .quadwp_io_num = -1,
         .quadhd_io_num = -1,
-        .max_transfer_sz = 65536,
+        /* 4096, NOT 65536: the spi_master driver allocates an internal
+         * DMA "priv buffer" per transaction whose user buffer isn't
+         * DMA-capable. At 65536 the sdmmc layer issues huge multi-block
+         * transactions → 64KB priv allocs → guaranteed failure in the
+         * 64KB DMA reserve pool → tight retry floods ("Failed to
+         * allocate priv TX buffer" ×507, stalling the whole system).
+         * 4KB transactions fit the pool and the retry loop is gone. */
+        .max_transfer_sz = 4096,
     };
     esp_err_t ret = spi_bus_initialize(SPI2_HOST, &spi2_cfg, SPI_DMA_CH_AUTO);
     if (ret == ESP_OK) {
@@ -1498,26 +1508,18 @@ esp_err_t board_init(void)
     s_lvgl_disp = disp;
     bsp_display_backlight_on();
 
-    /* ── Landscape rotation (Task 2: M1 rotation + touch verification) ──
-     * Native panel is 410x502 portrait; rotate 90° → logical 502x410.
-     * The BSP does not expose the esp_lcd panel handle nor the touch
-     * swap_xy/mirror flags (both hardcoded internal to the BSP), so hardware
-     * rotation (esp_lcd swap_xy/mirror, iron rule 18 preference) is not
-     * available — use the BSP's official rotation API (bsp_display_rotate →
-     * lv_disp_set_rotation, LVGL9 sw_rotate path).
-     * LVGL9 core auto-rotates touch coordinates (lv_indev.c →
-     * lv_display_rotate_point), so touch stays aligned with the rotated
-     * display without manual mapping (iron rule 18).
-     * If the physical screen appears upside-down, flip to ROTATION_270. */
-    bsp_display_rotate(disp, LV_DISPLAY_ROTATION_90);
-    ESP_LOGI(TAG, "Display rotated to landscape (logical %dx%d)",
+    /* ── Native portrait (410x502), same as AIWatch_Ver2.0 ──
+     * No rotation call: the UI screens were laid out for the native
+     * portrait resolution (SCREEN_W=BOARD_LCD_H_RES=410, SCREEN_H=
+     * BOARD_LCD_V_RES=502), and the earlier 90° landscape rotation drew
+     * them sideways. LVGL9 touch coordinates follow the display config
+     * automatically. */
+    ESP_LOGI(TAG, "Display native portrait (logical %dx%d)",
              lv_display_get_horizontal_resolution(disp),
              lv_display_get_vertical_resolution(disp));
 
-    ESP_LOGI(TAG, "BSP: display + LVGL + touch ready (native %dx%d, landscape %dx%d)",
-             BOARD_LCD_H_RES, BOARD_LCD_V_RES,
-             lv_display_get_horizontal_resolution(disp),
-             lv_display_get_vertical_resolution(disp));
+    ESP_LOGI(TAG, "BSP: display + LVGL + touch ready (%dx%d)",
+             BOARD_LCD_H_RES, BOARD_LCD_V_RES);
 
     /* Get I2C bus handle from BSP for audio codec, IMU, etc. */
     s_i2c0_bus = bsp_i2c_get_handle();

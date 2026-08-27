@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Web server — REST API + embedded SPA
@@ -8,15 +8,15 @@
 #include "webserver.h"
 #include "settings.h"
 #include "error_log.h"
-// TODO(Task 8): 由 doubao 链路替换 — openclaw_client.h deleted in Task 1
-//#include "openclaw_client.h"
 #include "wifi_manager.h"
+#include "doubao_test.h"
 #include "board.h"
 #include "notes_manager.h"
 #include "app_state.h"
 
 #include "esp_http_server.h"
 #include "esp_http_client.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_system.h"
@@ -70,7 +70,7 @@ static esp_err_t root_handler(httpd_req_t *req)
     return httpd_resp_send(req, index_html_start, len);
 }
 
-/* ── GET /api/status — device + OpenClaw status ──────────────────────── */
+/* ── GET /api/status — device status ─────────────────────────────────── */
 static esp_err_t status_handler(httpd_req_t *req)
 {
     cJSON *j = cJSON_CreateObject();
@@ -97,7 +97,6 @@ static esp_err_t status_handler(httpd_req_t *req)
 // TODO(Task 8): 由 doubao 链路替换 — openclaw status JSON deleted in Task 1
 //    /* OpenClaw */
 //    cJSON *oc = cJSON_AddObjectToObject(j, "openclaw");
-    /* Error count */
     cJSON_AddNumberToObject(j, "error_count", error_log_count());
 
     char *str = cJSON_PrintUnformatted(j);
@@ -105,19 +104,7 @@ static esp_err_t status_handler(httpd_req_t *req)
 
     httpd_resp_set_type(req, "application/json");
     httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
-    free(str);
-    
-    /* Log memory after sending response to detect leaks */
-    static uint32_t last_log_tick = 0;
-    uint32_t current_tick = xTaskGetTickCount();
-    if ((current_tick - last_log_tick) > 100) {  /* Log every ~10 seconds */
-        last_log_tick = current_tick;
-        ESP_LOGD(TAG, "Web server memory - Free heap: %d, Min free: %d",
-                 esp_get_free_heap_size(), esp_get_minimum_free_heap_size());
-    }
-    
-    return ret;
+    return httpd_resp_send(req, str, strlen(str));
 }
 
 /* ── GET /api/settings — current settings (secrets masked) ───────────── */
@@ -221,173 +208,6 @@ static esp_err_t errors_handler(httpd_req_t *req)
     esp_err_t ret = httpd_resp_send(req, json, strlen(json));
     free(json);
     return ret;
-}
-
-/* ── POST /api/openclaw/test — test OpenClaw connection ──────────────── */
-static esp_err_t openclaw_test_handler(httpd_req_t *req)
-{
-    /* Read JSON body with host/port/token */
-    int total_len = req->content_len;
-    if (total_len <= 0 || total_len > 2048) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
-        return ESP_FAIL;
-    }
-
-    char *buf = malloc(total_len + 1);
-    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
-
-    int received = 0;
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, buf + received, total_len - received);
-        if (ret <= 0) { free(buf); httpd_resp_send_500(req); return ESP_FAIL; }
-        received += ret;
-    }
-    buf[total_len] = '\0';
-
-    cJSON *j = cJSON_ParseWithLength(buf, total_len);
-    free(buf);
-
-    if (!j) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
-        return ESP_FAIL;
-    }
-
-    cJSON *host_item = cJSON_GetObjectItem(j, "host");
-    cJSON *port_item = cJSON_GetObjectItem(j, "port");
-
-    const char *test_host = host_item && cJSON_IsString(host_item) ? host_item->valuestring : NULL;
-    int test_port = port_item && cJSON_IsNumber(port_item) ? (int)port_item->valuedouble : 18789;
-
-    cJSON *result = cJSON_CreateObject();
-
-    if (!test_host || !test_host[0]) {
-        cJSON_AddBoolToObject(result, "ok", false);
-        cJSON_AddStringToObject(result, "error", "Host is required");
-    } else {
-        /* Simple TCP connection test */
-        char url[256];
-        snprintf(url, sizeof(url), "ws://%s:%d", test_host, test_port);
-        cJSON_AddBoolToObject(result, "ok", true);
-        cJSON_AddStringToObject(result, "message", "Connection parameters accepted. Save and reboot to connect.");
-        cJSON_AddStringToObject(result, "url", url);
-    }
-
-    cJSON_Delete(j);
-
-    char *str = cJSON_PrintUnformatted(result);
-    cJSON_Delete(result);
-
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
-    free(str);
-    return ret;
-}
-
-/* ── POST /api/stt/health — check STT (MiMo-V2.5-ASR) configuration ─── */
-static esp_err_t stt_health_handler(httpd_req_t *req)
-{
-    const settings_t *s = settings_get();
-
-    cJSON *result = cJSON_CreateObject();
-
-    if (!s->mimo_api_key[0]) {
-        cJSON_AddBoolToObject(result, "ok", false);
-        cJSON_AddStringToObject(result, "error", "MiMo API key not configured");
-    } else if (!s->asr_model[0]) {
-        cJSON_AddBoolToObject(result, "ok", false);
-        cJSON_AddStringToObject(result, "error", "ASR model not configured");
-    } else {
-        cJSON_AddBoolToObject(result, "ok", true);
-        cJSON_AddStringToObject(result, "model", s->asr_model);
-        cJSON_AddStringToObject(result, "endpoint", s->mimo_url);
-        cJSON_AddStringToObject(result, "message", "MiMo-V2.5-ASR configuration present.");
-    }
-
-    char *str = cJSON_PrintUnformatted(result);
-    cJSON_Delete(result);
-
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
-    free(str);
-    return ret;
-}
-
-/* ── GET /api/tasks — OpenClaw cron/background tasks ─────────────────── */
-static esp_err_t tasks_handler(httpd_req_t *req)
-{
-    cJSON *j = cJSON_CreateArray();
-// TODO(Task 8): 由 doubao 链路替换 — openclaw task data deleted in Task 1
-//    const openclaw_info_t *info = openclaw_get_info();
-//    if (info && info->has_tasks) {
-//        for (int i = 0; i < info->task_count; i++) {
-//            const openclaw_task_t *t = &info->tasks[i];
-//            cJSON *item = cJSON_CreateObject();
-//            cJSON_AddStringToObject(item, "id", t->id);
-//            cJSON_AddStringToObject(item, "name", t->name);
-//            cJSON_AddBoolToObject(item, "enabled", t->enabled);
-//            cJSON_AddBoolToObject(item, "running", t->running);
-//            cJSON_AddStringToObject(item, "schedule_kind", t->schedule_kind);
-//            cJSON_AddStringToObject(item, "schedule_expr", t->schedule_expr);
-//            cJSON_AddStringToObject(item, "last_status", t->last_status);
-//            cJSON_AddStringToObject(item, "last_error", t->last_error);
-//            cJSON_AddNumberToObject(item, "last_duration_ms", t->last_duration_ms);
-//            cJSON_AddNumberToObject(item, "consecutive_errors", t->consecutive_errors);
-//            cJSON_AddItemToArray(j, item);
-//        }
-//    }
-    char *str = cJSON_PrintUnformatted(j);
-    cJSON_Delete(j);
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
-    free(str);
-    return ret;
-}
-
-/* ── POST /api/tasks/toggle — enable/disable a cron job ──────────────── */
-static esp_err_t tasks_toggle_handler(httpd_req_t *req)
-{
-    int total_len = req->content_len;
-    if (total_len <= 0 || total_len > 512) {
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
-        return ESP_FAIL;
-    }
-
-    char *buf = malloc(total_len + 1);
-    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
-    int received = 0;
-    while (received < total_len) {
-        int ret = httpd_req_recv(req, buf + received, total_len - received);
-        if (ret <= 0) { free(buf); httpd_resp_send_500(req); return ESP_FAIL; }
-        received += ret;
-    }
-    buf[total_len] = '\0';
-
-    cJSON *j = cJSON_ParseWithLength(buf, total_len);
-    free(buf);
-    if (!j) { httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON"); return ESP_FAIL; }
-
-    cJSON *id_item = cJSON_GetObjectItem(j, "id");
-    cJSON *en_item = cJSON_GetObjectItem(j, "enabled");
-    if (!id_item || !cJSON_IsString(id_item) || !en_item) {
-        cJSON_Delete(j);
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing id or enabled");
-        return ESP_FAIL;
-    }
-
-    // TODO(Task 8): 由 doubao 链路替换 — openclaw_cron_toggle deleted in Task 1
-    const esp_err_t err = ESP_ERR_NOT_SUPPORTED;  /* openclaw 链路 stubbed */
-    cJSON_Delete(j);
-
-    httpd_resp_set_type(req, "application/json");
-    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-    if (err == ESP_OK) {
-        return httpd_resp_send(req, "{\"ok\":true}", 11);
-    } else {
-        return httpd_resp_send(req, "{\"ok\":false,\"error\":\"Not connected\"}", 35);
-    }
 }
 
 /* ── OPTIONS handler for CORS ────────────────────────────────────────── */
@@ -1018,13 +838,19 @@ static esp_err_t mp3_list_handler(httpd_req_t *req)
                 size_t len = strlen(name);
                 if (len > 4 && (strcasecmp(name + len - 4, ".mp3") == 0 ||
                                 strcasecmp(name + len - 4, ".wav") == 0)) {
-                    struct stat st;
-                    char fullpath[320];
-                    snprintf(fullpath, sizeof(fullpath), "/sdcard/mp3/%s", name);
                     cJSON *item = cJSON_CreateObject();
                     cJSON_AddStringToObject(item, "name", name);
-                    if (stat(fullpath, &st) == 0) {
-                        cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                    /* Get file size via stat — reuse a single PSRAM buffer
+                     * instead of a 320-byte stack fullpath for each file. */
+                    size_t path_len = sizeof("/sdcard/mp3/") + len;
+                    char *fullpath = heap_caps_malloc(path_len, MALLOC_CAP_SPIRAM);
+                    if (fullpath) {
+                        snprintf(fullpath, path_len, "/sdcard/mp3/%s", name);
+                        struct stat st;
+                        if (stat(fullpath, &st) == 0) {
+                            cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                        }
+                        heap_caps_free(fullpath);
                     }
                     cJSON_AddItemToArray(j, item);
                 }
@@ -1054,13 +880,17 @@ static esp_err_t gif_list_handler(httpd_req_t *req)
                 const char *name = entry->d_name;
                 size_t len = strlen(name);
                 if (len > 4 && strcasecmp(name + len - 4, ".gif") == 0) {
-                    struct stat st;
-                    char fullpath[320];
-                    snprintf(fullpath, sizeof(fullpath), "/sdcard/gifs/%s", name);
                     cJSON *item = cJSON_CreateObject();
                     cJSON_AddStringToObject(item, "name", name);
-                    if (stat(fullpath, &st) == 0) {
-                        cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                    size_t path_len = sizeof("/sdcard/gifs/") + len;
+                    char *fullpath = heap_caps_malloc(path_len, MALLOC_CAP_SPIRAM);
+                    if (fullpath) {
+                        snprintf(fullpath, path_len, "/sdcard/gifs/%s", name);
+                        struct stat st;
+                        if (stat(fullpath, &st) == 0) {
+                            cJSON_AddNumberToObject(item, "size", (double)st.st_size);
+                        }
+                        heap_caps_free(fullpath);
                     }
                     cJSON_AddItemToArray(j, item);
                 }
@@ -1077,6 +907,96 @@ static esp_err_t gif_list_handler(httpd_req_t *req)
     free(str);
     return ret;
 }
+/* ── POST /api/doubao/test — validate Doubao API key ─────────────────── */
+static esp_err_t doubao_test_handler(httpd_req_t *req)
+{
+    int total_len = req->content_len;
+    if (total_len <= 0 || total_len > 512) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid content length");
+        return ESP_FAIL;
+    }
+
+    char *buf = malloc(total_len + 1);
+    if (!buf) { httpd_resp_send_500(req); return ESP_FAIL; }
+    int received = 0;
+    while (received < total_len) {
+        int ret = httpd_req_recv(req, buf + received, total_len - received);
+        if (ret <= 0) { free(buf); httpd_resp_send_500(req); return ESP_FAIL; }
+        received += ret;
+    }
+    buf[total_len] = '\0';
+
+    cJSON *j = cJSON_ParseWithLength(buf, total_len);
+    free(buf);
+    if (!j) {
+        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
+        return ESP_FAIL;
+    }
+
+    cJSON *key_item = cJSON_GetObjectItem(j, "api_key");
+    const char *api_key = (key_item && cJSON_IsString(key_item))
+                          ? key_item->valuestring : NULL;
+
+    /* If key is empty/masked, fall back to current settings */
+    if (!api_key || !api_key[0] || strcmp(api_key, "****") == 0) {
+        const settings_t *s = settings_get();
+        api_key = s->api_key;
+    }
+    cJSON_Delete(j);
+
+    if (!api_key || !api_key[0]) {
+        httpd_resp_set_type(req, "application/json");
+        httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+        return httpd_resp_send(req,
+            "{\"ok\":false,\"error\":\"No API key configured\"}", -1);
+    }
+
+    ESP_LOGI(TAG, "Testing Doubao API key...");
+
+    char result_msg[128] = {0};
+    doubao_test_result_t result = doubao_test_api_key(api_key,
+                                                      result_msg,
+                                                      sizeof(result_msg));
+
+    /* A validated key is applied immediately: saved to NVS and pushed
+     * into a reconnect via the change callback — the user's expectation
+     * for the test button is that it *works*, not merely that it reports. */
+    bool applied = false;
+    if (result == DOUBAO_TEST_OK) {
+        settings_t *s = settings_get_mutable();
+        if (strcmp(s->api_key, api_key) != 0) {
+            strncpy(s->api_key, api_key, sizeof(s->api_key) - 1);
+            s->api_key[sizeof(s->api_key) - 1] = '\0';
+            if (settings_save() == ESP_OK) {
+                applied = true;
+                if (s_doubao_changed_cb) {
+                    s_doubao_changed_cb();
+                }
+            } else {
+                snprintf(result_msg, sizeof(result_msg),
+                         "Key valid but NVS save failed — retry");
+            }
+        } else {
+            applied = true;  /* already the active key */
+        }
+    }
+
+    cJSON *resp = cJSON_CreateObject();
+    cJSON_AddBoolToObject(resp, "ok", (result == DOUBAO_TEST_OK));
+    cJSON_AddStringToObject(resp, "message", result_msg);
+    cJSON_AddNumberToObject(resp, "result", (int)result);
+    cJSON_AddBoolToObject(resp, "applied", applied);
+
+    char *str = cJSON_PrintUnformatted(resp);
+    cJSON_Delete(resp);
+
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    esp_err_t ret = httpd_resp_send(req, str, strlen(str));
+    free(str);
+    return ret;
+}
+
 /* ── GET /api/doubao — Doubao API key (masked) ───────────────────────── */
 static esp_err_t doubao_get_handler(httpd_req_t *req)
 {
@@ -1089,6 +1009,14 @@ static esp_err_t doubao_get_handler(httpd_req_t *req)
     }
     /* 打码规则：settings 有值 → "****"；无值（含仅 dev 回落）→ "" */
     cJSON_AddStringToObject(j, "api_key", s->api_key[0] ? "****" : "");
+    cJSON_AddStringToObject(j, "voice", s->voice);
+    cJSON_AddNumberToObject(j, "speed", s->speed);
+    cJSON_AddNumberToObject(j, "loudness", s->loudness);
+    cJSON_AddStringToObject(j, "system_prompt", s->system_prompt);
+    cJSON_AddBoolToObject(j, "auto_continue", s->auto_continue);
+    cJSON_AddNumberToObject(j, "idle_timeout_s", s->idle_timeout_s);
+    cJSON_AddBoolToObject(j, "enable_search", s->enable_search);
+    cJSON_AddBoolToObject(j, "enable_music", s->enable_music);
 
     char *str = cJSON_PrintUnformatted(j);
     cJSON_Delete(j);
@@ -1131,19 +1059,78 @@ static esp_err_t doubao_put_handler(httpd_req_t *req)
     if (!j) {
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid JSON");
         return ESP_FAIL;
-    }
-
-    /* 空 / "****"（打码值）不覆盖，保持原值 */
+    }    /* 空 / "****"（打码值）不覆盖，保持原值 */
     bool changed = false;
+    settings_t *s = settings_get_mutable();
+
     cJSON *key_item = cJSON_GetObjectItem(j, "api_key");
     if (key_item && cJSON_IsString(key_item) && key_item->valuestring[0] &&
         strcmp(key_item->valuestring, "****") != 0) {
-        settings_t *s = settings_get_mutable();
         if (strcmp(s->api_key, key_item->valuestring) != 0) {
             strncpy(s->api_key, key_item->valuestring, sizeof(s->api_key) - 1);
             s->api_key[sizeof(s->api_key) - 1] = '\0';
             changed = true;
         }
+    }
+    cJSON *voice_item = cJSON_GetObjectItem(j, "voice");
+    if (voice_item && cJSON_IsString(voice_item) && voice_item->valuestring[0]) {
+        /* Voice must be a voice name, not a URL — a bad entry once stored
+         * the MiMo endpoint here and Doubao silently ignored the session.
+         * Reject URL-shaped values so the NVS never holds garbage again.
+         * Also reject values that don't look like a valid Doubao voice ID
+         * (must start with "zh_" or "en_" and contain "_bigtts" or
+         * match a known pattern). Invalid IDs cause silent session
+         * failure — the server accepts the session but produces no audio. */
+        const char *vv = voice_item->valuestring;
+        if (strstr(vv, "://") != NULL) {
+            ESP_LOGW(TAG, "ignoring URL-shaped voice value: %s", vv);
+        } else if (strncmp(vv, "zh_", 3) != 0 && strncmp(vv, "en_", 3) != 0) {
+            /* Doubao voice IDs always start with language prefix */
+            ESP_LOGW(TAG, "ignoring non-standard voice value: %s", vv);
+        } else if (strcmp(s->voice, vv) != 0) {
+            strncpy(s->voice, vv, sizeof(s->voice) - 1);
+            s->voice[sizeof(s->voice) - 1] = '\0';
+            changed = true;
+        }
+    }
+    cJSON *speed_item = cJSON_GetObjectItem(j, "speed");
+    if (speed_item && cJSON_IsNumber(speed_item)) {
+        int8_t v = (int8_t)speed_item->valueint;
+        if (s->speed != v) { s->speed = v; changed = true; }
+    }
+    cJSON *loud_item = cJSON_GetObjectItem(j, "loudness");
+    if (loud_item && cJSON_IsNumber(loud_item)) {
+        int8_t v = (int8_t)loud_item->valueint;
+        if (s->loudness != v) { s->loudness = v; changed = true; }
+    }
+    cJSON *prompt_item = cJSON_GetObjectItem(j, "system_prompt");
+    if (prompt_item && cJSON_IsString(prompt_item) && prompt_item->valuestring[0]) {
+        if (strcmp(s->system_prompt, prompt_item->valuestring) != 0) {
+            strncpy(s->system_prompt, prompt_item->valuestring,
+                    sizeof(s->system_prompt) - 1);
+            s->system_prompt[sizeof(s->system_prompt) - 1] = '\0';
+            changed = true;
+        }
+    }
+    cJSON *cont_item = cJSON_GetObjectItem(j, "auto_continue");
+    if (cont_item && cJSON_IsBool(cont_item)) {
+        bool v = cJSON_IsTrue(cont_item);
+        if (s->auto_continue != v) { s->auto_continue = v; changed = true; }
+    }
+    cJSON *idle_item = cJSON_GetObjectItem(j, "idle_timeout_s");
+    if (idle_item && cJSON_IsNumber(idle_item)) {
+        uint8_t v = (uint8_t)idle_item->valueint;
+        if (s->idle_timeout_s != v) { s->idle_timeout_s = v; changed = true; }
+    }
+    cJSON *search_item = cJSON_GetObjectItem(j, "enable_search");
+    if (search_item && cJSON_IsBool(search_item)) {
+        bool v = cJSON_IsTrue(search_item);
+        if (s->enable_search != v) { s->enable_search = v; changed = true; }
+    }
+    cJSON *music_item = cJSON_GetObjectItem(j, "enable_music");
+    if (music_item && cJSON_IsBool(music_item)) {
+        bool v = cJSON_IsTrue(music_item);
+        if (s->enable_music != v) { s->enable_music = v; changed = true; }
     }
     cJSON_Delete(j);
 
@@ -1186,7 +1173,7 @@ static void mdns_init_helper(void)
     /* Hostname: aiwatch.local */
     mdns_hostname_set("aiwatch");
     /* Instance name */
-    mdns_instance_name_set("AIWatch AI Assistant");
+    mdns_instance_name_set("Doubao AI Assistant");
 
     /* Register HTTP service */
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
@@ -1210,7 +1197,11 @@ esp_err_t webserver_start(void)
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 32;
-    config.stack_size = 4096;  /* JSON API only — 4KB is sufficient */
+    config.stack_size = 6144;  /* 3072 was too small for SD card + cJSON
+                                  handlers (mp3_list, gif_list, notes_*
+                                  all do opendir/readdir/stat + cJSON on
+                                  stack → stack overflow → crash). 6144
+                                  gives headroom for the full call chain. */
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
 
@@ -1228,12 +1219,9 @@ esp_err_t webserver_start(void)
         { .uri = "/api/settings",    .method = HTTP_PUT,     .handler = settings_put_handler },
         { .uri = "/api/doubao",      .method = HTTP_GET,     .handler = doubao_get_handler },
         { .uri = "/api/doubao",      .method = HTTP_POST,    .handler = doubao_put_handler },
+        { .uri = "/api/doubao/test",  .method = HTTP_POST,    .handler = doubao_test_handler },
         { .uri = "/api/settings/reset", .method = HTTP_POST, .handler = settings_reset_handler },
         { .uri = "/api/errors",      .method = HTTP_GET,     .handler = errors_handler },
-        { .uri = "/api/tasks",       .method = HTTP_GET,     .handler = tasks_handler },
-        { .uri = "/api/tasks/toggle", .method = HTTP_POST,   .handler = tasks_toggle_handler },
-        { .uri = "/api/openclaw/test", .method = HTTP_POST,  .handler = openclaw_test_handler },
-        { .uri = "/api/stt/health",    .method = HTTP_POST,  .handler = stt_health_handler },
         { .uri = "/api/led/demo",      .method = HTTP_POST,  .handler = led_demo_handler },
         { .uri = "/api/notes",         .method = HTTP_GET,   .handler = notes_list_handler },
         { .uri = "/api/notes/stats",   .method = HTTP_GET,   .handler = notes_stats_handler },

@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * Shared application state — event groups, helpers, state transitions
@@ -34,6 +34,8 @@ extern "C" {
 /* BIT14 — DOUBAO_START_BIT: 对话开始入口（say 命令/唤醒词共用，
  * Task 7 定义，Task 10 唤醒词接线消费） */
 #define DOUBAO_START_BIT    BIT14
+#define SETTINGS_LONG_PRESS_BIT  BIT15  /* 长按1s进入轻设置页 */
+#define DOUBLE_TAP_BIT       BIT16  /* 双击打断/停止 */
 
 /** Global event group — created in app_main */
 extern EventGroupHandle_t g_app_events;

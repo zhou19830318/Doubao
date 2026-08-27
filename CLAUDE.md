@@ -15,7 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # 首次（或在 build/ 出现怪异行为后）：idf.py fullclean
 idf.py set-target esp32s3          # 若尚未设置目标
-idf.py menuconfig                  # 板卡选择在 "AIWatch Doubao Configuration" 下
+idf.py menuconfig                  # 板卡选择在 "Doubao Application Configuration" 下
 idf.py build
 idf.py -p /dev/ttyACM0 -b 921600 flash   # Linux 原生 USB-JTAG 口；开发期用 app-flash 更快
 idf.py -p /dev/ttyACM0 monitor     # Ctrl+] 退出；自动解码 panic 地址为 文件:行号

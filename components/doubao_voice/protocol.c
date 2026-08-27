@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * doubao_protocol — Doubao (Volcengine) realtime duplex dialogue protocol:
@@ -28,6 +28,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_log.h"
+#include "esp_random.h"
 
 #include "cJSON.h"
 #include "mbedtls/base64.h"
@@ -51,9 +52,39 @@ static int     s_status_code;
 static char    s_session_id[PROTO_SESSION_ID_CAP];
 static char    s_err_msg[PROTO_ERR_MSG_CAP];
 static uint32_t s_evt_seq;           /* upstream event_id counter */
+static uint32_t s_audio_delta_cnt;   /* total audio delta events received */
+static uint32_t s_total_events;       /* total events dispatched */
+
+/* cJSON global hooks → PSRAM. Every downlink JSON parse allocates hundreds
+ * of small cJSON nodes (<256B each → internal heap under ALWAYSINTERNAL),
+ * and at ~2× audio burst rate that transient churn starved the SPI DMA
+ * allocator mid-conversation ("setup_dma_priv_buffer: Failed to allocate
+ * priv TX buffer" — display/SD stalls during playback). PSRAM is
+ * plentiful; cJSON is fine with it (parse fails cleanly on OOM). */
+static bool s_cjson_hooks_set = false;
+
+static void *cjson_psram_malloc(size_t sz)
+{
+    return heap_caps_malloc(sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+}
+
+static void cjson_psram_free(void *p)
+{
+    heap_caps_free(p);
+}
+
+static void cjson_hooks_ensure(void)
+{
+    if (s_cjson_hooks_set) return;
+    cJSON_Hooks hooks = { .malloc_fn = cjson_psram_malloc,
+                          .free_fn = cjson_psram_free };
+    cJSON_InitHooks(&hooks);
+    s_cjson_hooks_set = true;
+}
 
 static esp_err_t ensure_buffers(void)
 {
+    cjson_hooks_ensure();
     if (s_frag_buf == NULL) {
         s_frag_buf = heap_caps_malloc(PROTO_FRAG_CAP, MALLOC_CAP_SPIRAM);
         if (s_frag_buf == NULL) {
@@ -116,17 +147,53 @@ static bool append_fmt(char *buf, size_t cap, size_t *off, const char *fmt, ...)
 
 static bool append_json_escape(char *buf, size_t cap, size_t *off, const char *s)
 {
-    for (const char *p = s; *p != '\0'; p++) {
-        char esc[2];
+    for (const unsigned char *p = (const unsigned char *)s; *p != '\0'; p++) {
+        char esc[16];  /* \uXXXX = 6, surrogate pair \uXXXX\uXXXX = 12 */
         size_t n;
-        switch (*p) {
-        case '"':  esc[0] = '\\'; esc[1] = '"';  n = 2; break;
-        case '\\': esc[0] = '\\'; esc[1] = '\\'; n = 2; break;
-        case '\n': esc[0] = '\\'; esc[1] = 'n';  n = 2; break;
-        case '\r': esc[0] = '\\'; esc[1] = 'r';  n = 2; break;
-        case '\t': esc[0] = '\\'; esc[1] = 't';  n = 2; break;
-        default:   esc[0] = *p;                   n = 1; break;
+        unsigned char c = *p;
+        if (c == '"')  { esc[0] = '\\'; esc[1] = '"';  n = 2; }
+        else if (c == '\\') { esc[0] = '\\'; esc[1] = '\\'; n = 2; }
+        else if (c == '\n') { esc[0] = '\\'; esc[1] = 'n';  n = 2; }
+        else if (c == '\r') { esc[0] = '\\'; esc[1] = 'r';  n = 2; }
+        else if (c == '\t') { esc[0] = '\\'; esc[1] = 't';  n = 2; }
+        else if (c < 0x20) {
+            /* Control character → \u00XX */
+            esc[0] = '\\'; esc[1] = 'u';
+            n = 2 + snprintf(esc + 2, sizeof(esc) - 2, "%04x", (unsigned)c);
         }
+        else if (c >= 0x80) {
+            /* Non-ASCII byte → decode UTF-8 and emit \uXXXX.
+             * This ensures the server's JSON parser handles it
+             * regardless of its UTF-8 support. */
+            unsigned int cp = 0;
+            int extra = 0;
+            if ((c & 0xE0) == 0xC0)      { cp = c & 0x1F; extra = 1; }
+            else if ((c & 0xF0) == 0xE0) { cp = c & 0x0F; extra = 2; }
+            else if ((c & 0xF8) == 0xF0) { cp = c & 0x07; extra = 3; }
+            else { esc[0] = '?'; n = 1; goto write; }
+            for (int i = 0; i < extra; i++) {
+                p++;
+                if ((*p & 0xC0) != 0x80) { esc[0] = '?'; n = 1; goto write; }
+                cp = (cp << 6) | (*p & 0x3F);
+            }
+            /* Supplementary plane (>U+FFFF) needs surrogate pair */
+            /* Cannot use \u in C string literal (triggers UCN parsing),
+             * so build the \uXXXX escape manually. */
+            esc[0] = '\\'; esc[1] = 'u';  /* \u prefix */
+            if (cp > 0xFFFF) {
+                unsigned int hi = 0xD800 + ((cp - 0x10000) >> 10);
+                unsigned int lo = 0xDC00 + ((cp - 0x10000) & 0x3FF);
+                n = 2 + snprintf(esc + 2, sizeof(esc) - 2, "%04x", hi);
+                esc[n] = '\\'; esc[n+1] = 'u'; n += 2;
+                n += snprintf(esc + n, sizeof(esc) - n, "%04x", lo);
+            } else {
+                n = 2 + snprintf(esc + 2, sizeof(esc) - 2, "%04x", cp);
+            }
+        }
+        else {
+            esc[0] = (char)c; n = 1;
+        }
+write:
         if (*off + n + 1 > cap) {
             return false;
         }
@@ -137,34 +204,82 @@ static bool append_json_escape(char *buf, size_t cap, size_t *off, const char *s
     return true;
 }
 
-esp_err_t proto_build_session_create(char *buf, size_t cap, const doubao_cfg_t *cfg,
-                                     const char *session_id)
+/* RFC 4122 version-4 UUID from hardware RNG, formatted as 36 chars.
+ * One per session.create — mirrors the official Python demo, whose
+ * client-generated id is echoed back by the server as the dialog id. */
+static void gen_client_uuid(char out[37])
+{
+    uint8_t b[16];
+    esp_fill_random(b, sizeof(b));
+    b[6] = (uint8_t)((b[6] & 0x0F) | 0x40);  /* version 4 */
+    b[8] = (uint8_t)((b[8] & 0x3F) | 0x80);  /* variant 10xx */
+    snprintf(out, 37,
+             "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+             b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
+             b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]);
+}
+
+esp_err_t proto_build_session_create(char *buf, size_t cap, const doubao_cfg_t *cfg)
 {
     if (buf == NULL || cfg == NULL || cap == 0) {
         return ESP_ERR_INVALID_ARG;
     }
+    /* Client-generated session id — the official Python demo sends a
+     * fresh UUID on every session.create and the server echoes it back
+     * as the dialog id in session.created. Omitting it worked for the
+     * handshake but not, on our device, for the dialogue. */
+    char client_id[37];
+    gen_client_uuid(client_id);
+
     size_t off = 0;
-    if (!append_raw(buf, cap, &off,
-                    "{\"type\":\"session.create\",\"session\":{\"model\":\"1.2.6.1\","
-                    "\"instructions\":") ||
+    if (!append_fmt(buf, cap, &off,
+                    "{\"type\":\"session.create\",\"event_id\":\"event_%u\","
+                    "\"session\":{\"type\":\"realtime\",\"id\":\"%s\","
+                    "\"model\":\"1.2.6.1\","
+                    "\"instructions\":\"", (unsigned)s_evt_seq++, client_id) ||
         !append_json_escape(buf, cap, &off, cfg->instructions ? cfg->instructions : "") ||
         !append_raw(buf, cap, &off,
-                    ",\"audio\":{\"input\":{\"format\":{\"type\":\"pcm\",\"rate\":16000}},"
-                    "\"output\":{\"format\":{\"type\":\"pcm\",\"rate\":24000},\"voice\":") ||
+                    "\",\"audio\":{\"input\":{\"format\":{\"type\":\"pcm\",\"rate\":16000}},"
+                    "\"output\":{\"format\":{\"type\":\"pcm_s16le\",\"rate\":24000},\"voice\":\"") ||
         !append_json_escape(buf, cap, &off, cfg->voice ? cfg->voice : "") ||
-        !append_fmt(buf, cap, &off, ",\"speed\":%d,\"loudness\":%d}}",
+        /* closes audio.output then audio — session stays open for the
+         * optional id field below (a "session.id" outside the session
+         * object was silently sent to the server for a long time) */
+        !append_fmt(buf, cap, &off, "\",\"speed\":%d,\"loudness\":%d}}",
                     (int)cfg->speed, (int)cfg->loudness)) {
         return ESP_ERR_NO_MEM;
     }
-    /* id field only on reconnect (session_id non-NULL) */
-    if (session_id != NULL && session_id[0] != '\0') {
-        if (!append_raw(buf, cap, &off, ",\"id\":") ||
-            !append_json_escape(buf, cap, &off, session_id)) {
+    if (!append_raw(buf, cap, &off, "}")) {
+        return ESP_ERR_NO_MEM;
+    }
+    /* The official example sends the extension object (all-empty asr/tts/
+     * dialog) at the TOP level, as a sibling of "session". Our payload
+     * omitted it entirely and the server accepted everything while never
+     * producing a single ASR/response event — the engine was never engaged.
+     * See the 输入输出示例 doc, example #1.
+     * dialog.extra mirrors the demo's config (realtime_client.py):
+     * enable_loudness_norm keeps TTS output level steady so loud
+     * utterances don't clip the DAC (audible crackle).
+     * enable_music: true → 歌唱功能（服务端 TTS 切换为歌唱模式）。
+     * tools: web_search → 联网搜索（服务端自动调用搜索引擎）。 */
+    if (!append_fmt(buf, cap, &off,
+                    ",\"extension\":{\"asr\":{},\"tts\":{\"audio_config\":{"
+                    "\"format\":\"pcm_s16le\",\"sample_rate\":24000,\"channel\":1,"
+                    "\"bits\":16}},\"dialog\":{\"extra\":{\"enable_loudness_norm\":true,"
+                    "\"enable_music\":%s}}}}",
+                    cfg->enable_music ? "true" : "false")) {
+        return ESP_ERR_NO_MEM;
+    }
+    /* 联网搜索：添加 tool_search 工具，服务端在需要时自动调用搜索引擎 */
+    if (cfg->enable_search) {
+        if (!append_raw(buf, cap, &off,
+                        ",\"tools\":[{\"type\":\"function\",\"name\":\"tool_search\","
+                        "\"description\":\"Search the internet for real-time information.\","
+                        "\"parameters\":{\"type\":\"object\",\"properties\":{"
+                        "\"query\":{\"type\":\"string\",\"description\":\"Search query.\"}},"
+                        "\"required\":[\"query\"]}}]")) {
             return ESP_ERR_NO_MEM;
         }
-    }
-    if (!append_raw(buf, cap, &off, "}}")) {
-        return ESP_ERR_NO_MEM;
     }
     return ESP_OK;
 }
@@ -338,6 +453,21 @@ static bool handle_json(const char *json, doubao_event_cb_t cb)
     cJSON *type_item = cJSON_GetObjectItemCaseSensitive(root, "type");
     const char *type = (type_item != NULL && cJSON_IsString(type_item)) ? type_item->valuestring : "";
 
+    /* Downlink boundary evidence. audio.delta arrives at ~40 events/s so it
+     * would drown the log at INFO; log it at DEBUG with a counter. Everything
+     * else is rare enough to print at INFO. */
+    s_total_events++;
+    if (strcmp(type, "response.output_audio.delta") == 0) {
+        s_audio_delta_cnt++;
+        if ((s_audio_delta_cnt % 50) == 1) {
+            ESP_LOGD(TAG, "<< audio.delta #%lu",
+                     (unsigned long)s_audio_delta_cnt);
+        }
+    } else {
+        ESP_LOGD(TAG, "<< %s (event#%lu)", type, (unsigned long)s_total_events);
+        ESP_LOGD(TAG, "raw: %.768s", json);
+    }
+
     if (strcmp(type, "session.created") == 0) {
         cJSON *sess = cJSON_GetObjectItemCaseSensitive(root, "session");
         cJSON *id_it = sess ? cJSON_GetObjectItemCaseSensitive(sess, "id") : NULL;
@@ -354,6 +484,11 @@ static bool handle_json(const char *json, doubao_event_cb_t cb)
          * via proto_get_session_id()==NULL. */
         s_session_id[0] = '\0';
         ESP_LOGI(TAG, "session closed — session id cleared");
+        cb(DOUBAO_EVT_SESSION_CLOSED, NULL, 0);
+    } else if (strcmp(type, "input_audio_buffer.committed") == 0) {
+        /* ACK of our commit — pure acknowledgement, no action needed.
+         * Handled explicitly so it does not hit the unhandled-event WARN. */
+        ESP_LOGD(TAG, "commit acked");
     } else if (strcmp(type, "conversation.item.input_audio_transcription.started") == 0) {
         /* server confirms new user utterance → interrupt local playback */
         cb(DOUBAO_EVT_INTERRUPTED, NULL, 0);
@@ -427,11 +562,21 @@ static bool handle_json(const char *json, doubao_event_cb_t cb)
         }
         cb(DOUBAO_EVT_ERROR, s_err_msg, strlen(s_err_msg));
     } else {
-        ESP_LOGD(TAG, "unhandled downlink event type: %s", type);
+        /* WARN, not DEBUG: a downlink event we do not recognise is
+         * indistinguishable from silence at INFO level, which makes "the
+         * server said nothing" impossible to tell from "the server said
+         * something we ignored". */
+        ESP_LOGW(TAG, "unhandled downlink event type: %s", type);
     }
 
     cJSON_Delete(root);
     return true;
+}
+
+void proto_get_stats(uint32_t *audio_deltas, uint32_t *total_events)
+{
+    if (audio_deltas) *audio_deltas = s_audio_delta_cnt;
+    if (total_events) *total_events = s_total_events;
 }
 
 esp_err_t proto_feed(ws_frag_t frag, doubao_event_cb_t cb)

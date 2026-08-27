@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * MP3 Player implementation — wraps esp_audio_simple_player for SD card MP3 playback
@@ -101,6 +101,14 @@ static int event_callback(esp_asp_event_pkt_t *event, void *ctx)
 
     if (event->type == ESP_ASP_EVENT_TYPE_MUSIC_INFO) {
         esp_asp_music_info_t info = {0};
+        /* H5 fix: validate payload size before memcpy to prevent
+         * stack buffer overflow if payload is larger than struct */
+        if (!event->payload || event->payload_size == 0 ||
+            event->payload_size > sizeof(info)) {
+            ESP_LOGE(TAG, "MUSIC_INFO: invalid payload (size=%u, max=%u)",
+                     (unsigned)event->payload_size, (unsigned)sizeof(info));
+            return -1;
+        }
         memcpy(&info, event->payload, event->payload_size);
 
         /* Store channel count for SW downmix in output callback */
@@ -133,6 +141,13 @@ static int event_callback(esp_asp_event_pkt_t *event, void *ctx)
         }
     } else if (event->type == ESP_ASP_EVENT_TYPE_STATE) {
         esp_asp_state_t st = 0;
+        /* H5 fix: validate payload size before memcpy */
+        if (!event->payload || event->payload_size == 0 ||
+            event->payload_size > sizeof(st)) {
+            ESP_LOGE(TAG, "STATE: invalid payload (size=%u, max=%u)",
+                     (unsigned)event->payload_size, (unsigned)sizeof(st));
+            return -1;
+        }
         memcpy(&st, event->payload, event->payload_size);
         ESP_LOGI(TAG, "Player state: %d (%s)", st, esp_audio_simple_player_state_to_str(st));
 

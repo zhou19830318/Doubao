@@ -1,11 +1,12 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * App state helpers — LED mapping, state transitions, shared globals
  */
 
 #include "app_state.h"
+#include "app_state_machine.h"
 #include "board.h"
 #include "ui.h"
 #include "ui_mp3_ui.h"
@@ -105,7 +106,12 @@ static void sd_mp3_cache_refresh(void)
     }
 
     /* Use dynamic scanning to support unlimited files */
-    esp_err_t ret = mp3_player_scan_sd_dynamic("/sdcard/mp3", &s_sd_mp3_names, (uint16_t *)&s_sd_mp3_count);
+    uint16_t scan_count = 0;
+    esp_err_t ret = mp3_player_scan_sd_dynamic("/sdcard/mp3", &s_sd_mp3_names, &scan_count);
+    /* H6 fix: assign via uint16_t intermediary to avoid writing only
+     * the low 16 bits of a 32-bit int (the old cast to uint16_t*
+     * would leave high bits stale, causing out-of-bounds loops). */
+    s_sd_mp3_count = (int)scan_count;
     if (ret != ESP_OK || !s_sd_mp3_names) {
         s_sd_mp3_count = 0;
         s_sd_scanned = true;
@@ -115,20 +121,26 @@ static void sd_mp3_cache_refresh(void)
 
     s_sd_scanned = true;
 
-    /* Build compact list string for system prefix.
-     * Sanitize each filename for display: FAT 8.3 short names may contain
-     * non-UTF-8 OEM bytes (codepage 437) that cause WebSocket close 1007.
+    /* Build compact list string for AI system prompt.
+     * Format: "1:歌名 2:歌名 ..." (space-separated, no extensions).
+     * Sanitize each filename: FAT 8.3 short names may contain non-UTF-8
+     * OEM bytes (codepage 437) that cause WebSocket close 1007.
      * Original names in s_sd_mp3_names are kept intact for file operations. */
     s_sd_mp3_list[0] = '\0';
     if (s_sd_mp3_count > 0) {
         int off = 0;
-        for (int i = 0; i < s_sd_mp3_count && off < (int)sizeof(s_sd_mp3_list) - 80; i++) {
+        for (int i = 0; i < s_sd_mp3_count && off < (int)sizeof(s_sd_mp3_list) - 40; i++) {
             char safe_name[MP3_FILE_NAME_MAX];
             strncpy(safe_name, s_sd_mp3_names[i], sizeof(safe_name) - 1);
             safe_name[sizeof(safe_name) - 1] = '\0';
             utf8_sanitize(safe_name);
+            /* Strip .mp3 extension to save space */
+            size_t nlen = strlen(safe_name);
+            if (nlen > 4 && strcasecmp(safe_name + nlen - 4, ".mp3") == 0) {
+                safe_name[nlen - 4] = '\0';
+            }
             off += snprintf(s_sd_mp3_list + off, sizeof(s_sd_mp3_list) - off,
-                           "%s%d:%s", i > 0 ? ", " : "", i + 1, safe_name);
+                           "%s%d:%s", i > 0 ? " " : "", i + 1, safe_name);
         }
     }
 }
@@ -394,6 +406,13 @@ void app_led_for_state(ui_state_t st)
 
 void app_set_state(ui_state_t st)
 {
+    /* Sync the state machine's internal tracker so that subsequent
+     * app_state_request() calls validate from the correct source state.
+     * The doubao path calls app_set_state() directly (bypassing the
+     * state machine's transition validation) — without this sync,
+     * s_current_state drifts and transitions get rejected.
+     */
+    app_state_machine_force_current(st);
     ui_set_state(st);
     app_led_for_state(st);
 }

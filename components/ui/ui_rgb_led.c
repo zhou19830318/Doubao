@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2024-2026 AIWatch Contributors
+ * SPDX-FileCopyrightText: 2024-2026 Doubao Contributors
  * SPDX-License-Identifier: MIT
  *
  * RGB LED Ring Control Module — 7× WS2812 LEDs with state-based animations
@@ -275,7 +275,7 @@ static void ensure_anim_task(void)
 {
     if (s_anim_task_handle == NULL) {
         s_anim_running = true;
-        BaseType_t ret = xTaskCreate(led_anim_task, "led_anim", 3072,
+        BaseType_t ret = xTaskCreate(led_anim_task, "led_anim", 4096,
                                      NULL, 5, &s_anim_task_handle);
         if (ret != pdPASS) {
             ESP_LOGE(TAG, "Failed to create LED anim task");
