@@ -16,7 +16,7 @@
 豆包语音机器人将 ESP32-S3 开发板变成一款语音优先的 AI 伴侣。通过单条 WebSocket 连接与[火山引擎豆包](https://www.volcengine.com/product/doubao)实时语音 API 通信，在一条连接内完成 ASR + LLM + TTS 全链路处理。
 
 ```mermaid
-flowchart TD
+[flowchart TD
     subgraph Robot["豆包语音机器人"]
         direction TB
         
@@ -47,8 +47,8 @@ flowchart TD
     %% 样式调整
     classDef default fill:#fff,stroke:#333,stroke-width:1px;
     classDef cloud fill:#f9f9f9,stroke:#666,stroke-dasharray: 5 5;
-    class K cloud;
-```
+    class K cloud;]
+
 ---
 
 ## 核心特性
