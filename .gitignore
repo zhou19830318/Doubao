@@ -1,0 +1,11 @@
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+esp32-s3-log.txt
+esp_log.txt
+esp32_log.txt
+*.log
+main/include/secrets.h
+__MACOSX/
+.DS_Store
